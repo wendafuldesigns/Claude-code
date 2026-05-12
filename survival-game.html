@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Barnyard Survival</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0a06;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+  }
+  #gameCanvas { display: block; image-rendering: pixelated; }
+  #title {
+    color: #e8c87a;
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div id="title">Barnyard Survival</div>
+<canvas id="gameCanvas"></canvas>
+<script>
+'use strict';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+const TILE  = 32;
+const MAP_W = 60;
+const MAP_H = 50;
+const VIEW_W = 26;
+const VIEW_H = 20;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+canvas.width  = VIEW_W * TILE;
+canvas.height = VIEW_H * TILE;
+
+// Tile IDs
+const T = { GRASS:0, DIRT:1, TILLED:2, WET:3, WATER:4, HAY:5, WALL:6, FENCE:7, PATH:8, PLANK:9 };
+
+// Crop stages (per plant type, 4 stages)
+const CROP_NONE = 0;
+// wheat  1-4, tomato 5-8, carrot 9-12
+const CROP_READY = [4, 8, 12];
+
+// ─── Map ─────────────────────────────────────────────────────────────────────
+const map       = [];
+const cropGrid  = [];
+const cropTimer = [];
+
+function initMap() {
+  for (let y = 0; y < MAP_H; y++) {
+    map[y]       = new Uint8Array(MAP_W);
+    cropGrid[y]  = new Uint8Array(MAP_W);
+    cropTimer[y] = new Float32Array(MAP_W);
+    for (let x = 0; x < MAP_W; x++) map[y][x] = T.GRASS;
+  }
+
+  // Stone paths
+  for (let x = 0; x < MAP_W; x++) { map[22][x] = T.PATH; map[23][x] = T.PATH; }
+  for (let y = 0; y < MAP_H; y++) { map[y][26] = T.PATH; map[y][27] = T.PATH; }
+
+  // Farm plot (fenced)
+  for (let y = 6; y < 20; y++)
+    for (let x = 2; x < 24; x++)
+      map[y][x] = T.DIRT;
+
+  // Fence perimeter
+  for (let x = 1; x < 25; x++) { map[5][x] = T.FENCE; map[20][x] = T.FENCE; }
+  for (let y = 5; y < 21; y++) { map[y][1]  = T.FENCE; map[y][24] = T.FENCE; }
+  // Gate openings
+  map[20][12] = T.DIRT; map[20][13] = T.DIRT;
+
+  // Water trough near farm
+  for (let y = 7; y < 11; y++)
+    for (let x = 25; x < 28; x++)
+      map[y][x] = T.WATER;
+
+  // ── North Barn ────────────────────────────────────────────────
+  buildBarn(30, 2, 22, 14);
+
+  // ── South Barn ────────────────────────────────────────────────
+  buildBarn(30, 26, 22, 18);
+}
+
+function buildBarn(bx, by, bw, bh) {
+  // Interior hay floor
+  for (let y = by + 1; y < by + bh - 1; y++)
+    for (let x = bx + 1; x < bx + bw - 1; x++)
+      map[y][x] = T.HAY;
+
+  // Walls
+  for (let x = bx; x < bx + bw; x++) {
+    map[by][x]          = T.WALL;
+    map[by + bh - 1][x] = T.WALL;
+  }
+  for (let y = by; y < by + bh; y++) {
+    map[y][bx]          = T.WALL;
+    map[y][bx + bw - 1] = T.WALL;
+  }
+
+  // Door openings (2 wide on south wall)
+  const mid = bx + Math.floor(bw / 2);
+  map[by + bh - 1][mid]     = T.PLANK;
+  map[by + bh - 1][mid + 1] = T.PLANK;
+}
+
+// ─── Player ──────────────────────────────────────────────────────────────────
+const player = {
+  x: 12 * TILE, y: 15 * TILE,
+  w: 22, h: 28,
+  speed: 110,
+  hp: 100, maxHp: 100,
+  hunger: 100, maxHunger: 100,
+  stamina: 100, maxStamina: 100,
+  inv: {
+    wheat_seed: 6, tomato_seed: 4, carrot_seed: 4,
+    watering_can: 1, water: 10,
+    pitchfork: 1,
+    wheat: 0, tomato: 0, carrot: 0,
+    spider_fang: 0,
+  },
+  slot: 0,          // 0-7 hot bar
+  facing: 'down',
+  walkFrame: 0,
+  walkTimer: 0,
+  attackTimer: 0,
+  invTimer: 0,
+  isInvincible: false,
+};
+
+const HOTBAR = [
+  { id:'wheat_seed',   label:'Wheat Seed',   key:'1' },
+  { id:'tomato_seed',  label:'Tomato Seed',  key:'2' },
+  { id:'carrot_seed',  label:'Carrot Seed',  key:'3' },
+  { id:'watering_can', label:'Watering Can', key:'4' },
+  { id:'pitchfork',    label:'Pitchfork',    key:'5' },
+  { id:'wheat',        label:'Wheat',        key:'6' },
+  { id:'tomato',       label:'Tomato',       key:'7' },
+  { id:'carrot',       label:'Carrot',       key:'8' },
+];
+
+// ─── Camera ──────────────────────────────────────────────────────────────────
+const cam = { x: 0, y: 0 };
+
+// ─── Entities ────────────────────────────────────────────────────────────────
+const spiders   = [];
+const particles = [];
+const drops     = [];
+
+let kills     = 0;
+let gameDay   = 1;
+let gameTime  = 7 * 60;   // minutes from midnight (07:00)
+let message   = '';
+let msgTimer  = 0;
+let running   = true;
+
+// ─── Input ───────────────────────────────────────────────────────────────────
+const keys     = {};
+const justDown = {};
+
+document.addEventListener('keydown', e => {
+  if (!keys[e.code]) justDown[e.code] = true;
+  keys[e.code] = true;
+  e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// ─── Spiders ─────────────────────────────────────────────────────────────────
+function spawnSpider(tx, ty, type = 'normal') {
+  const big = type === 'boss';
+  spiders.push({
+    x: tx * TILE, y: ty * TILE,
+    w: big ? 52 : 30, h: big ? 44 : 26,
+    hp: big ? 250 : 45, maxHp: big ? 250 : 45,
+    speed: big ? 55 : 78,
+    dmg: big ? 22 : 9,
+    type,
+    state: 'patrol',
+    patrolX: tx * TILE, patrolY: ty * TILE,
+    cooldown: 0,
+    attackCd: big ? 1.8 : 1.1,
+    legT: Math.random() * Math.PI * 2,
+    aggro: false,
+    aggroRange: big ? 210 : 160,
+  });
+}
+
+function initSpiders() {
+  // North barn
+  spawnSpider(33, 4);
+  spawnSpider(38, 7);
+  spawnSpider(44, 3);
+  spawnSpider(48, 9);
+  spawnSpider(41, 11, 'boss');
+
+  // South barn
+  spawnSpider(33, 28);
+  spawnSpider(40, 31);
+  spawnSpider(46, 27);
+  spawnSpider(35, 35);
+  spawnSpider(48, 33);
+  spawnSpider(42, 37, 'boss');
+}
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+function tileXY(wx, wy) {
+  return { tx: Math.floor(wx / TILE), ty: Math.floor(wy / TILE) };
+}
+
+function isWalkable(wx, wy) {
+  const tx = Math.floor(wx / TILE);
+  const ty = Math.floor(wy / TILE);
+  if (tx < 0 || tx >= MAP_W || ty < 0 || ty >= MAP_H) return false;
+  const t = map[ty][tx];
+  return t !== T.WALL && t !== T.FENCE && t !== T.WATER;
+}
+
+function overlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function showMsg(text, dur = 2.5) {
+  message  = text;
+  msgTimer = dur;
+}
+
+function particle(x, y, color, vx, vy, life = 0.5) {
+  particles.push({ x, y, color, vx, vy, life, maxLife: life });
+}
+
+function burst(x, y, color, n = 8) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = 60 + Math.random() * 80;
+    particle(x, y, color, Math.cos(a) * s, Math.sin(a) * s - 40, 0.4 + Math.random() * 0.4);
+  }
+}
+
+function dropItem(x, y, type, n = 1) {
+  for (let i = 0; i < n; i++) {
+    drops.push({
+      x: x + (Math.random() - 0.5) * 28,
+      y: y + (Math.random() - 0.5) * 28,
+      type,
+      bob: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+// ─── Interact ────────────────────────────────────────────────────────────────
+function facingTile() {
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2;
+  let tx = Math.floor(cx / TILE);
+  let ty = Math.floor(cy / TILE);
+  if (player.facing === 'up')    ty--;
+  if (player.facing === 'down')  ty++;
+  if (player.facing === 'left')  tx--;
+  if (player.facing === 'right') tx++;
+  return { tx, ty };
+}
+
+function interact() {
+  const { tx, ty } = facingTile();
+  if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return;
+
+  const tile = map[ty][tx];
+  const crop = cropGrid[ty][tx];
+  const sel  = HOTBAR[player.slot].id;
+
+  // Refill watering can from water
+  if (sel === 'watering_can' && tile === T.WATER) {
+    player.inv.water = 10;
+    showMsg('Watering can filled! (10 uses)');
+    return;
+  }
+
+  // Water tilled soil
+  if (sel === 'watering_can' && (tile === T.TILLED || tile === T.WET) && crop !== CROP_NONE) {
+    if (player.inv.water > 0) {
+      player.inv.water--;
+      map[ty][tx] = T.WET;
+      showMsg('Crops watered — grows faster!');
+    } else {
+      showMsg('Watering can is empty!');
+    }
+    return;
+  }
+
+  // Till grass/dirt
+  if ((tile === T.GRASS || tile === T.DIRT) && (sel === 'wheat_seed' || sel === 'tomato_seed' || sel === 'carrot_seed')) {
+    map[ty][tx] = T.TILLED;
+    showMsg('Tilled soil. Now plant a seed!');
+    return;
+  }
+
+  // Plant seed
+  if ((tile === T.TILLED || tile === T.WET) && crop === CROP_NONE) {
+    const seedMap = { wheat_seed: 1, tomato_seed: 5, carrot_seed: 9 };
+    if (seedMap[sel] !== undefined && player.inv[sel] > 0) {
+      player.inv[sel]--;
+      cropGrid[ty][tx]  = seedMap[sel];
+      cropTimer[ty][tx] = 0;
+      showMsg(`Planted ${sel.replace('_seed', '')}!`);
+    }
+    return;
+  }
+
+  // Harvest ready crop
+  if (CROP_READY.includes(crop)) {
+    let got = 0;
+    if (crop === 4)  { got = 2 + rng(3); player.inv.wheat  += got; showMsg(`Harvested wheat! +${got}`); }
+    if (crop === 8)  { got = 1 + rng(2); player.inv.tomato += got; showMsg(`Harvested tomato! +${got}`); }
+    if (crop === 12) { got = 1 + rng(3); player.inv.carrot += got; showMsg(`Harvested carrot! +${got}`); }
+    cropGrid[ty][tx]  = CROP_NONE;
+    cropTimer[ty][tx] = 0;
+    map[ty][tx] = T.TILLED;
+    burst(tx * TILE + TILE / 2, ty * TILE + TILE / 2, '#90ee90', 6);
+    return;
+  }
+
+  showMsg('Nothing to do here.');
+}
+
+// ─── Combat ──────────────────────────────────────────────────────────────────
+function attack() {
+  if (player.inv.pitchfork < 1) { showMsg('Equip the pitchfork (slot 5)!'); return; }
+  if (player.attackTimer > 0) return;
+  player.attackTimer = 0.45;
+
+  const cx = player.x + player.w / 2;
+  const cy = player.y + player.h / 2;
+  const reach = 52;
+  let ax = cx, ay = cy;
+  if (player.facing === 'up')    ay -= reach;
+  if (player.facing === 'down')  ay += reach;
+  if (player.facing === 'left')  ax -= reach;
+  if (player.facing === 'right') ax += reach;
+
+  const hitBox = { x: ax - 22, y: ay - 22, w: 44, h: 44 };
+  let didHit = false;
+
+  for (let i = spiders.length - 1; i >= 0; i--) {
+    const s = spiders[i];
+    if (overlap(hitBox, s)) {
+      const dmg = s.type === 'boss' ? 18 : 28;
+      s.hp -= dmg;
+      didHit = true;
+      burst(s.x + s.w / 2, s.y + s.h / 2, '#cc0000', 6);
+      if (s.hp <= 0) killSpider(i);
+    }
+  }
+
+  // Swing particle
+  particle(ax, ay, '#FFD700', 0, -60, 0.2);
+  if (!didHit && spiders.length > 0) showMsg('Missed!');
+}
+
+function killSpider(idx) {
+  const s = spiders[idx];
+  kills++;
+  burst(s.x + s.w / 2, s.y + s.h / 2, '#8b008b', 15);
+  burst(s.x + s.w / 2, s.y + s.h / 2, '#cc0000', 10);
+  const fangs = s.type === 'boss' ? 3 + rng(4) : 1;
+  dropItem(s.x + s.w / 2, s.y + s.h / 2, 'spider_fang', fangs);
+  if (s.type === 'boss') showMsg(`QUEEN SPIDER SLAIN! +${fangs} fangs! Fear of God installed.`, 5);
+  else showMsg(`Spider down! +${fangs} fang`, 1.5);
+  spiders.splice(idx, 1);
+}
+
+// ─── Eating ──────────────────────────────────────────────────────────────────
+function eat() {
+  if (player.inv.tomato > 0) {
+    player.inv.tomato--;
+    player.hunger  = Math.min(player.maxHunger,  player.hunger  + 28);
+    player.hp      = Math.min(player.maxHp,      player.hp      + 18);
+    showMsg('Ate tomato (+28 hunger, +18 HP)');
+  } else if (player.inv.carrot > 0) {
+    player.inv.carrot--;
+    player.hunger  = Math.min(player.maxHunger,  player.hunger  + 22);
+    player.hp      = Math.min(player.maxHp,      player.hp      + 10);
+    showMsg('Ate carrot (+22 hunger, +10 HP)');
+  } else if (player.inv.wheat > 0) {
+    player.inv.wheat--;
+    player.hunger  = Math.min(player.maxHunger,  player.hunger  + 15);
+    player.hp      = Math.min(player.maxHp,      player.hp      + 5);
+    showMsg('Ate wheat (+15 hunger, +5 HP)');
+  } else {
+    showMsg('Nothing to eat!');
+  }
+}
+
+// ─── Update ──────────────────────────────────────────────────────────────────
+function rng(n) { return Math.floor(Math.random() * n); }
+
+let lastTs = 0;
+
+function update(ts) {
+  const dt = Math.min((ts - lastTs) / 1000, 0.1);
+  lastTs = ts;
+
+  // ── Time ──
+  gameTime += dt * 0.6 * 60; // 1 real second ≈ 1 game minute
+  if (gameTime >= 1440) { gameTime -= 1440; gameDay++; }
+
+  if (msgTimer > 0) msgTimer -= dt;
+
+  // ── Hunger & starvation ──
+  player.hunger -= 1.2 * dt;
+  if (player.hunger <= 0) { player.hunger = 0; player.hp -= 3 * dt; }
+  if (player.hp <= 0) { running = false; return; }
+
+  // ── Stamina recovery ──
+  player.stamina = Math.min(player.maxStamina, player.stamina + 22 * dt);
+
+  // ── Input ──
+  // Hotbar
+  for (let i = 0; i < 8; i++) {
+    if (justDown[`Digit${i + 1}`]) player.slot = i;
+  }
+  if (justDown['KeyE']) interact();
+  if (justDown['Space'] || justDown['KeyF']) attack();
+  if (justDown['KeyQ']) eat();
+
+  // ── Movement ──
+  let dx = 0, dy = 0;
+  if (keys['KeyW'] || keys['ArrowUp'])    { dy = -1; player.facing = 'up'; }
+  if (keys['KeyS'] || keys['ArrowDown'])  { dy =  1; player.facing = 'down'; }
+  if (keys['KeyA'] || keys['ArrowLeft'])  { dx = -1; player.facing = 'left'; }
+  if (keys['KeyD'] || keys['ArrowRight']) { dx =  1; player.facing = 'right'; }
+
+  const sprint = (keys['ShiftLeft'] || keys['ShiftRight']) && player.stamina > 5;
+  if (sprint && (dx || dy)) player.stamina -= 28 * dt;
+  const spd = player.speed * (sprint ? 1.85 : 1);
+
+  if (dx && dy) { dx *= 0.707; dy *= 0.707; }
+
+  const nx = player.x + dx * spd * dt;
+  const ny = player.y + dy * spd * dt;
+
+  const canX = isWalkable(nx + 3,             player.y + 10) &&
+               isWalkable(nx + player.w - 3,  player.y + 10) &&
+               isWalkable(nx + 3,             player.y + player.h - 3) &&
+               isWalkable(nx + player.w - 3,  player.y + player.h - 3);
+  const canY = isWalkable(player.x + 3,            ny + 10) &&
+               isWalkable(player.x + player.w - 3, ny + 10) &&
+               isWalkable(player.x + 3,            ny + player.h - 3) &&
+               isWalkable(player.x + player.w - 3, ny + player.h - 3);
+
+  if (canX) player.x = nx;
+  if (canY) player.y = ny;
+
+  player.x = Math.max(0, Math.min(player.x, MAP_W * TILE - player.w));
+  player.y = Math.max(0, Math.min(player.y, MAP_H * TILE - player.h));
+
+  // Walk animation
+  if (dx || dy) {
+    player.walkTimer += dt * spd * 0.12;
+    player.walkFrame  = Math.floor(player.walkTimer) % 4;
+  } else {
+    player.walkFrame  = 0;
+    player.walkTimer  = 0;
+  }
+
+  // Timers
+  if (player.attackTimer > 0) player.attackTimer -= dt;
+  if (player.invTimer    > 0) { player.invTimer -= dt; if (player.invTimer <= 0) player.isInvincible = false; }
+
+  // ── Crops ──
+  updateCrops(dt);
+
+  // ── Spiders ──
+  updateSpiders(dt);
+
+  // ── Particles ──
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x  += p.vx * dt;
+    p.y  += p.vy * dt;
+    p.vy += 160 * dt;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // ── Drops ──
+  drops.forEach(d => d.bob += dt * 2.5);
+  for (let i = drops.length - 1; i >= 0; i--) {
+    const d   = drops[i];
+    const pcx = player.x + player.w / 2;
+    const pcy = player.y + player.h / 2;
+    if (Math.hypot(d.x - pcx, d.y - pcy) < 22) {
+      player.inv[d.type] = (player.inv[d.type] || 0) + 1;
+      showMsg(`Picked up ${d.type.replace('_', ' ')}!`, 1.5);
+      drops.splice(i, 1);
+    }
+  }
+
+  // ── Camera ──
+  cam.x = Math.max(0, Math.min(player.x + player.w / 2 - canvas.width  / 2, MAP_W * TILE - canvas.width));
+  cam.y = Math.max(0, Math.min(player.y + player.h / 2 - canvas.height / 2, MAP_H * TILE - canvas.height));
+
+  // ── Clear justDown ──
+  for (const k in justDown) delete justDown[k];
+}
+
+function updateCrops(dt) {
+  for (let ty = 0; ty < MAP_H; ty++) {
+    for (let tx = 0; tx < MAP_W; tx++) {
+      const c = cropGrid[ty][tx];
+      if (!c) continue;
+      const wet  = map[ty][tx] === T.WET;
+      const rate = wet ? 1.0 : 0.25;
+      cropTimer[ty][tx] += dt * rate;
+
+      // Advance growth stage (every 8s at full rate)
+      const base = c <= 4 ? 1 : c <= 8 ? 5 : 9; // offset per crop type
+      const stage = c - base;                     // 0-3
+      if (stage < 3 && cropTimer[ty][tx] >= 8) {
+        cropGrid[ty][tx]++;
+        cropTimer[ty][tx] = 0;
+      }
+    }
+  }
+}
+
+function updateSpiders(dt) {
+  const pcx = player.x + player.w / 2;
+  const pcy = player.y + player.h / 2;
+
+  for (let i = spiders.length - 1; i >= 0; i--) {
+    const s   = spiders[i];
+    const scx = s.x + s.w / 2;
+    const scy = s.y + s.h / 2;
+    const dist = Math.hypot(pcx - scx, pcy - scy);
+
+    s.legT += dt * (s.aggro ? 7 : 2.5);
+
+    // Aggro check
+    if (dist < s.aggroRange)           s.aggro = true;
+    if (dist > s.aggroRange * 2.2)     s.aggro = false;
+
+    if (s.aggro) {
+      // Chase
+      const ang  = Math.atan2(pcy - scy, pcx - scx);
+      const mnx  = s.x + Math.cos(ang) * s.speed * dt;
+      const mny  = s.y + Math.sin(ang) * s.speed * dt;
+      if (isWalkable(mnx + s.w / 2, s.y + s.h / 2)) s.x = mnx;
+      if (isWalkable(s.x + s.w / 2, mny + s.h / 2)) s.y = mny;
+
+      // Attack
+      s.cooldown -= dt;
+      const pBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+      if (overlap(s, pBox) && s.cooldown <= 0 && !player.isInvincible) {
+        s.cooldown = s.attackCd;
+        player.hp -= s.dmg;
+        player.isInvincible = true;
+        player.invTimer     = 0.9;
+        const kba = Math.atan2(pcy - scy, pcx - scx);
+        player.x += Math.cos(kba) * 28;
+        player.y += Math.sin(kba) * 28;
+        burst(pcx, pcy, '#ff0000', 5);
+        showMsg(`Spider bites! −${s.dmg} HP`, 1.2);
+      }
+    } else {
+      // Patrol
+      const pdx = s.patrolX - s.x, pdy = s.patrolY - s.y;
+      if (Math.hypot(pdx, pdy) < 8) {
+        s.patrolX = s.x + (Math.random() - 0.5) * 120;
+        s.patrolY = s.y + (Math.random() - 0.5) * 120;
+      }
+      const pa = Math.atan2(pdy, pdx);
+      s.x += Math.cos(pa) * s.speed * 0.35 * dt;
+      s.y += Math.sin(pa) * s.speed * 0.35 * dt;
+    }
+  }
+}
+
+// ─── Drawing ─────────────────────────────────────────────────────────────────
+const TILE_COLORS = {
+  [T.GRASS]:  '#4a7c3f',
+  [T.DIRT]:   '#8B6347',
+  [T.TILLED]: '#5e3520',
+  [T.WET]:    '#3a2010',
+  [T.WATER]:  '#1e5f90',
+  [T.HAY]:    '#c4a85a',
+  [T.WALL]:   '#7a3a10',
+  [T.FENCE]:  '#8B7355',
+  [T.PATH]:   '#888070',
+  [T.PLANK]:  '#b8945a',
+};
+
+function drawMap() {
+  const sx = Math.max(0, Math.floor(cam.x / TILE));
+  const ex = Math.min(MAP_W, Math.ceil((cam.x + canvas.width)  / TILE));
+  const sy = Math.max(0, Math.floor(cam.y / TILE));
+  const ey = Math.min(MAP_H, Math.ceil((cam.y + canvas.height) / TILE));
+
+  for (let ty = sy; ty < ey; ty++) {
+    for (let tx = sx; tx < ex; tx++) {
+      const t  = map[ty][tx];
+      const px = tx * TILE - cam.x;
+      const py = ty * TILE - cam.y;
+
+      ctx.fillStyle = TILE_COLORS[t] || '#4a7c3f';
+      ctx.fillRect(px, py, TILE, TILE);
+
+      // Tile decorations
+      switch (t) {
+        case T.GRASS: {
+          // Grass blades
+          if ((tx * 3 + ty * 7) % 5 === 0) {
+            ctx.fillStyle = 'rgba(0,80,0,0.25)';
+            ctx.fillRect(px + 5,  py + 10, 2, 7);
+            ctx.fillRect(px + 13, py + 6,  2, 9);
+            ctx.fillRect(px + 22, py + 12, 2, 6);
+          }
+          break;
+        }
+        case T.WATER: {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillRect(px + 4,  py + 9,  TILE - 8, 3);
+          ctx.fillRect(px + 2,  py + 18, TILE - 4, 2);
+          ctx.fillRect(px + 7,  py + 26, TILE - 14, 2);
+          break;
+        }
+        case T.HAY: {
+          ctx.fillStyle = 'rgba(0,0,0,0.1)';
+          const planks = (tx + ty) % 3;
+          ctx.fillRect(px, py + planks * 10, TILE, 1);
+          ctx.fillRect(px + ((tx * 11 + ty * 7) % TILE), py, 1, TILE);
+          break;
+        }
+        case T.WALL: {
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.fillRect(px + 2, py + 5,  TILE - 4, 7);
+          ctx.fillRect(px + 2, py + 20, TILE - 4, 7);
+          ctx.fillStyle = 'rgba(255,200,100,0.07)';
+          ctx.fillRect(px, py, TILE, 3);
+          break;
+        }
+        case T.FENCE: {
+          ctx.fillStyle = '#6B5533';
+          ctx.fillRect(px + 14, py,  4, TILE);
+          ctx.fillRect(px,       py + 5, TILE, 4);
+          ctx.fillRect(px,       py + 22, TILE, 4);
+          ctx.fillStyle = '#9a7a55';
+          ctx.fillRect(px + 15, py + 1, 2, TILE - 2);
+          break;
+        }
+        case T.PATH: {
+          ctx.fillStyle = 'rgba(0,0,0,0.08)';
+          ctx.fillRect(px + (tx * 5) % 20, py, 2, TILE);
+          break;
+        }
+      }
+
+      // Crop
+      const crop = cropGrid[ty][tx];
+      if (crop) drawCrop(crop, px, py);
+    }
+  }
+}
+
+function drawCrop(crop, px, py) {
+  const cx = px + TILE / 2;
+  const by = py + TILE - 2;
+
+  // Determine type and stage
+  let type, stage;
+  if (crop <= 4)  { type = 'wheat';  stage = crop - 1; }
+  else if (crop <= 8)  { type = 'tomato'; stage = crop - 5; }
+  else             { type = 'carrot'; stage = crop - 9; }
+
+  ctx.save();
+
+  if (type === 'wheat') {
+    const colors = ['#7a5c2a', '#7ab648', '#90c040', '#d4a820'];
+    ctx.strokeStyle = colors[stage];
+    ctx.lineWidth = 2;
+    const h = [6, 14, 20, 22][stage];
+    if (stage < 3) {
+      const cnt = stage + 1;
+      for (let i = 0; i < cnt; i++) {
+        const ox = (i - (cnt - 1) / 2) * 5;
+        ctx.beginPath();
+        ctx.moveTo(cx + ox, by);
+        ctx.lineTo(cx + ox + (i % 2 ? 2 : -2), by - h);
+        ctx.stroke();
+      }
+    } else {
+      // Ripe wheat heads
+      for (let i = -2; i <= 2; i++) {
+        ctx.strokeStyle = '#c8a020';
+        ctx.beginPath(); ctx.moveTo(cx + i * 4, by); ctx.lineTo(cx + i * 4, by - 20); ctx.stroke();
+        ctx.fillStyle = '#e8b828';
+        ctx.fillRect(cx + i * 4 - 2, by - 26, 4, 10);
+        ctx.fillStyle = '#f0c830';
+        ctx.fillRect(cx + i * 4 - 1, by - 28, 2, 5);
+      }
+    }
+  }
+
+  if (type === 'tomato') {
+    if (stage === 0) {
+      ctx.fillStyle = '#654321';
+      ctx.beginPath(); ctx.arc(cx, by - 5, 2, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.strokeStyle = '#4a8c28';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx, by); ctx.lineTo(cx, by - 8 - stage * 5); ctx.stroke();
+      if (stage >= 2) {
+        ctx.fillStyle = '#5aa035';
+        ctx.fillRect(cx - 5, by - 14, 10, 3);
+      }
+      if (stage >= 1) {
+        const ripe = stage === 3;
+        ctx.fillStyle = ripe ? '#cc2200' : '#5aa035';
+        ctx.beginPath(); ctx.arc(cx - 5, by - 18, 5, 0, Math.PI * 2); ctx.fill();
+        if (stage >= 2) { ctx.beginPath(); ctx.arc(cx + 5, by - 16, 4, 0, Math.PI * 2); ctx.fill(); }
+        if (ripe) {
+          ctx.fillStyle = '#ee4400';
+          ctx.beginPath(); ctx.arc(cx - 6, by - 20, 3, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+  }
+
+  if (type === 'carrot') {
+    ctx.strokeStyle = '#3a8c18';
+    ctx.lineWidth   = 2;
+    const stems = stage + 1;
+    for (let i = 0; i < stems; i++) {
+      const ox = (i - (stems - 1) / 2) * 5;
+      const h  = 8 + stage * 4;
+      ctx.beginPath(); ctx.moveTo(cx + ox, by); ctx.lineTo(cx + ox, by - h); ctx.stroke();
+    }
+    if (stage === 3) {
+      ctx.fillStyle = '#ff8c00';
+      ctx.beginPath();
+      ctx.moveTo(cx - 5, by - 2);
+      ctx.lineTo(cx,     by - 8);
+      ctx.lineTo(cx + 5, by - 2);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const x = player.x - cam.x;
+  const y = player.y - cam.y;
+  const w = player.w, h = player.h;
+
+  if (player.isInvincible && Math.floor(Date.now() / 80) % 2) return;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.beginPath();
+  ctx.ellipse(x + w / 2, y + h + 2, w / 2 - 1, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Legs
+  const lo = [0, 5, 0, -5][player.walkFrame];
+  ctx.fillStyle = '#2b60d0';
+  ctx.fillRect(x + 3, y + h - 11, 7, 11);
+  ctx.fillRect(x + w - 10, y + h - 11, 7, 11);
+  ctx.fillStyle = '#1a50c0';
+  ctx.fillRect(x + 4,     y + h - 11 + lo,  5, 11);
+  ctx.fillRect(x + w - 9, y + h - 11 - lo,  5, 11);
+
+  // Boots
+  ctx.fillStyle = '#2e1a0e';
+  ctx.fillRect(x + 2,     y + h - 5, 9,  5);
+  ctx.fillRect(x + w - 11,y + h - 5, 9,  5);
+
+  // Body / overalls
+  ctx.fillStyle = '#3058b8';
+  ctx.fillRect(x + 2, y + 10, w - 4, h - 20);
+  ctx.fillStyle = '#7a3a10'; // shirt showing at top
+  ctx.fillRect(x + 4, y + 8, w - 8, 5);
+
+  // Suspender straps
+  ctx.fillStyle = '#2040a0';
+  ctx.fillRect(x + 5,     y + 8, 4, 10);
+  ctx.fillRect(x + w - 9, y + 8, 4, 10);
+
+  // Neck/face
+  ctx.fillStyle = '#f5c5a0';
+  ctx.fillRect(x + 6, y + 6, w - 12, 6);
+  ctx.fillRect(x + 5, y - 2, w - 10, 10);
+
+  // Hat brim
+  ctx.fillStyle = '#7a3a10';
+  ctx.fillRect(x + 1, y - 4, w - 2, 4);
+  ctx.fillRect(x + 5, y - 12, w - 10, 9);
+  ctx.fillStyle = '#5a2a08';
+  ctx.fillRect(x + 5, y - 12, w - 10, 2);
+
+  // Eyes
+  if (player.facing !== 'up') {
+    ctx.fillStyle = '#222';
+    ctx.fillRect(x + 8, y + 2, 2, 2);
+    ctx.fillRect(x + w - 10, y + 2, 2, 2);
+  }
+
+  // Pitchfork
+  if (player.attackTimer > 0) {
+    const t = player.attackTimer / 0.45;
+    ctx.save();
+    ctx.translate(x + w / 2, y + h / 2);
+    const ang = { up: -Math.PI/2, down: Math.PI/2, left: Math.PI, right: 0 }[player.facing];
+    ctx.rotate(ang + (1 - t) * 0.4);
+    ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(48, 0); ctx.stroke();
+    ctx.fillStyle = '#aaa';
+    ctx.fillRect(42, -8, 3, 10); ctx.fillRect(47, -6, 3, 8); ctx.fillRect(52, -8, 3, 10);
+    ctx.fillStyle = '#888';
+    ctx.fillRect(43, -10, 2, 4); ctx.fillRect(48, -8,  2, 3); ctx.fillRect(53, -10, 2, 4);
+    ctx.restore();
+  }
+}
+
+function drawSpider(s) {
+  const sx = s.x - cam.x;
+  const sy = s.y - cam.y;
+  const w  = s.w, h = s.h;
+  const boss  = s.type === 'boss';
+  const bcx   = sx + w / 2;
+  const bcy   = sy + h / 2;
+
+  // HP bar
+  if (s.hp < s.maxHp) {
+    const bw  = w + 14;
+    const bx  = sx - 7;
+    const hby = sy - 14;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(bx, hby, bw, 7);
+    ctx.fillStyle = s.hp > s.maxHp * 0.6 ? '#22cc22' : s.hp > s.maxHp * 0.3 ? '#cccc22' : '#cc2222';
+    ctx.fillRect(bx, hby, bw * (s.hp / s.maxHp), 7);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    ctx.strokeRect(bx, hby, bw, 7);
+  }
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(bcx, sy + h + 2, w / 2, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const legColor  = boss ? '#5500aa' : '#180e00';
+  const bodyColor = boss ? '#3a0055' : '#1e1208';
+  const accColor  = boss ? '#aa00ff' : '#6b3a0a';
+
+  // Legs (4 per side, 8 total)
+  ctx.strokeStyle = legColor;
+  ctx.lineWidth   = boss ? 3 : 2;
+  const legBases  = [-0.35, -0.12, 0.12, 0.35].map(f => f * Math.PI);
+  const legLen    = boss ? 30 : 19;
+
+  for (const side of [-1, 1]) {
+    for (let li = 0; li < 4; li++) {
+      const baseAng = legBases[li];
+      const anim    = Math.sin(s.legT + li * 0.8) * 0.25;
+      const ang     = baseAng + anim;
+      const bpx     = bcx + side * (w * 0.3);
+      const bpy     = bcy;
+      const midX    = bpx + side * Math.cos(ang + side * 0.3) * legLen * 0.55;
+      const midY    = bpy + Math.sin(ang) * legLen * 0.55 - 6;
+      const endX    = bpx + side * Math.cos(ang - side * 0.25) * legLen;
+      const endY    = bpy + Math.sin(ang) * legLen + 10;
+      ctx.beginPath();
+      ctx.moveTo(bpx, bpy);
+      ctx.quadraticCurveTo(midX, midY, endX, endY);
+      ctx.stroke();
+    }
+  }
+
+  // Abdomen
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(bcx - (boss ? 9 : 5), bcy, boss ? 16 : 10, boss ? 13 : 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = accColor;
+  ctx.beginPath();
+  ctx.ellipse(bcx - (boss ? 9 : 5), bcy, boss ? 9 : 5, boss ? 7 : 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (boss) {
+    ctx.fillStyle = '#ff00ff';
+    ctx.beginPath(); ctx.ellipse(bcx - 9, bcy, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Cephalothorax
+  const headR = boss ? 13 : 8;
+  ctx.fillStyle = boss ? '#220033' : '#120a04';
+  ctx.beginPath();
+  ctx.ellipse(bcx + (boss ? 7 : 4), bcy, headR, headR * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes (8 of them)
+  const eyeR   = boss ? 3.5 : 2;
+  const eyeCol = boss ? '#ff2222' : '#dd1111';
+  const eyePos = [[-3,-4],[2,-4],[-5,-1],[4,-1],[-4,2],[3,2],[-2,4],[1,4]];
+  const hcx    = bcx + (boss ? 7 : 4);
+  eyePos.forEach(([ex, ey]) => {
+    ctx.fillStyle = eyeCol;
+    ctx.beginPath();
+    ctx.arc(hcx + ex * (boss ? 1.4 : 1), bcy + ey * (boss ? 1.2 : 1), eyeR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,200,200,0.5)';
+    ctx.beginPath();
+    ctx.arc(hcx + ex * (boss ? 1.4 : 1) - eyeR * 0.3, bcy + ey * (boss ? 1.2 : 1) - eyeR * 0.3, eyeR * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Chelicerae
+  const fanX = hcx + (boss ? 14 : 9);
+  ctx.strokeStyle = boss ? '#cc00cc' : '#2a1000';
+  ctx.lineWidth = boss ? 2.5 : 1.5;
+  ctx.beginPath(); ctx.moveTo(fanX - 2, bcy - (boss ? 4 : 2)); ctx.lineTo(fanX + (boss ? 8 : 5), bcy - (boss ? 7 : 4)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fanX - 2, bcy + (boss ? 4 : 2)); ctx.lineTo(fanX + (boss ? 8 : 5), bcy + (boss ? 7 : 4)); ctx.stroke();
+
+  // Boss label + aggro
+  if (boss) {
+    ctx.font        = 'bold 10px monospace';
+    ctx.textAlign   = 'center';
+    ctx.fillStyle   = '#ff44ff';
+    ctx.fillText('QUEEN SPIDER', bcx, sy - 20);
+  }
+  if (s.aggro) {
+    ctx.font      = 'bold 15px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff2222';
+    ctx.fillText('!', bcx, sy - (boss ? 32 : 22));
+  }
+}
+
+function drawDrops() {
+  drops.forEach(d => {
+    const dx = d.x - cam.x;
+    const dy = d.y - cam.y + Math.sin(d.bob) * 3;
+    ctx.fillStyle = 'rgba(140,0,190,0.3)';
+    ctx.beginPath(); ctx.arc(dx, dy, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#cc44ff';
+    ctx.beginPath();
+    ctx.moveTo(dx, dy - 7);
+    ctx.lineTo(dx - 4, dy + 7);
+    ctx.lineTo(dx + 4, dy + 7);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ee88ff';
+    ctx.fillRect(dx - 1, dy - 6, 2, 7);
+  });
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    const a = p.life / p.maxLife;
+    ctx.globalAlpha = a;
+    ctx.fillStyle   = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x - cam.x, p.y - cam.y, 3 * a + 1, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function skyOverlay() {
+  const h = gameTime / 60;
+  let col = null;
+  if (h < 5 || h >= 21)        col = 'rgba(5,5,28,0.72)';
+  else if (h < 6.5)             col = 'rgba(10,10,50,0.45)';
+  else if (h < 7.5)             col = 'rgba(220,80,30,0.18)';
+  else if (h < 18.5)            col = null;
+  else if (h < 19.5)            col = 'rgba(200,70,20,0.22)';
+  else if (h < 21)              col = 'rgba(15,15,55,0.4)';
+  if (col) { ctx.fillStyle = col; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+}
+
+function timeStr() {
+  const h  = Math.floor(gameTime / 60) % 24;
+  const m  = Math.floor(gameTime % 60);
+  const ap = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ap}`;
+}
+
+function drawHUD() {
+  const W = canvas.width, H = canvas.height;
+
+  // ── Status bars ──
+  function bar(x, y, w, pct, col, label) {
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.fillRect(x, y, w, 16);
+    ctx.fillStyle = col;
+    ctx.fillRect(x + 1, y + 1, (w - 2) * pct, 14);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font      = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + w / 2, y + 11);
+  }
+
+  bar(10, 10, 150, player.hp     / player.maxHp,      player.hp     > 50 ? '#22cc22' : player.hp     > 25 ? '#cccc22' : '#dd2222', `HP ${Math.ceil(player.hp)}`);
+  bar(10, 30, 150, player.hunger / player.maxHunger,   player.hunger > 50 ? '#ff8c00' : '#cc4400',                                   `HUNGER ${Math.ceil(player.hunger)}%`);
+  bar(10, 50, 150, player.stamina/ player.maxStamina,  '#4466ee',                                                                    'STAMINA');
+
+  // ── Clock ──
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(W - 160, 10, 150, 42);
+  ctx.fillStyle = '#ffd700';
+  ctx.font      = 'bold 15px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`Day ${gameDay}`, W - 85, 28);
+  ctx.fillStyle = '#eee';
+  ctx.font      = '12px monospace';
+  ctx.fillText(timeStr(), W - 85, 45);
+
+  // ── Kill counter ──
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(W - 160, 56, 150, 22);
+  ctx.fillStyle = '#cc44ff';
+  ctx.font      = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`Spiders slain: ${kills}`, W - 85, 71);
+
+  // ── Inventory bar ──
+  const slotSz = 46;
+  const slotY  = H - slotSz - 8;
+  const slotX0 = W / 2 - (HOTBAR.length * slotSz) / 2;
+
+  HOTBAR.forEach((item, i) => {
+    const sx  = slotX0 + i * slotSz;
+    const sel = i === player.slot;
+    ctx.fillStyle = sel ? 'rgba(255,200,50,0.85)' : 'rgba(20,16,10,0.82)';
+    ctx.fillRect(sx, slotY, slotSz - 2, slotSz - 2);
+    ctx.strokeStyle = sel ? '#ffd700' : '#666';
+    ctx.lineWidth   = sel ? 2 : 1;
+    ctx.strokeRect(sx, slotY, slotSz - 2, slotSz - 2);
+
+    // Icon (drawn with canvas shapes)
+    drawInvIcon(item.id, sx + (slotSz - 2) / 2, slotY + 20);
+
+    const cnt = item.id === 'watering_can' ? player.inv.water : player.inv[item.id];
+    ctx.fillStyle = cnt > 0 ? '#fff' : '#666';
+    ctx.font      = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(cnt, sx + (slotSz - 2) / 2, slotY + 36);
+
+    ctx.fillStyle = '#aaa';
+    ctx.font      = '8px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(item.key, sx + 3, slotY + 10);
+  });
+
+  // Selected label
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(W / 2 - 80, slotY - 22, 160, 18);
+  ctx.fillStyle = '#ffd700';
+  ctx.font      = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(HOTBAR[player.slot].label, W / 2, slotY - 8);
+
+  // ── Controls ──
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(10, H - 88, 220, 78);
+  ctx.fillStyle = '#bbb';
+  ctx.font      = '9px monospace';
+  ctx.textAlign = 'left';
+  ['WASD / Arrows — Move', 'Shift — Sprint', 'E — Interact / Plant / Harvest', 'Space / F — Attack', 'Q — Eat food', '1-8 — Select item'].forEach((line, i) => {
+    ctx.fillText(line, 14, H - 76 + i * 13);
+  });
+
+  // ── Message ──
+  if (msgTimer > 0) {
+    const alpha = Math.min(1, msgTimer);
+    ctx.fillStyle = `rgba(0,0,0,${alpha * 0.82})`;
+    ctx.fillRect(W / 2 - 170, H / 2 - 64, 340, 30);
+    ctx.fillStyle = `rgba(255,240,120,${alpha})`;
+    ctx.font      = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(message, W / 2, H / 2 - 44);
+  }
+}
+
+function drawInvIcon(id, cx, cy) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  switch (id) {
+    case 'wheat_seed':
+      ctx.fillStyle = '#c8a040'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#8B6347'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 3); ctx.lineTo(0, 9); ctx.stroke();
+      break;
+    case 'tomato_seed':
+      ctx.fillStyle = '#cc2200'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#004400'; ctx.fillRect(-1, -7, 2, 4);
+      break;
+    case 'carrot_seed':
+      ctx.fillStyle = '#ff8c00';
+      ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(-5, -5); ctx.lineTo(5, -5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#228822'; ctx.fillRect(-1, -10, 2, 6);
+      break;
+    case 'watering_can':
+      ctx.fillStyle = '#5588cc';
+      ctx.fillRect(-8, -6, 12, 9);
+      ctx.strokeStyle = '#5588cc'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(4, -2); ctx.lineTo(10, -6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(-12, -10); ctx.stroke();
+      break;
+    case 'pitchfork':
+      ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(0, -8); ctx.stroke();
+      ctx.fillStyle = '#aaa';
+      ctx.fillRect(-6, -10, 3, 6); ctx.fillRect(-1, -12, 3, 8); ctx.fillRect(4, -10, 3, 6);
+      break;
+    case 'wheat':
+      ctx.strokeStyle = '#d4a820'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(0, -4); ctx.stroke();
+      ctx.fillStyle = '#e8b828'; ctx.fillRect(-4, -10, 8, 8);
+      break;
+    case 'tomato':
+      ctx.fillStyle = '#cc2200'; ctx.beginPath(); ctx.arc(0, 2, 7, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ee4400'; ctx.beginPath(); ctx.arc(-2, 0, 4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#228822'; ctx.fillRect(-2, -8, 3, 6);
+      break;
+    case 'carrot':
+      ctx.fillStyle = '#ff8c00';
+      ctx.beginPath(); ctx.moveTo(0, 9); ctx.lineTo(-6, -6); ctx.lineTo(6, -6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#33aa33';
+      ctx.fillRect(-1, -11, 2, 7);
+      break;
+  }
+  ctx.restore();
+}
+
+function drawDeathScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#cc0000';
+  ctx.font      = 'bold 42px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('YOU DIED', canvas.width / 2, canvas.height / 2 - 50);
+  ctx.fillStyle = '#ddd';
+  ctx.font      = '18px monospace';
+  ctx.fillText(`Day ${gameDay}  •  Spiders slain: ${kills}`, canvas.width / 2, canvas.height / 2);
+  ctx.fillStyle = '#888';
+  ctx.font      = '14px monospace';
+  ctx.fillText('Press R to restart', canvas.width / 2, canvas.height / 2 + 44);
+}
+
+function drawWinScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ffd700';
+  ctx.font      = 'bold 36px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BARN CLEARED!', canvas.width / 2, canvas.height / 2 - 50);
+  ctx.fillStyle = '#cc44ff';
+  ctx.font      = '20px monospace';
+  ctx.fillText('All spiders defeated!', canvas.width / 2, canvas.height / 2 - 10);
+  ctx.fillStyle = '#ddd';
+  ctx.font      = '16px monospace';
+  ctx.fillText(`Day ${gameDay}  •  ${kills} spiders slain  •  ${player.inv.spider_fang} fangs collected`, canvas.width / 2, canvas.height / 2 + 30);
+  ctx.fillStyle = '#888';
+  ctx.font      = '14px monospace';
+  ctx.fillText('Press R to play again', canvas.width / 2, canvas.height / 2 + 68);
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!running && kills >= 12) { drawWinScreen(); return; }
+  if (!running)                 { drawDeathScreen(); return; }
+
+  drawMap();
+  drawDrops();
+
+  // Sprites sorted by Y so things behind player are drawn first
+  const pcx = player.x + player.w / 2;
+  const pcy = player.y + player.h / 2;
+  const allSprites = spiders.map(s => ({ y: s.y + s.h / 2, draw: () => drawSpider(s) }));
+  allSprites.push({ y: pcy, draw: drawPlayer });
+  allSprites.sort((a, b) => a.y - b.y).forEach(s => s.draw());
+
+  drawParticles();
+  skyOverlay();
+  drawHUD();
+}
+
+// ─── Win / death detection ───────────────────────────────────────────────────
+function checkGameState() {
+  if (!running) return;
+  if (kills >= 12) { running = false; }
+}
+
+// ─── Loop ────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.key === 'r' || e.key === 'R') && !running) location.reload();
+});
+
+function loop(ts) {
+  update(ts);
+  checkGameState();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+initMap();
+initSpiders();
+showMsg('Welcome to Barnyard Survival! Farm crops & clear the barns of spiders!', 6);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
