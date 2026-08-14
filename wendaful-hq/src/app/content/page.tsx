@@ -1,12 +1,12 @@
-import { Clapperboard } from "lucide-react";
-import { ComingSoon } from "@/components/ui/ComingSoon";
+import { db } from "@/lib/db";
+import { ContentPipelineView } from "@/components/content/ContentPipelineView";
 
-export default function ContentPipelinePage() {
-  return (
-    <ComingSoon
-      title="Content Pipeline"
-      blurb="Idea to posted, across TikTok, Instagram, and YouTube. Mirrors your ClickUp content calendar."
-      icon={Clapperboard}
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function ContentPipelinePage() {
+  const posts = await db.contentPost.findMany({
+    orderBy: { createdAt: "asc" },
+  });
+
+  return <ContentPipelineView posts={posts} />;
 }

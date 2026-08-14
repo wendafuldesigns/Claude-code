@@ -19,3 +19,19 @@ export const contentStageLabels: Record<string, string> = {
   scheduled: "Scheduled",
   posted: "Posted",
 };
+
+export const contentStageOrder = [
+  "idea",
+  "scripting",
+  "filming",
+  "editing",
+  "scheduled",
+  "posted",
+] as const;
+
+export function nextContentStage(stage: string): string | null {
+  const index = contentStageOrder.indexOf(stage as (typeof contentStageOrder)[number]);
+  if (index === -1 || index === contentStageOrder.length - 1) return null;
+  return contentStageOrder[index + 1];
+}
+

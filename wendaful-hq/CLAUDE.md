@@ -135,7 +135,7 @@ automatically, no need to touch `Sidebar.tsx`.
 | Page | Route | Status |
 |---|---|---|
 | Home | `/` | **Built** — morning overview |
-| Content Pipeline | `/content` | Stub (placeholder copy only) |
+| Content Pipeline | `/content` | **Built** — kanban board |
 | Habits | `/habits` | Stub |
 | Revenue | `/revenue` | Stub |
 | Client Work | `/clients` | Stub |
@@ -170,6 +170,25 @@ the page, top to bottom, is fixed by the original brief:
    `CreativeProject`s with a deadline within the next
    `UPCOMING_DEADLINE_DAYS` (5) days. Extend that function, don't add a
    separate "flags" table, if new urgency sources come up.
+
+### Content Pipeline (`src/app/content/page.tsx`)
+
+Server component fetches all `ContentPost`s, hands them to
+`ContentPipelineView` (client) which owns filter state (All/TikTok/
+Instagram/YouTube tabs) and renders a horizontally-scrolling kanban board,
+one column per `contentStageOrder` entry (`src/lib/labels.ts`). Each
+`ContentCard` has a "move to next stage" arrow that calls the
+`advanceContentStage` server action (`src/app/content/actions.ts`) —
+setting `postedDate` automatically when a post lands on "posted" — with an
+optimistic local update so the card moves instantly instead of waiting on
+the round trip. No create/edit/delete UI yet; that's the natural next
+increment if Wenda wants to add posts from the app instead of just
+triage/track them.
+
+The kanban board intentionally scrolls horizontally inside its own
+container rather than squeezing into the page's `max-w-5xl` — six columns
+don't fit at readable width otherwise, and ClickUp's own board view works
+the same way.
 
 ## Database schema
 
