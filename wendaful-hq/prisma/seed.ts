@@ -14,6 +14,13 @@ function atTime(offset: number, hour: number, minute: number) {
   return d;
 }
 
+function dayOffset(offset: number) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  return d;
+}
+
 async function main() {
   console.log("Clearing existing data...");
   await db.habitCheckin.deleteMany();
@@ -77,22 +84,30 @@ async function main() {
   });
 
   console.log("Seeding habits...");
+  const HABIT_HISTORY_DAYS = 29;
   const habitDefs = [
-    { name: "Move your body", icon: "🏃", order: 0, misses: [-20, -14, -7] },
-    { name: "Drink water", icon: "💧", order: 1, misses: [-16, -9] },
-    { name: "No phone first hour", icon: "📵", order: 2, misses: [-19, -18, -16, -15, -12, -11, -10, -8, -6, -5, -3] },
-    { name: "Post something", icon: "📱", order: 3, misses: [-19, -17, -13, -10, -9, -4] },
-    { name: "Read before bed", icon: "📖", order: 4, misses: [-17, -12, -6] },
+    // recent 3-day miss (plus today, still open) so the flag has something to show
+    { name: "Workout", icon: "💪", order: 0, misses: [0, -1, -2, -3] },
+    { name: "Read 20 mins", icon: "📖", order: 1, misses: [0, -18, -25] },
+    {
+      name: "No phone before 9am or after 9pm",
+      icon: "📵",
+      order: 2,
+      misses: [-29, -27, -24, -22, -19, -17, -14, -12, -9, -7],
+    },
+    { name: "Drink 2L water", icon: "💧", order: 3, misses: [-20] },
+    { name: "Journal", icon: "📝", order: 4, misses: [0, -6, -13, -15, -21, -28] },
+    { name: "No alcohol", icon: "🚫", order: 5, misses: [-23] },
   ];
 
   for (const h of habitDefs) {
     const habit = await db.habit.create({
-      data: { name: h.name, icon: h.icon, order: h.order },
+      data: { name: h.name, icon: h.icon, order: h.order, createdAt: daysFromToday(-45) },
     });
     const checkins = [];
-    for (let offset = -20; offset <= 0; offset++) {
+    for (let offset = -HABIT_HISTORY_DAYS; offset <= 0; offset++) {
       if (!h.misses.includes(offset)) {
-        checkins.push({ habitId: habit.id, date: daysFromToday(offset), done: true });
+        checkins.push({ habitId: habit.id, date: dayOffset(offset), done: true });
       }
     }
     await db.habitCheckin.createMany({ data: checkins });

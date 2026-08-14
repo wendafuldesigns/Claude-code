@@ -136,7 +136,7 @@ automatically, no need to touch `Sidebar.tsx`.
 |---|---|---|
 | Home | `/` | **Built** — morning overview |
 | Content Pipeline | `/content` | **Built** — kanban board |
-| Habits | `/habits` | Stub |
+| Habits | `/habits` | **Built** — daily check-ins, streaks |
 | Revenue | `/revenue` | Stub |
 | Client Work | `/clients` | Stub |
 | Goals | `/goals` | Stub |
@@ -189,6 +189,44 @@ The kanban board intentionally scrolls horizontally inside its own
 container rather than squeezing into the page's `max-w-5xl` — six columns
 don't fit at readable width otherwise, and ClickUp's own board view works
 the same way.
+
+### Habits (`src/app/habits/page.tsx`)
+
+The six tracked habits (Workout, Read 20 mins, No phone before 9am or after
+9pm, Drink 2L water, Journal, No alcohol) are seeded directly — there's no
+add/edit/delete UI yet, same "check-in only" scope as Content Pipeline.
+
+Streak logic lives in `src/lib/habits.ts`, not in the database — `Habit`
+and `HabitCheckin` just store raw check-in facts (one row per habit per day
+actually completed; a missed day is simply the absence of a row, not a
+`done: false` row — unchecking a habit for today **deletes** that day's
+row rather than storing it as false). Everything else is derived on read:
+
+- `computeCurrentStreak` — consecutive done-days counting backward. Today
+  doesn't break or extend the streak until it's actually checked; a day
+  in progress is neither a hit nor a miss.
+- `computeMissedStreak` — consecutive missed days ending **yesterday**
+  (today is deliberately excluded — it isn't over yet, so it can't be a
+  miss). The 3-day-flag on a habit card
+  (`MISSED_STREAK_FLAG_THRESHOLD` in `src/lib/habits.ts`) is driven by
+  this number, not by the current streak.
+- `buildWeekGrid` — rolling 7 days ending today (not a fixed Mon–Sun
+  calendar week), so the grid always has 7 real data points instead of
+  blank future cells early in the week.
+
+`toggleHabitCheckin` (`src/app/habits/actions.ts`) upserts/deletes
+`HabitCheckin` by the `(habitId, date)` compound unique, using `startOfDay`
+as the canonical date — **all** `HabitCheckin.date` values must be
+exact local midnight for that matching to work, seed data included (see
+`dayOffset` in `prisma/seed.ts`, not the `daysFromToday`/`atTime` helpers
+used elsewhere, which set a non-midnight hour).
+
+`HabitCard` is a client component: optimistic local toggle on click (for
+the instant checkbox animation — scale on tap, spring-in checkmark, plus a
+CSS color-fill transition on the circle) with the server action firing in
+a transition behind it; `revalidatePath("/habits")` refreshes the summary
+count and streaks once it resolves, no manual state-lifting needed between
+the card and the summary card above it.
 
 ## Database schema
 
