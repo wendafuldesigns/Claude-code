@@ -1,0 +1,129 @@
+// Wendaful HQ — personal dashboard
+// One model per page/section. See CLAUDE.md for the full picture.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// --- Home / shared ---------------------------------------------------
+
+// Today's top 3 priorities (and history of past days')
+model Priority {
+  id        String   @id @default(cuid())
+  date      DateTime
+  text      String
+  done      Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// Mirrors Apple Calendar, copied in by hand for now
+model CalendarEvent {
+  id        String   @id @default(cuid())
+  title     String
+  date      DateTime
+  startTime String? // display string, e.g. "9:00 AM"
+  endTime   String?
+  location  String?
+  source    String   @default("apple_calendar")
+  createdAt DateTime @default(now())
+}
+
+// --- Content Pipeline --------------------------------------------------
+
+// platform: "tiktok" | "instagram" | "youtube"
+// stage: "idea" | "scripting" | "filming" | "editing" | "scheduled" | "posted"
+model ContentPost {
+  id         String    @id @default(cuid())
+  title      String
+  platform   String
+  stage      String
+  notes      String?
+  dueDate    DateTime?
+  postedDate DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// --- Habits --------------------------------------------------------------
+
+model Habit {
+  id        String         @id @default(cuid())
+  name      String
+  icon      String? // emoji
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+  checkins  HabitCheckin[]
+}
+
+model HabitCheckin {
+  id      String   @id @default(cuid())
+  habitId String
+  habit   Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date    DateTime
+  done    Boolean  @default(true)
+
+  @@unique([habitId, date])
+}
+
+// --- Revenue ---------------------------------------------------------
+
+// source: "clickup_affiliate" | "youtube_ads" | "sponsorship" | "planning_lab"
+// status: "received" | "pending"
+model RevenueEntry {
+  id          String   @id @default(cuid())
+  source      String
+  description String
+  amount      Float
+  date        DateTime
+  status      String   @default("received")
+  createdAt   DateTime @default(now())
+}
+
+// --- Client Work (SCMC) -----------------------------------------------
+
+// status: "todo" | "in_progress" | "done"
+model ClientTask {
+  id        String    @id @default(cuid())
+  client    String    @default("SCMC")
+  title     String
+  notes     String?
+  hours     Float?
+  status    String    @default("todo")
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// --- Goals -------------------------------------------------------------
+
+// timeframe: "monthly" | "quarterly" | "yearly"
+// status: "active" | "done"
+model Goal {
+  id         String    @id @default(cuid())
+  title      String
+  timeframe  String
+  notes      String?
+  progress   Int       @default(0)
+  status     String    @default("active")
+  targetDate DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+// --- Creative Projects ---------------------------------------------------
+
+// category: "content_series" | "product_launch" | "other"
+// status: "planning" | "in_progress" | "review" | "done"
+model CreativeProject {
+  id          String    @id @default(cuid())
+  title       String
+  category    String
+  description String?
+  status      String    @default("planning")
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+}
