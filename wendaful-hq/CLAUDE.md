@@ -64,6 +64,13 @@ The database is a single file at `dev.db` (SQLite), gitignored. Anyone
 cloning this repo needs to run `npm run db:push && npm run db:seed` once to
 get a working local database.
 
+`src/generated/prisma` (the generated Prisma Client) is also gitignored.
+`npm install` regenerates it automatically via the `postinstall` script —
+if you ever see "Cannot find module '@/generated/prisma/client'", it means
+`npm install`'s postinstall step didn't run (e.g. it got interrupted, or
+was skipped by an npm scripts-approval gate) — running `npx prisma
+generate` by hand fixes it immediately.
+
 We're using `db push`, not migrations — this is a single-user local app, not
 a team project with a shared production database. If that ever changes,
 switch to `prisma migrate dev`.
