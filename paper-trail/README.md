@@ -4,6 +4,23 @@ Scan a receipt, bill, or form. Claude reads it, you check the details, and it ge
 
 Example: a photo of an oil change receipt becomes a record with the date, shop, total, mileage, vehicle, work done, VIN, and when the next change is due.
 
+## Quick add ideas
+
+Not sure what is worth filing? The home screen has a **Quick add ideas** row: Oil change, HVAC filter change, Vet checkup, Dental cleaning, Annual physical, Passport, Appliance warranty, Permission slip, Electric bill. **See all ideas** opens 66 ideas in 14 groups (Car, Home, Pet, School, Health, Dental, Bills, Insurance, Banking, Taxes, Legal and ID, Travel, Purchases, Business), with filter chips and a color for each type.
+
+Tapping an idea opens the add form already filled in with the basics:
+
+- the type and title
+- today's date
+- the work that usually goes with it ("Replace air filter")
+- a blank row for each detail worth keeping ("Filter size", "Model number")
+- a suggested reminder when the thing repeats (3 months for an HVAC filter, a year for a vet checkup), which then shows up under Coming up
+- a short tip when one helps ("The size is printed on the edge of your old filter")
+
+Nothing is saved until you check it and tap **Save record**. Detail rows you leave blank are not saved. If you have exactly one car or one pet on file, the name is filled in and the form says so. Discard from an idea takes you back to where you started. The list is collapsed once you have six or more records, and it stays open or closed the way you leave it. View-only people do not see it.
+
+The ideas live in one table near the top of the file (`IDEAS`). Each row is a type, a title, a reminder in months (0 for none), the reminder note, the work lines, the detail labels, and an optional tip, so adding an idea is one line.
+
 ## Opening a record
 
 Tapping a record opens a **summary**: the photo, the total, who and what it was for, the work done, other details, what is due next, and notes. Nothing on it can be changed by accident.

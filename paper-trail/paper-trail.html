@@ -268,6 +268,28 @@ p { margin: 0; }
 .due-pill.done { color: var(--muted); }
 .notes-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* quick add ideas */
+.quick > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
+.quick > summary::-webkit-details-marker { display: none; }
+.quick > summary h2 { font-size: 20px; }
+.quick .chev { font-size: 24px; line-height: 1; color: var(--muted); }
+.quick[open] .chev { transform: rotate(90deg); }
+.quick > p { margin: 2px 0 10px; }
+.idea-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.idea-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid transparent; background: var(--cat-soft, var(--surface-2)); color: var(--cat-ink, var(--fg)); font-size: 14px; cursor: pointer; }
+.idea-chip.more { background: transparent; border-color: var(--line-strong); color: var(--fg); font-weight: 600; }
+.ideas-intro { margin: 0 0 12px; max-width: 36rem; }
+.idea-group { margin-top: 20px; }
+.idea-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.idea-head h3 { font-size: 18px; }
+.idea-list { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.idea-card { display: grid; gap: 4px; align-content: start; min-width: 0; text-align: left; padding: 12px 14px 12px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: inset 6px 0 0 var(--cat-dot), var(--shadow); cursor: pointer; }
+.idea-card:hover { border-color: var(--sage); }
+.idea-title { font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.idea-keep { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.idea-remind { justify-self: start; margin-top: 2px; font-size: 12.5px; font-weight: 600; padding: 1px 10px; border-radius: 999px; background: var(--cat-soft); color: var(--cat-ink); }
+.ideas-foot { margin-top: 22px; }
+
 /* reading */
 .reading { display: grid; gap: 16px; justify-items: center; text-align: center; padding-top: 28px; }
 .reading h2 { font-size: 24px; }
@@ -373,12 +395,86 @@ const CATS = [
   { id: 'other',     short: 'Other',        long: 'Other',                    group: 'Other',             who: 'For',              hint: '',                       work: 'Details',        about: 'anything that does not fit the others' },
 ];
 const SENSITIVE = new Set(['legal', 'tax', 'bank', 'insurance']);
+
+/* ---------- quick add ideas ----------
+   [type, title, reminder in months (0 = none), reminder note, work lines, details worth keeping, tip] */
+const IDEAS = [
+  ['car', 'Oil change', 6, 'Next oil change', ['Oil and filter change'], ['Oil type'], 'The sticker in the corner of your windshield shows the mileage for next time.'],
+  ['car', 'Tire rotation', 6, 'Next tire rotation', ['Rotate tires'], ['Tire size'], ''],
+  ['car', 'Registration renewal', 12, 'Registration due', ['Renew registration'], ['Plate', 'Renewal number'], 'Keep the receipt, not just the sticker.'],
+  ['car', 'Smog check', 24, 'Next smog check', ['Smog inspection'], ['Certificate number'], ''],
+  ['car', 'Brake service', 12, 'Next brake check', ['Brake pads', 'Rotors'], [], ''],
+  ['car', 'New tires or battery', 0, '', ['New tires'], ['Brand', 'Warranty ends'], 'Snap the warranty card too.'],
+  ['home', 'HVAC filter change', 3, 'Change the filter', ['Replace air filter'], ['Filter size'], 'The size is printed on the edge of your old filter.'],
+  ['home', 'Smoke and CO detector batteries', 6, 'Change detector batteries', ['Replace batteries', 'Test alarms'], [], 'The weekend the clocks change is an easy reminder.'],
+  ['home', 'Water heater flush', 12, 'Flush the water heater', ['Flush tank'], ['Model', 'Installed'], ''],
+  ['home', 'Gutter cleaning', 6, 'Clean the gutters', ['Clean gutters', 'Check downspouts'], [], ''],
+  ['home', 'Dryer vent cleaning', 12, 'Clean the dryer vent', ['Clean dryer vent'], [], ''],
+  ['home', 'Pest control', 3, 'Next pest control visit', ['Spray and inspect'], ['Company phone'], ''],
+  ['home', 'Paint colors', 0, '', [], ['Brand', 'Color name', 'Color code'], 'Take a photo of the lid. It has everything you need.'],
+  ['home', 'Appliance model and serial numbers', 0, '', [], ['Model number', 'Serial number'], 'The sticker is inside the door or on the back.'],
+  ['pet', 'Vet checkup', 12, 'Next checkup', ['Exam'], ['Weight'], ''],
+  ['pet', 'Vaccines', 12, 'Next vaccines', ['Rabies', 'Distemper'], ['Vet phone'], ''],
+  ['pet', 'Flea and tick medicine', 1, 'Next dose', ['Monthly dose'], ['Brand'], ''],
+  ['pet', 'Grooming', 2, 'Next grooming', ['Bath and trim'], [], ''],
+  ['pet', 'License renewal', 12, 'Renew the license', ['Renew license'], ['Tag number'], ''],
+  ['pet', 'Microchip info', 0, '', [], ['Chip number', 'Registry'], 'Check once a year that the registry has your current phone number.'],
+  ['school', 'School registration', 12, 'Register for next year', ['Register for next year'], ['Student ID'], ''],
+  ['school', 'Permission slip', 0, '', ['Signed and returned'], [], ''],
+  ['school', 'Sports or activity sign-up', 0, '', ['Registration fee'], ['Season', 'Coach'], ''],
+  ['school', 'Report card', 0, '', [], ['Grade', 'Teacher'], ''],
+  ['school', 'Field trip or fundraiser', 0, '', ['Money sent'], ['Due date'], ''],
+  ['health', 'Annual physical', 12, 'Next physical', ['Checkup'], ['Doctor', 'Doctor phone'], ''],
+  ['health', 'Flu shot', 12, 'Next flu shot', ['Flu vaccine'], [], ''],
+  ['health', 'Kids well visit', 12, 'Next well visit', ['Growth check', 'Vaccines'], ['Height', 'Weight'], ''],
+  ['health', 'Prescription', 3, 'Refill', ['Refill'], ['Medicine', 'Pharmacy phone'], ''],
+  ['health', 'Lab results', 0, '', [], ['Test', 'Result'], ''],
+  ['health', 'Specialist visit', 0, '', ['Visit notes'], ['Specialist', 'Phone'], ''],
+  ['dental', 'Dental cleaning', 6, 'Next cleaning', ['Cleaning and exam'], ['Dentist phone'], ''],
+  ['dental', 'Orthodontist adjustment', 2, 'Next adjustment', ['Adjustment'], [], ''],
+  ['dental', 'Eye exam', 12, 'Next eye exam', ['Eye exam'], ['Prescription'], 'Snap the prescription so you can reorder lenses.'],
+  ['dental', 'Glasses or contacts', 0, '', ['New lenses'], ['Brand', 'Warranty ends'], ''],
+  ['money', 'Electric bill', 0, '', [], ['Account (last 4)', 'kWh used'], ''],
+  ['money', 'Water and sewer bill', 0, '', [], ['Account (last 4)'], ''],
+  ['money', 'Internet or phone bill', 0, '', [], ['Plan', 'Account (last 4)'], ''],
+  ['money', 'Annual subscription', 12, 'Renewal coming up', ['Renewal'], ['Service', 'Cancel by'], 'Move the reminder to a few days before the renewal so you have time to cancel.'],
+  ['insurance', 'Auto policy', 12, 'Renew the policy', ['Policy renewal'], ['Policy number (last 4)', 'Agent phone'], ''],
+  ['insurance', 'Home or renters policy', 12, 'Renew the policy', ['Policy renewal'], ['Policy number (last 4)', 'Agent phone'], ''],
+  ['insurance', 'Insurance claim', 0, '', ['What happened'], ['Claim number', 'Adjuster phone'], ''],
+  ['insurance', 'Health insurance card', 0, '', [], ['Member ID (last 4)', 'Group number'], ''],
+  ['bank', 'Mortgage statement', 0, '', [], ['Loan number (last 4)', 'Escrow'], ''],
+  ['bank', 'Car loan', 0, '', [], ['Lender', 'Payoff date'], ''],
+  ['bank', 'Savings or 529 statement', 0, '', [], ['Account (last 4)'], ''],
+  ['tax', 'Tax return', 12, "File next year's return", ['Filed return'], ['Tax year', 'Preparer'], 'Keep the return and the receipts together.'],
+  ['tax', 'W-2 or 1099', 0, '', [], ['Tax year', 'Employer or payer'], ''],
+  ['tax', 'Property tax', 6, 'Next installment due', ['Installment paid'], ['Parcel number'], ''],
+  ['tax', 'Donation receipt', 0, '', [], ['Charity'], ''],
+  ['legal', 'Passport', 0, '', [], ['Passport number (last 4)', 'Expires'], 'Put the expiration date under Next due. Some countries want six months left, so set it a little early.'],
+  ['legal', "Driver's license", 0, '', [], ['License number (last 4)', 'Expires'], 'Put the expiration date under Next due so you get a heads up.'],
+  ['legal', 'Birth certificate', 0, '', [], ['Certificate number (last 4)'], ''],
+  ['legal', 'Will or trust', 0, '', [], ['Attorney', 'Where the original is kept'], ''],
+  ['legal', 'Car title or home deed', 0, '', [], ['Where the original is kept'], ''],
+  ['travel', 'Flight booking', 0, '', [], ['Airline', 'Confirmation code'], ''],
+  ['travel', 'Hotel booking', 0, '', [], ['Confirmation code', 'Check-in date'], ''],
+  ['travel', 'Rental car', 0, '', [], ['Confirmation code'], ''],
+  ['travel', 'Trip itinerary', 0, '', [], ['Dates', 'Who is going'], ''],
+  ['purchase', 'Appliance warranty', 0, '', [], ['Model number', 'Warranty ends'], 'Put the warranty end date under Next due to get a heads up before it runs out.'],
+  ['purchase', 'Electronics receipt', 0, '', [], ['Model', 'Warranty ends'], ''],
+  ['purchase', 'Furniture or big purchase', 0, '', [], ['Delivery date'], ''],
+  ['purchase', 'Store return window', 1, 'Return by', [], ['Order number'], 'Most stores give you about 30 days.'],
+  ['business', 'Equipment purchase', 0, '', [], ['Serial number'], 'Keep receipts for gear you use for work.'],
+  ['business', 'Software or subscription', 12, 'Renewal coming up', ['Renewal'], ['Service', 'Plan'], ''],
+  ['business', 'Course or conference', 0, '', ['Registration'], ['Event', 'Dates'], ''],
+].map(([cat, title, months, next, work, labels, tip]) => ({ cat, title, months, next, work, labels, tip }));
+const FEATURED = ['Oil change', 'HVAC filter change', 'Vet checkup', 'Dental cleaning', 'Annual physical', 'Passport', 'Appliance warranty', 'Permission slip', 'Electric bill']
+  .map(t => IDEAS.find(i => i.title === t));
+const everyText = m => (m === 1 ? 'every month' : m === 12 ? 'every year' : m % 12 === 0 ? 'every ' + (m / 12) + ' years' : 'every ' + m + ' months');
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 const UNSURE_KEYS = new Set(['category', 'title', 'date', 'vendor', 'subject', 'total', 'mileage', 'work', 'details', 'nextDueDate', 'nextDueNote', 'notes']);
 
 /* ---------- state ---------- */
 const state = {
-  view: 'home',            // home | reading | detail | edit
+  view: 'home',            // home | ideas | reading | detail | edit
   storage: 'loading',      // loading | ready | none
   loaded: false,           // true after the first database snapshot
   canWrite: true,
@@ -400,6 +496,9 @@ const state = {
   focusAfter: null,        // id of a field to focus after the next render
   homeScroll: 0,
   restoreScroll: null,
+  ideaCat: 'all',          // type filter on the ideas screen
+  quickOpen: null,         // null = open while the list is short, then whatever the person chose
+  returnTo: 'home',        // where Discard goes for a new record
 };
 const caps = { db: null, sample: null, assets: null, downloads: null, user: null, images: null };
 let sampleBlocked = false;
@@ -633,7 +732,7 @@ function recordFromDraft(d) {
     total: numOrNull(d.total),
     mileage: d.category === 'car' ? intOrNull(d.mileage) : null,
     work: d.work.split('\n').map(s => s.trim().slice(0, 160)).filter(Boolean).slice(0, 30),
-    details: d.details.map(p => ({ label: str(p.label, 60), value: str(p.value, 200) })).filter(p => p.label || p.value).slice(0, 20),
+    details: d.details.map(p => ({ label: str(p.label, 60), value: str(p.value, 200) })).filter(p => p.value).slice(0, 20),
     nextDueDate: next,
     nextDueNote: str(d.nextDueNote, 160),
     nextDueDone: !!(next && d.nextDueDone && next === d.origNextDate),
@@ -819,7 +918,52 @@ function openEdit(focusId) {
   state.view = 'edit';
   render();
 }
+function draftFromIdea(idea) {
+  const d = blankDraft();
+  d.category = idea.cat;
+  d.title = idea.title;
+  d.date = todayISO();
+  d.work = idea.work.join('\n');
+  d.details = idea.labels.map(label => ({ label, value: '' }));
+  if (idea.months) {
+    d.nextDueDate = addMonthsISO(d.date, idea.months);
+    d.nextDueNote = idea.next;
+  }
+  // one car or one pet on file: fill in the name (a home item or a person is too easy to guess wrong)
+  const names = new Map();
+  state.records.filter(r => r.category === idea.cat && r.subject).forEach(r => { if (!names.has(subjectKey(r.subject))) names.set(subjectKey(r.subject), r.subject); });
+  if ((idea.cat === 'car' || idea.cat === 'pet') && names.size === 1) {
+    d.subject = Array.from(names.values())[0];
+    d.autoSubject = true;
+  }
+  d.idea = idea;
+  return d;
+}
+function startFromIdea(idea, from) {
+  if (state.view === 'home') state.homeScroll = window.scrollY;
+  clearScans();
+  state.draft = draftFromIdea(idea);
+  state.editingId = null;
+  state.confirm = null;
+  state.readError = null;
+  state.returnTo = from;
+  state.view = 'edit';
+  render();
+}
+function showIdeas() {
+  if (state.view === 'home') state.homeScroll = window.scrollY;
+  clearScans();
+  state.draft = null;
+  state.editingId = null;
+  state.confirm = null;
+  state.view = 'ideas';
+  render();
+}
+function leaveNew() {
+  if (state.returnTo === 'ideas') showIdeas(); else goHome();
+}
 function addByHand(keepScans) {
+  state.returnTo = 'home';
   if (!keepScans) clearScans();
   state.draft = blankDraft();
   state.editingId = null;
@@ -986,7 +1130,7 @@ function render() {
     state.view = 'home';
     state.viewId = null;
   }
-  const v = state.view === 'home' ? homeView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : editView();
+  const v = state.view === 'home' ? homeView() : state.view === 'ideas' ? ideasView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : editView();
   byId('app').replaceChildren(v);
   if (lastView !== state.view) window.scrollTo(0, 0);
   lastView = state.view;
@@ -1009,6 +1153,7 @@ function homeView() {
       h('div', null, h('span', { class: 'brand' }, 'Paper Trail'), h('span', { class: 'brand-sub' }, 'Household records'))),
     scanCard(),
     h('div', { id: 'comingArea' }),
+    h('div', { id: 'quickArea' }),
     h('section', { class: 'section' },
       h('div', { class: 'section-head' }, h('h2', null, 'Your papers')),
       h('input', {
@@ -1025,11 +1170,57 @@ function refreshHome() {
   if (state.view !== 'home') return;
   const c = byId('comingArea');
   if (c) c.replaceChildren(comingUp());
+  const q = byId('quickArea');
+  if (q) q.replaceChildren(quickAdd());
   refreshList();
 }
 function refreshList() {
   const l = byId('listArea');
   if (l) l.replaceChildren(listContent());
+}
+
+function quickAdd() {
+  const frag = document.createDocumentFragment();
+  if (!(state.canWrite && state.storage === 'ready' && state.loaded)) return frag;
+  const open = state.quickOpen != null ? state.quickOpen : state.records.length < 6;
+  const det = h('details', { class: 'quick', id: 'quick' },
+    h('summary', { onclick: () => { state.quickOpen = !det.open; } }, h('h2', null, 'Quick add ideas'), h('span', { class: 'chev', 'aria-hidden': 'true' }, '›')),
+    h('p', { class: 'muted small' }, 'Not sure what to file? Tap an idea. The form opens with the basics filled in.'),
+    h('div', { class: 'idea-chips' },
+      FEATURED.map(i => h('button', { class: 'idea-chip', 'data-cat': i.cat, type: 'button', onclick: () => startFromIdea(i, 'home') }, i.title)),
+      h('button', { class: 'idea-chip more', type: 'button', id: 'btnMoreIdeas', onclick: showIdeas }, 'See all ideas')));
+  if (open) det.setAttribute('open', '');
+  frag.append(h('section', { class: 'section' }, det));
+  return frag;
+}
+
+function ideasView() {
+  const wrap = h('div', { class: 'ideas' });
+  wrap.append(
+    h('div', { class: 'bar' },
+      h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: goHome }, '← Back'),
+      h('h2', { class: 'bar-title' }, 'Ideas to add')),
+    h('p', { class: 'ideas-intro muted' }, 'Pick one and the form opens with the basics filled in. Change anything, then save. Nothing is filed until you tap Save record.'));
+  const counts = {};
+  IDEAS.forEach(i => { counts[i.cat] = (counts[i.cat] || 0) + 1; });
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter ideas by type' });
+  const chip = (id, label, n) => h('button', {
+    class: 'chip', type: 'button', 'data-idea-cat': id, 'data-cat': id === 'all' ? null : id, 'aria-pressed': String(state.ideaCat === id),
+    onclick: () => { state.ideaCat = id; render(); },
+  }, label, h('span', { class: 'n' }, n));
+  chips.append(chip('all', 'All', IDEAS.length));
+  CATS.forEach(c => { if (counts[c.id]) chips.append(chip(c.id, c.short, counts[c.id])); });
+  wrap.append(chips);
+  CATS.filter(c => counts[c.id] && (state.ideaCat === 'all' || state.ideaCat === c.id)).forEach(c => {
+    wrap.append(h('section', { class: 'idea-group', 'data-cat': c.id },
+      h('div', { class: 'idea-head' }, h('span', { class: 'tag' }, c.short), h('h3', null, c.long)),
+      h('div', { class: 'idea-list' }, IDEAS.filter(i => i.cat === c.id).map(i => h('button', { class: 'idea-card', type: 'button', onclick: () => startFromIdea(i, 'ideas') },
+        h('span', { class: 'idea-title' }, i.title),
+        i.labels.length ? h('span', { class: 'idea-keep' }, 'Keep: ' + i.labels.join(', ')) : null,
+        i.months ? h('span', { class: 'idea-remind' }, 'Reminder ' + everyText(i.months)) : null)))));
+  });
+  wrap.append(h('p', { class: 'ideas-foot' }, 'Not seeing yours? ', h('button', { class: 'linkish', type: 'button', id: 'btnIdeasHand', onclick: () => addByHand(false) }, 'Add a record by hand')));
+  return wrap;
 }
 
 function scanCard() {
@@ -1271,6 +1462,11 @@ function editView() {
     h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: requestLeave }, '← Back'),
     h('h2', { class: 'bar-title' }, isNew ? 'Check the details' : 'Edit record'),
     h('span', { class: 'tag' }, cat.short)));
+  if (d.idea) {
+    wrap.append(h('p', { class: 'notice' }, 'Quick add: ' + d.idea.title + '. ' + (d.idea.tip ? d.idea.tip + ' ' : '')
+      + 'Fill in what you have and tap Save record.' + (d.idea.months ? ' The reminder date is a starting point.' : '')
+      + (d.autoSubject ? ' The name is the only one on file, so it is filled in. Change it if this is for a different one.' : '')));
+  }
   if (d.unsure.length) {
     wrap.append(h('p', { class: 'notice warn' }, 'Claude was not sure about the highlighted spots. Compare them with your photo.'));
   }
@@ -1396,7 +1592,7 @@ function actionsBar(isNew) {
     const kind = state.confirm;
     const text = kind === 'discard' ? 'Throw away this scan without saving?' : kind === 'revert' ? 'Throw away your changes?' : 'Delete this record and its photo?';
     const yes = kind === 'discard' ? 'Yes, discard' : kind === 'revert' ? 'Yes, discard changes' : 'Yes, delete it';
-    const go = kind === 'discard' ? goHome : kind === 'revert' ? () => showDetail(state.editingId) : deleteRecord;
+    const go = kind === 'discard' ? leaveNew : kind === 'revert' ? () => showDetail(state.editingId) : deleteRecord;
     bar.append(
       h('span', { class: 'confirm-text' }, text),
       h('button', { class: kind === 'delete' ? 'btn danger' : 'btn', type: 'button', id: 'btnConfirm', onclick: go }, yes),
