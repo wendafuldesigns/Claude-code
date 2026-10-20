@@ -4,13 +4,26 @@ Scan a receipt, bill, or form. Claude reads it, you check the details, and it ge
 
 Example: a photo of an oil change receipt becomes a record with the date, shop, total, mileage, vehicle, work done, VIN, and when the next change is due.
 
+## Opening a record
+
+Tapping a record opens a **summary**: the photo, the total, who and what it was for, the work done, other details, what is due next, and notes. Nothing on it can be changed by accident.
+
+- **Edit** opens the form, filled in. Change anything, add a detail, clear a field, or delete a detail row, then **Save record**. Saving brings you back to the summary with the new info.
+- Anything that is missing says **Not filled in** with an **Add** link. Tapping Add opens the form with the cursor already in that field.
+- **Cancel** or **Back** from the form asks first if you changed something, and goes straight back if you did not.
+- **Mark done** clears a next-due reminder. **Copy** next to a detail (a VIN, a policy number) copies just that value. **Copy summary** copies the whole record.
+- **Back** from the summary returns to the same spot in the list.
+- People with view-only access see the same summary without Edit, Add, or Mark done.
+- If someone else changes or deletes the record while you are looking at it, the summary updates.
+- **Delete** lives in the edit form, behind a confirmation.
+
 ## Finding and grabbing things
 
 - **Search** matches the title, shop, name, work done, VIN and other details, notes, and dates. Type more than one word to narrow it down ("highlander brake").
 - **Type chips** (Car, Home, Health, Pet, and so on) filter the list. Pick a type and a row of names appears under it: one car, one person, one pet. Tap a name for a history card with the latest mileage, VIN, plate, total spent, and what is due next.
 - **Copy history** puts a car's (or person's, or pet's) full history on the clipboard as plain text, newest first. If the view blocks the clipboard, the text opens in a box, already selected.
-- **Copy summary** (inside any record) copies that one record.
-- **Photos** show as a small thumbnail on each card. Open a record to see them, tap one to view it full screen, or tap **Save photo** to download it.
+- **Copy summary** (on a record's summary) copies that one record.
+- **Photos** show as a small thumbnail on each card. Open a record to see them, tap one to view it full screen, or tap **Save photo** on the summary to download it.
 - **Save as a spreadsheet** exports whatever you are looking at as a CSV: everything, one type, one search, or one car.
 - **Coming up** lists anything with a next-due date in the next 90 days, plus anything overdue. Tap **Done** when it is handled.
 - **Remind me in 3 months, 6 months, or 1 year** (in the Next due section) sets the date from the paper's date. It is meant for vet, dentist, and doctor visits that do not print a next date.

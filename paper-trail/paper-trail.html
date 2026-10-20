@@ -217,7 +217,7 @@ p { margin: 0; }
 .subject-row[data-cat] .chip.sub[aria-pressed="true"] { background: var(--cat-solid); color: var(--cat-solid-ink); font-weight: 600; }
 .history[data-cat] { border-top: 6px solid var(--cat-dot); }
 .due[data-cat] { padding-left: 20px; box-shadow: inset 6px 0 0 var(--cat-dot); }
-.edit[data-cat] { border-top: 6px solid var(--cat-dot); border-radius: 6px 6px 0 0; padding-top: 14px; }
+.edit[data-cat], .detail[data-cat] { border-top: 6px solid var(--cat-dot); border-radius: 6px 6px 0 0; padding-top: 14px; }
 .edit[data-cat] #f-category { border-left: 6px solid var(--cat-dot); }
 
 /* subject history, thumbnails, reminders */
@@ -238,6 +238,35 @@ p { margin: 0; }
 .presets .lead { flex-basis: 100%; font-size: 13px; color: var(--muted); }
 .bar .spacer { flex: 1; }
 .scans .btn { justify-self: start; }
+
+/* record summary */
+.detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-top: 4px; }
+.detail-title { font-size: 28px; line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
+.detail-total { font-family: var(--display); font-weight: 600; font-size: 28px; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.detail-grid { display: grid; gap: 18px; margin-top: 16px; }
+@media (min-width: 760px) {
+  .detail-grid { grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); align-items: start; }
+  .detail .scans { position: sticky; top: 16px; }
+}
+.facts { display: grid; gap: 14px; min-width: 0; }
+.fact-block { display: grid; gap: 8px; min-width: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.fact-block h3 { font-family: var(--ui); font-size: 12.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.facts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 12px 18px; }
+.fact { display: grid; gap: 2px; min-width: 0; }
+.fact-label { font-size: 13px; color: var(--muted); }
+.fact-value { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.fact-value.empty { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; color: var(--muted); }
+.add { color: var(--fg); font-weight: 500; padding: 6px 0; justify-self: start; }
+.work-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.detail-list { display: grid; gap: 10px; }
+.detail-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center; }
+.detail-item .fact-label, .detail-item .fact-value { grid-column: 1; }
+.detail-item .btn { grid-column: 2; grid-row: 1 / span 2; }
+.next { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.due-pill { font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.due-pill.late { background: var(--bad-bg); color: var(--bad); border-color: var(--line-strong); }
+.due-pill.done { color: var(--muted); }
+.notes-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* reading */
 .reading { display: grid; gap: 16px; justify-items: center; text-align: center; padding-top: 28px; }
@@ -349,7 +378,7 @@ const UNSURE_KEYS = new Set(['category', 'title', 'date', 'vendor', 'subject', '
 
 /* ---------- state ---------- */
 const state = {
-  view: 'home',            // home | reading | edit
+  view: 'home',            // home | reading | detail | edit
   storage: 'loading',      // loading | ready | none
   loaded: false,           // true after the first database snapshot
   canWrite: true,
@@ -366,6 +395,11 @@ const state = {
   confirm: null,           // null | 'discard' | 'delete'
   subject: 'all',          // 'all' or a subjectKey, only used while one type is selected
   showAllDue: false,
+  viewId: null,              // the record open on the summary screen
+  baseline: '',            // draft as it was when editing began, to spot unsaved changes
+  focusAfter: null,        // id of a field to focus after the next render
+  homeScroll: 0,
+  restoreScroll: null,
 };
 const caps = { db: null, sample: null, assets: null, downloads: null, user: null, images: null };
 let sampleBlocked = false;
@@ -752,11 +786,36 @@ function stopReading() {
 }
 
 /* ---------- navigation ---------- */
+const recById = id => state.records.find(r => r.id === id) || null;
+function draftSnapshot(d) {
+  return JSON.stringify([d.category, d.title, d.date, d.vendor, d.subject, d.total, d.mileage, d.work,
+    d.details.filter(p => p.label.trim() || p.value.trim()), d.nextDueDate, d.nextDueNote, d.notes]);
+}
 function openRecord(r) {
+  if (state.view === 'home') state.homeScroll = window.scrollY;
+  showDetail(r.id);
+}
+function showDetail(id) {
   clearScans();
+  state.draft = null;
+  state.editingId = null;
+  state.confirm = null;
+  state.viewId = id;
+  state.view = 'detail';
+  render();
+}
+function openEdit(focusId) {
+  const r = recById(state.viewId);
+  if (!r) return;
   state.draft = toDraft(r, []);
+  if (focusId === 'detail-new') {
+    state.draft.details.push({ label: '', value: '' });
+    focusId = 'f-dl-' + (state.draft.details.length - 1);
+  }
+  state.baseline = draftSnapshot(state.draft);
   state.editingId = r.id;
   state.confirm = null;
+  state.focusAfter = focusId || null;
   state.view = 'edit';
   render();
 }
@@ -773,14 +832,21 @@ function goHome() {
   clearScans();
   state.draft = null;
   state.editingId = null;
+  state.viewId = null;
   state.confirm = null;
   state.readError = null;
   state.view = 'home';
+  state.restoreScroll = state.homeScroll;
+  state.homeScroll = 0;
   render();
 }
 function requestLeave() {
-  if (!state.editingId && state.canWrite) { state.confirm = 'discard'; render(); return; }
-  goHome();
+  if (!state.editingId) {
+    if (state.canWrite) { state.confirm = 'discard'; render(); } else goHome();
+    return;
+  }
+  if (state.draft && draftSnapshot(state.draft) !== state.baseline) { state.confirm = 'revert'; render(); return; }
+  showDetail(state.editingId);
 }
 
 /* ---------- saving ---------- */
@@ -820,8 +886,11 @@ async function save() {
     rec.updatedAt = Date.now();
     const ref = state.editingId ? caps.db.doc('records/' + state.editingId) : caps.db.collection('records').doc();
     await ref.set(rec);
+    const saved = cleanRecord(ref.id, rec);
+    const at = state.records.findIndex(x => x.id === saved.id);
+    if (at >= 0) state.records[at] = saved; else state.records.push(saved);
     toast('Saved.' + photoNote);
-    goHome();
+    if (state.editingId) showDetail(saved.id); else goHome();
   } catch (e) {
     const code = e && e.code;
     if (code === 'quota_exceeded') toast('Paper Trail is full. Delete a few records to add more.');
@@ -854,6 +923,8 @@ async function deleteRecord() {
 async function markDone(r) {
   try {
     await caps.db.doc('records/' + r.id).update({ nextDueDone: true });
+    r.nextDueDone = true;
+    if (state.view === 'detail') render();
   } catch (e) {
     toast('That did not save. Try again.');
   }
@@ -910,10 +981,25 @@ function dueLabel(days, date) {
 /* ---------- views ---------- */
 let lastView = '';
 function render() {
-  const v = state.view === 'home' ? homeView() : state.view === 'reading' ? readingView() : editView();
+  if (state.view === 'detail' && !recById(state.viewId)) {
+    toast('That record is not here anymore.');
+    state.view = 'home';
+    state.viewId = null;
+  }
+  const v = state.view === 'home' ? homeView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : editView();
   byId('app').replaceChildren(v);
   if (lastView !== state.view) window.scrollTo(0, 0);
   lastView = state.view;
+  if (state.view === 'home' && state.restoreScroll != null) {
+    const y = state.restoreScroll;
+    state.restoreScroll = null;
+    setTimeout(() => window.scrollTo(0, y), 0);
+  }
+  if (state.focusAfter) {
+    const el = byId(state.focusAfter);
+    state.focusAfter = null;
+    if (el) { el.focus(); el.scrollIntoView({ block: 'center' }); }
+  }
 }
 
 function homeView() {
@@ -1150,19 +1236,19 @@ function closeLightbox() {
   lb.querySelector('img').removeAttribute('src');
 }
 
-function scansPanel() {
-  const imgs = state.scans.map(s => s.url).concat(state.draft.scanIds.map(id => '/_blob/' + id));
+function scansPanel(d, saveable) {
+  const imgs = state.scans.map(s => s.url).concat(d.scanIds.map(id => '/_blob/' + id));
   const box = h('div', { class: 'scans' });
   if (!imgs.length) {
     box.append(h('p', { class: 'muted small' }, 'No photo with this record.'));
     return box;
   }
-  const photoName = i => slug(state.draft.title || state.draft.vendor || 'paper') + (state.draft.date ? '-' + state.draft.date : '') + (imgs.length > 1 ? '-' + (i + 1) : '');
+  const photoName = i => slug(d.title || d.vendor || 'paper') + (d.date ? '-' + d.date : '') + (imgs.length > 1 ? '-' + (i + 1) : '');
   imgs.forEach((src, i) => {
     const img = h('img', { src, alt: 'Photo ' + (i + 1) + ' of the paper' });
     const btn = h('button', { class: 'thumb', type: 'button', 'aria-label': 'View photo ' + (i + 1) + ' larger', onclick: () => openLightbox(src) }, img);
     const stored = i >= state.scans.length;
-    const save = stored && caps.downloads
+    const save = stored && saveable && caps.downloads
       ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnSavePhoto' + i, onclick: () => savePhoto(src, photoName(i)) }, imgs.length > 1 ? 'Save photo ' + (i + 1) : 'Save photo')
       : null;
     img.addEventListener('error', () => {
@@ -1172,7 +1258,7 @@ function scansPanel() {
     box.append(btn);
     if (save) box.append(save);
   });
-  if (!state.editingId && !caps.assets) box.append(h('p', { class: 'muted small' }, 'This view cannot store photos, so only the details will be saved.'));
+  if (!saveable && !state.editingId && !caps.assets) box.append(h('p', { class: 'muted small' }, 'This view cannot store photos, so only the details will be saved.'));
   return box;
 }
 
@@ -1184,9 +1270,7 @@ function editView() {
   wrap.append(h('div', { class: 'bar' },
     h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: requestLeave }, '← Back'),
     h('h2', { class: 'bar-title' }, isNew ? 'Check the details' : 'Edit record'),
-    h('span', { class: 'tag' }, cat.short),
-    isNew ? null : h('span', { class: 'spacer' }),
-    isNew ? null : h('button', { class: 'btn ghost small', type: 'button', id: 'btnCopyRecord', onclick: () => copyText(recordText(recordFromDraft(d)), 'the summary') }, 'Copy summary')));
+    h('span', { class: 'tag' }, cat.short)));
   if (d.unsure.length) {
     wrap.append(h('p', { class: 'notice warn' }, 'Claude was not sure about the highlighted spots. Compare them with your photo.'));
   }
@@ -1301,7 +1385,7 @@ function editView() {
     h('datalist', { id: 'subjects' }, subjects.map(s => h('option', { value: s }))),
     fields);
 
-  const grid = h('div', { class: 'edit-grid' }, scansPanel(), form);
+  const grid = h('div', { class: 'edit-grid' }, scansPanel(d, false), form);
   wrap.append(grid, actionsBar(isNew));
   return wrap;
 }
@@ -1309,19 +1393,86 @@ function editView() {
 function actionsBar(isNew) {
   const bar = h('div', { class: 'actions' });
   if (state.confirm) {
-    const discard = state.confirm === 'discard';
+    const kind = state.confirm;
+    const text = kind === 'discard' ? 'Throw away this scan without saving?' : kind === 'revert' ? 'Throw away your changes?' : 'Delete this record and its photo?';
+    const yes = kind === 'discard' ? 'Yes, discard' : kind === 'revert' ? 'Yes, discard changes' : 'Yes, delete it';
+    const go = kind === 'discard' ? goHome : kind === 'revert' ? () => showDetail(state.editingId) : deleteRecord;
     bar.append(
-      h('span', { class: 'confirm-text' }, discard ? 'Throw away this scan without saving?' : 'Delete this record and its photo?'),
-      h('button', { class: discard ? 'btn' : 'btn danger', type: 'button', id: 'btnConfirm', onclick: discard ? goHome : deleteRecord }, discard ? 'Yes, discard' : 'Yes, delete it'),
-      h('button', { class: 'btn ghost', type: 'button', id: 'btnKeep', onclick: () => { state.confirm = null; render(); } }, 'Keep it'));
+      h('span', { class: 'confirm-text' }, text),
+      h('button', { class: kind === 'delete' ? 'btn danger' : 'btn', type: 'button', id: 'btnConfirm', onclick: go }, yes),
+      h('button', { class: 'btn ghost', type: 'button', id: 'btnKeep', onclick: () => { state.confirm = null; render(); } }, kind === 'revert' ? 'Keep editing' : 'Keep it'));
     return bar;
   }
   if (state.canWrite) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnSave', onclick: save }, 'Save record'));
-  bar.append(h('button', { class: 'btn ghost', type: 'button', id: 'btnClose', onclick: requestLeave }, isNew && state.canWrite ? 'Discard' : 'Close'));
+  bar.append(h('button', { class: 'btn ghost', type: 'button', id: 'btnClose', onclick: requestLeave }, isNew && state.canWrite ? 'Discard' : 'Cancel'));
   if (!isNew && state.canWrite) {
     bar.append(h('span', { class: 'spacer' }), h('button', { class: 'btn danger', type: 'button', id: 'btnDelete', onclick: () => { state.confirm = 'delete'; render(); } }, 'Delete'));
   }
   return bar;
+}
+
+/* ---------- record summary ---------- */
+function detailView() {
+  const r = recById(state.viewId);
+  const cat = CAT[r.category] || CAT.other;
+  const canEdit = state.canWrite;
+  const wrap = h('div', { class: 'detail', 'data-cat': r.category });
+  wrap.append(
+    h('div', { class: 'bar' },
+      h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: goHome }, '← Back'),
+      h('span', { class: 'tag' }, cat.short)),
+    h('div', { class: 'detail-head' },
+      h('h2', { class: 'detail-title' }, r.title || r.vendor || 'Untitled'),
+      r.total != null ? h('span', { class: 'detail-total' }, money(r.total)) : null));
+
+  // a missing value says so, and Add jumps into the form at that spot
+  const add = (what, focusId, text) => (canEdit
+    ? h('button', { class: 'linkish add', type: 'button', 'aria-label': 'Add ' + what, onclick: () => openEdit(focusId) }, text || 'Add')
+    : null);
+  const empty = (what, focusId) => h('p', { class: 'fact-value empty' }, 'Not filled in', add(what, focusId));
+  const fact = (label, value, focusId) => h('div', { class: 'fact' },
+    h('span', { class: 'fact-label' }, label),
+    value ? h('span', { class: 'fact-value' }, value) : h('span', { class: 'fact-value empty' }, 'Not filled in', add(label.toLowerCase(), focusId)));
+
+  const core = h('section', { class: 'fact-block' }, h('div', { class: 'facts-grid' },
+    fact('Date', r.date ? fmtDay(r.date) : '', 'f-date'),
+    fact('Shop or provider', r.vendor, 'f-vendor'),
+    fact(cat.who, r.subject, 'f-subject'),
+    r.category === 'car' ? fact('Mileage', r.mileage != null ? miles(r.mileage) : '', 'f-mileage') : null,
+    r.total == null ? fact('Total', '', 'f-total') : null));
+
+  const work = h('section', { class: 'fact-block' }, h('h3', null, cat.work),
+    r.work.length ? h('ul', { class: 'work-list' }, r.work.map(w => h('li', null, w))) : empty(cat.work.toLowerCase(), 'f-work'));
+
+  const details = h('section', { class: 'fact-block' }, h('h3', null, 'Other details'),
+    r.details.length
+      ? h('div', { class: 'detail-list' }, r.details.map(p => h('div', { class: 'detail-item' },
+        h('span', { class: 'fact-label' }, p.label || 'Detail'),
+        h('span', { class: 'fact-value' }, p.value),
+        p.value ? h('button', { class: 'btn ghost small', type: 'button', 'aria-label': 'Copy ' + (p.label || 'detail'), onclick: () => copyText(p.value, p.label || 'the detail') }, 'Copy') : null)))
+      : empty('details', 'detail-new'),
+    r.details.length ? add('another detail', 'detail-new', 'Add a detail') : null);
+
+  const days = r.nextDueDate ? daysFromToday(r.nextDueDate) : null;
+  const next = h('section', { class: 'fact-block' }, h('h3', null, 'Next due'),
+    r.nextDueDate || r.nextDueNote
+      ? h('div', { class: 'next' },
+        h('span', { class: 'fact-value' }, [r.nextDueDate ? fmtDay(r.nextDueDate) : '', r.nextDueNote].filter(Boolean).join(' · ')),
+        r.nextDueDate && !r.nextDueDone && days != null ? h('span', { class: 'due-pill' + (days < 0 ? ' late' : '') }, dueLabel(days, r.nextDueDate)) : null,
+        r.nextDueDone ? h('span', { class: 'due-pill done' }, 'Marked done') : null,
+        r.nextDueDate && !r.nextDueDone && canEdit ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnDoneNext', onclick: () => markDone(r) }, 'Mark done') : null)
+      : empty('next due', 'f-nextDueDate'));
+
+  const notes = h('section', { class: 'fact-block' }, h('h3', null, 'Notes'),
+    r.notes ? h('p', { class: 'notes-text' }, r.notes) : empty('notes', 'f-notes'));
+
+  wrap.append(h('div', { class: 'detail-grid' }, scansPanel(toDraft(r, []), true), h('div', { class: 'facts' }, core, work, details, next, notes)));
+
+  const bar = h('div', { class: 'actions' });
+  if (canEdit) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnEdit', onclick: () => openEdit() }, 'Edit'));
+  bar.append(h('button', { class: 'btn ghost', type: 'button', id: 'btnCopyRecord', onclick: () => copyText(recordText(r), 'the summary') }, 'Copy summary'));
+  wrap.append(bar);
+  return wrap;
 }
 
 /* ---------- wiring ---------- */
@@ -1355,7 +1506,8 @@ async function init() {
       state.records = snap.docs.map(d => cleanRecord(d.id, d.data()));
       state.storage = 'ready';
       state.loaded = true;
-      if (state.view === 'home') { refreshHome(); }
+      if (state.view === 'home') refreshHome();
+      else if (state.view === 'detail') render();
     }, () => {
       state.storage = 'none';
       if (state.view === 'home') render();
