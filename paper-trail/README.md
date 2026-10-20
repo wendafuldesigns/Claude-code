@@ -8,11 +8,25 @@ Example: a photo of an oil change receipt becomes a record with the date, shop, 
 
 - **App bar:** the Paper Trail mark, today's date, and two round buttons: search (jumps to the search box) and ideas.
 - **Scan hero:** a scan illustration, a big **Take a photo** button, **Pick photos** (up to 4 pages of one paper), and **Add by hand**. A floating **Scan** button appears once you scroll past it.
-- **Coming up:** anything due in the next 90 days, plus anything overdue.
+- **Coming up:** anything due in the next 90 days, plus anything overdue, with an **Add reminder** link.
 - **Your files:** a tile for each of the 15 types, with an icon, its color, and how many papers it holds. Tap a tile with papers to filter the list below (tap again to clear). Tap an empty tile to see ideas for that type. Once you have records, the six biggest types show first and **Show all** reveals the rest. View-only people see only the types that have papers.
 - **Quick add ideas** and **Your papers** (search, type chips, the list) follow.
 
 The scan illustration, the logo, and every icon are inline SVG in the file, so nothing loads from outside. The icons are one table (`ICONS`) near the home screen code.
+
+## Reminders and appointments
+
+A paper you filed and an appointment you already booked are different things, so the add form has a switch at the top: **I did this** or **Coming up**.
+
+- **Coming up** drops the fields that only make sense for a paper (date, total, mileage, work done) and asks for **What is it**, **When** (a date and an optional time), **Where**, and **Who it was for**. The record has no paper date, and it appears under **Coming up** on the home screen. Saving needs a date.
+- The switch shows on every new record you start by hand, on every idea (so "Dental cleaning" can be a booked visit instead of a past one), and on a scanned appointment card. Flipping an idea to Coming up clears the guessed date and the usual work; flipping back restores them.
+- **Add a reminder** is in the scan card and in the Coming up header. It starts a blank reminder.
+- A reminder's summary leads with **When**, with the time and a countdown, then **Where** and **Who**. **Mark done** clears it. **It happened: add details** opens the paper form with the date filled in, so the same record can become a normal one after the visit.
+- **Copy reminder** copies text you can paste into your own calendar or reminders app, for example "Dentist appointment (Maya)", the day and time, and the place.
+- Times show in 12-hour form (2:30 PM). Same-day items sort by time. A time that is not a real time is ignored.
+- A scanned appointment card or confirmation fills in the date and time, and does not become a past service.
+
+Paper Trail does not send alerts. Reminders show up under Coming up when you open the app (anything in the next 90 days, plus anything overdue), and the form says so. For an alert on your phone, use Copy reminder and paste it into your calendar.
 
 ## Quick add ideas
 

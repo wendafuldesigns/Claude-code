@@ -269,6 +269,12 @@ p { margin: 0; }
 .bar .spacer { flex: 1; }
 .scans .btn { justify-self: start; }
 
+/* done or coming up */
+.mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 6px 0 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; }
+.mode-btn { min-height: 44px; border: 0; border-radius: 11px; background: transparent; color: var(--fg); font-weight: 500; cursor: pointer; }
+.mode-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; box-shadow: var(--shadow); }
+.edit[data-cat] .mode-btn[aria-pressed="true"] { background: var(--cat-solid); color: var(--cat-solid-ink); }
+
 /* record summary */
 .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-top: 4px; }
 .detail-title { font-size: 28px; line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
@@ -642,7 +648,7 @@ function recordText(r) {
   if (r.total != null) lines.push('Total: ' + money(r.total));
   if (r.work.length) lines.push('Work: ' + r.work.join('; '));
   r.details.forEach(p => lines.push(p.label ? p.label + ': ' + p.value : p.value));
-  const next = [r.nextDueDate ? fmtDay(r.nextDueDate) : '', r.nextDueNote].filter(Boolean).join(' - ');
+  const next = [r.nextDueDate ? fmtDay(r.nextDueDate) + (r.nextDueTime ? ' at ' + fmtTime(r.nextDueTime) : '') : '', r.nextDueNote].filter(Boolean).join(' - ');
   if (next) lines.push('Next due: ' + next);
   if (r.notes) lines.push('Notes: ' + r.notes);
   return lines.join('\n');
@@ -724,6 +730,30 @@ async function savePhoto(src, name) {
   }
 }
 
+/* ---------- reminders ---------- */
+// a reminder is a record with a date to come back to and no paper date yet
+const isReminder = r => !r.date && !!r.nextDueDate;
+function timeOnly(v) {
+  const m = /^(\d{2}):(\d{2})$/.exec(typeof v === 'string' ? v.trim() : '');
+  return m && +m[1] < 24 && +m[2] < 60 ? m[1] + ':' + m[2] : '';
+}
+function fmtTime(t) {
+  const m = /^(\d{2}):(\d{2})$/.exec(t || '');
+  if (!m) return '';
+  const hr = +m[1];
+  return ((hr % 12) || 12) + ':' + m[2] + ' ' + (hr < 12 ? 'AM' : 'PM');
+}
+function reminderText(r) {
+  const day = parseDay(r.nextDueDate);
+  const when = day ? day.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + (r.nextDueTime ? ' at ' + fmtTime(r.nextDueTime) : '') : '';
+  const what = r.nextDueNote || r.title || r.vendor || 'Reminder';
+  const lines = [what + (r.subject ? ' (' + r.subject + ')' : ''), when];
+  if (r.vendor && r.vendor !== what) lines.push(r.vendor);
+  const phone = r.details.find(p => /phone/i.test(p.label) && p.value);
+  if (phone) lines.push(phone.value);
+  return lines.filter(Boolean).join('\n');
+}
+
 /* ---------- record shapes ----------
    stored record: numbers are numbers, lists are arrays
    draft (form):  everything is a string, "work" is one line per item */
@@ -744,6 +774,7 @@ function cleanRecord(id, x) {
       : [],
     nextDueDate: dateOnly(x.nextDueDate),
     nextDueNote: str(x.nextDueNote, 160),
+    nextDueTime: timeOnly(x.nextDueTime),
     nextDueDone: x.nextDueDone === true,
     notes: str(x.notes, 600),
     scanIds: Array.isArray(x.scanIds) ? x.scanIds.filter(s => typeof s === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(s)).slice(0, 8) : [],
@@ -757,7 +788,8 @@ function toDraft(r, unsure) {
     mileage: r.mileage == null ? '' : String(r.mileage),
     work: r.work.join('\n'),
     details: r.details.map(p => ({ label: p.label, value: p.value })),
-    nextDueDate: r.nextDueDate, nextDueNote: r.nextDueNote, nextDueDone: r.nextDueDone, origNextDate: r.nextDueDate,
+    nextDueDate: r.nextDueDate, nextDueNote: r.nextDueNote, nextDueTime: r.nextDueTime, nextDueDone: r.nextDueDone, origNextDate: r.nextDueDate,
+    mode: isReminder(r) ? 'coming' : 'did', wasReminder: isReminder(r), suggestedNext: '',
     notes: r.notes, scanIds: r.scanIds.slice(), createdAt: r.createdAt, unsure: unsure || [],
   };
 }
@@ -783,6 +815,7 @@ function recordFromDraft(d) {
     details: d.details.map(p => ({ label: str(p.label, 60), value: str(p.value, 200) })).filter(p => p.value).slice(0, 20),
     nextDueDate: next,
     nextDueNote: str(d.nextDueNote, 160),
+    nextDueTime: next ? timeOnly(d.nextDueTime) : '',
     nextDueDone: !!(next && d.nextDueDone && next === d.origNextDate),
     notes: str(d.notes, 600),
   };
@@ -810,6 +843,7 @@ function buildPrompt() {
     '"work": a list of the services, repairs, or line items as short phrases. At most 12.',
     '"details": a list of {"label", "value"} for other facts printed on the paper that are worth keeping, such as VIN, license plate, invoice or order number, phone number, address, warranty end date, tax, payment method, or policy number. At most 10.',
     '"nextDueDate": YYYY-MM-DD if the paper says when the next service or follow up is due, otherwise null.',
+    '"nextDueTime": the time of that next visit as HH:MM in 24-hour time, only if the paper gives one, otherwise null.',
     '"nextDueNote": what is due next, like "Next oil change at 53,000 mi", or null.',
     '"notes": anything else the family should remember in one or two short sentences, or null.',
     '"unsure": a list of the key names above that you could not read clearly or had to guess.',
@@ -818,6 +852,7 @@ function buildPrompt() {
     '- Use only what is printed on the paper. If a value is not there, use null or an empty list. Never invent a value.',
     '- Never include a full card number, bank account number, or Social Security number. Keep the last 4 digits at most.',
     '- For a car paper, the title is the main service, "work" lists everything done including parts, the vehicle goes in "subject", and the VIN and plate go in "details".',
+    '- An appointment card or confirmation for a visit that has not happened yet is not a past service. Leave "date" null and put the visit in "nextDueDate", "nextDueTime", and "nextDueNote".',
     '- Keep every text value short. No Markdown.',
   ].join('\n');
 }
@@ -936,7 +971,7 @@ function stopReading() {
 const recById = id => state.records.find(r => r.id === id) || null;
 function draftSnapshot(d) {
   return JSON.stringify([d.category, d.title, d.date, d.vendor, d.subject, d.total, d.mileage, d.work,
-    d.details.filter(p => p.label.trim() || p.value.trim()), d.nextDueDate, d.nextDueNote, d.notes]);
+    d.details.filter(p => p.label.trim() || p.value.trim()), d.nextDueDate, d.nextDueTime, d.nextDueNote, d.notes]);
 }
 function openRecord(r) {
   if (state.view === 'home') state.homeScroll = window.scrollY;
@@ -951,10 +986,11 @@ function showDetail(id) {
   state.view = 'detail';
   render();
 }
-function openEdit(focusId) {
+function openEdit(focusId, mode) {
   const r = recById(state.viewId);
   if (!r) return;
   state.draft = toDraft(r, []);
+  if (mode) setMode(state.draft, mode);
   if (focusId === 'detail-new') {
     state.draft.details.push({ label: '', value: '' });
     focusId = 'f-dl-' + (state.draft.details.length - 1);
@@ -963,6 +999,41 @@ function openEdit(focusId) {
   state.editingId = r.id;
   state.confirm = null;
   state.focusAfter = focusId || null;
+  state.view = 'edit';
+  render();
+}
+function setMode(d, mode) {
+  if (d.mode === mode) return;
+  if (mode === 'coming') {
+    if (d.idea && d.nextDueDate && d.nextDueDate === d.suggestedNext) d.nextDueDate = '';
+    d.date = '';
+    if (d.idea && d.work === d.idea.work.join('\n')) d.work = '';
+    if (d.idea && d.nextDueNote === d.idea.next) d.nextDueNote = '';
+  } else if (d.idea) {
+    d.date = todayISO();
+    if (!d.work.trim()) d.work = d.idea.work.join('\n');
+    d.nextDueDate = d.suggestedNext || '';
+    d.nextDueNote = d.idea.next || '';
+    d.nextDueTime = '';
+  } else {
+    d.date = d.nextDueDate && d.nextDueDate <= todayISO() ? d.nextDueDate : todayISO();
+    if (d.nextDueNote.trim() === d.title.trim()) d.nextDueNote = '';
+    d.nextDueDate = '';
+    d.nextDueTime = '';
+  }
+  d.mode = mode;
+}
+function startReminder(from) {
+  if (state.view === 'home') state.homeScroll = window.scrollY;
+  clearScans();
+  const d = blankDraft();
+  d.mode = 'coming';
+  state.draft = d;
+  state.editingId = null;
+  state.confirm = null;
+  state.readError = null;
+  state.returnTo = from || 'home';
+  state.focusAfter = 'f-title';
   state.view = 'edit';
   render();
 }
@@ -976,6 +1047,7 @@ function draftFromIdea(idea) {
   if (idea.months) {
     d.nextDueDate = addMonthsISO(d.date, idea.months);
     d.nextDueNote = idea.next;
+    d.suggestedNext = d.nextDueDate;
   }
   // one car or one pet on file: fill in the name (a home item or a person is too easy to guess wrong)
   const names = new Map();
@@ -1055,6 +1127,13 @@ async function save() {
     if (t) t.focus();
     return;
   }
+  if (d.mode === 'coming' && !dateOnly(d.nextDueDate)) {
+    toast('Pick a date so it shows up under Coming up.');
+    const f = byId('f-nextDueDate');
+    if (f) f.focus();
+    return;
+  }
+  if (d.mode === 'coming' && !d.nextDueNote.trim()) d.nextDueNote = d.title.trim() || d.vendor.trim();
   state.saving = true;
   const btn = byId('btnSave');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
@@ -1093,7 +1172,7 @@ async function save() {
     else if (code === 'invalid_argument') toast('You can look at these records but not change them.');
     else toast('That did not save. Try again.');
     state.saving = false;
-    if (btn) { btn.disabled = false; btn.textContent = 'Save record'; }
+    if (btn) { btn.disabled = false; btn.textContent = d.mode === 'coming' ? 'Save reminder' : 'Save record'; }
     return;
   }
   state.saving = false;
@@ -1137,7 +1216,7 @@ async function exportCsv(list, tag) {
     r.date, CAT[r.category].long, r.title, r.vendor, r.subject,
     r.total == null ? '' : r.total.toFixed(2), r.mileage == null ? '' : r.mileage,
     r.work.join('; '), r.details.map(p => p.label + ': ' + p.value).join('; '),
-    [r.nextDueDate, r.nextDueNote].filter(Boolean).join(' '), r.notes,
+    [r.nextDueDate, fmtTime(r.nextDueTime), r.nextDueNote].filter(Boolean).join(' '), r.notes,
   ]);
   const csv = '﻿' + [cols].concat(rows).map(row => row.map(esc).join(',')).join('\r\n');
   try {
@@ -1164,14 +1243,12 @@ function comingItems() {
     .filter(r => r.nextDueDate && !r.nextDueDone)
     .map(r => ({ r, days: daysFromToday(r.nextDueDate) }))
     .filter(x => x.days != null && x.days <= 90)
-    .sort((a, b) => a.days - b.days);
+    .sort((a, b) => a.days - b.days || (a.r.nextDueTime || '99:99').localeCompare(b.r.nextDueTime || '99:99'));
 }
-function dueLabel(days, date) {
+function dueLabel(days, date, time) {
   if (days < 0) return 'Overdue by ' + (-days) + (days === -1 ? ' day' : ' days');
-  if (days === 0) return 'Due today';
-  if (days === 1) return 'Due tomorrow';
-  if (days <= 14) return 'In ' + days + ' days';
-  return 'Due ' + fmtDay(date, { month: 'short', day: 'numeric' });
+  const t = days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : days <= 14 ? 'In ' + days + ' days' : 'Due ' + fmtDay(date, { month: 'short', day: 'numeric' });
+  return time ? t + ' · ' + fmtTime(time) : t;
 }
 
 /* ---------- views ---------- */
@@ -1221,6 +1298,7 @@ const ICONS = {
   image: '<rect x="3.6" y="4.6" width="16.8" height="14.8" rx="2.6"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.9-4.6 3.5 3.2 3-2.7 5 4.4"/>',
   pencil: '<path d="M4.2 19.8l.9-3.9L16.4 4.6a1.9 1.9 0 0 1 2.7 0l.3.3a1.9 1.9 0 0 1 0 2.7L8.1 18.9z"/><path d="M14.6 6.4l3 3"/>',
   bulb: '<path d="M9.6 18.2h4.8M10.2 21h3.6"/><path d="M12 3.4a5.6 5.6 0 0 0-3.3 10.1c.5.4.8.9.8 1.5v.2h5v-.2c0-.6.3-1.1.8-1.5A5.6 5.6 0 0 0 12 3.4z"/>',
+  bell: '<path d="M6.4 16.6V11a5.6 5.6 0 0 1 11.2 0v5.6l1.6 2H4.8z"/><path d="M10 20.6a2.2 2.2 0 0 0 4 0"/>',
   search: '<circle cx="10.8" cy="10.8" r="6"/><path d="M15.3 15.3l4.6 4.6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
 };
@@ -1412,7 +1490,7 @@ function ideasView() {
     h('div', { class: 'bar' },
       h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: goHome }, '← Back'),
       h('h2', { class: 'bar-title' }, 'Ideas to add')),
-    h('p', { class: 'ideas-intro muted' }, 'Pick one and the form opens with the basics filled in. Change anything, then save. Nothing is filed until you tap Save record.'));
+    h('p', { class: 'ideas-intro muted' }, 'Pick one and the form opens with the basics filled in. Change anything, then save. Nothing is filed until you tap Save record. Already booked? Open the idea and tap Coming up.'));
   const counts = {};
   IDEAS.forEach(i => { counts[i.cat] = (counts[i.cat] || 0) + 1; });
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter ideas by type' });
@@ -1457,7 +1535,9 @@ function scanCard() {
   }
   const foot = h('div', { class: 'scan-foot' });
   if (state.canWrite && state.storage !== 'none') {
-    foot.append(h('button', { class: 'linkish', type: 'button', id: 'btnHand', onclick: () => addByHand(false) }, icon('pencil', 16), 'Add by hand'));
+    foot.append(
+      h('button', { class: 'linkish', type: 'button', id: 'btnHand', onclick: () => addByHand(false) }, icon('pencil', 16), 'Add by hand'),
+      h('button', { class: 'linkish', type: 'button', id: 'btnReminder', onclick: () => startReminder('home') }, icon('bell', 16), 'Add a reminder'));
   }
   if (canScanNow()) foot.append(h('p', { class: 'scan-note' }, 'Tip: get close so the text fills the photo. More than one page? Pick all the photos together.'));
   if (foot.childNodes.length) card.append(foot);
@@ -1473,12 +1553,15 @@ function comingUp() {
   items.forEach(({ r, days }) => {
     list.append(h('div', { class: 'due' + (days < 0 ? ' late' : ''), 'data-cat': r.category },
       h('button', { class: 'due-body', type: 'button', onclick: () => openRecord(r) },
-        h('span', { class: 'due-when' }, dueLabel(days, r.nextDueDate), h('span', { class: 'tag' }, catShort(r.category))),
+        h('span', { class: 'due-when' }, dueLabel(days, r.nextDueDate, r.nextDueTime), h('span', { class: 'tag' }, catShort(r.category))),
         h('span', { class: 'due-note' }, r.nextDueNote || ('Follow up: ' + (r.title || r.vendor))),
-        r.subject ? h('span', { class: 'due-for' }, r.subject) : null),
+        (isReminder(r) ? r.subject || r.vendor : r.subject) ? h('span', { class: 'due-for' }, (isReminder(r) ? [r.subject, r.vendor] : [r.subject]).filter(Boolean).join(' · ')) : null),
       state.canWrite ? h('button', { class: 'btn ghost small', type: 'button', onclick: () => markDone(r) }, 'Done') : null));
   });
-  const section = h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', null, 'Coming up')), list);
+  const section = h('section', { class: 'section' },
+    h('div', { class: 'section-head' }, h('h2', null, 'Coming up'),
+      state.canWrite ? h('button', { class: 'linkish', type: 'button', id: 'btnReminderDue', onclick: () => startReminder('home') }, 'Add reminder') : null),
+    list);
   if (all.length > 4) {
     section.append(h('button', {
       class: 'linkish due-more', type: 'button', id: 'btnDueMore',
@@ -1577,7 +1660,7 @@ function historyCard(name, recs, isCar) {
   if (s.latest) add('Latest', [s.latest.title || s.latest.vendor, s.latest.date ? fmtDay(s.latest.date) : ''].filter(Boolean).join(' · '));
   if (isCar && s.mileage != null) add('Mileage', miles(s.mileage) + (s.mileageDate ? ' on ' + fmtDay(s.mileageDate) : ''));
   if (isCar) { add('VIN', s.vin); add('Plate', s.plate); }
-  if (s.due) add('Next due', [fmtDay(s.due.nextDueDate), s.due.nextDueNote].filter(Boolean).join(' · '));
+  if (s.due) add('Next due', [fmtDay(s.due.nextDueDate) + (s.due.nextDueTime ? ' at ' + fmtTime(s.due.nextDueTime) : ''), s.due.nextDueNote].filter(Boolean).join(' · '));
   const actions = h('div', { class: 'history-actions' },
     h('button', { class: 'btn small', type: 'button', id: 'btnCopyHistory', onclick: () => copyText(historyText(name, recs, isCar), 'the history') }, 'Copy history'),
     caps.downloads ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnExportSubject', onclick: () => exportCsv(recs, name) }, 'Save as spreadsheet') : null);
@@ -1595,7 +1678,7 @@ function recordCard(r) {
   const work = r.work.length ? r.work.slice(0, 3).join(', ') + (r.work.length > 3 ? ', and more' : '') : '';
   return h('button', { class: 'card', 'data-cat': r.category, type: 'button', onclick: () => openRecord(r) },
     h('span', { class: 'card-main' },
-      h('span', { class: 'card-top' }, h('span', { class: 'tag' }, catShort(r.category)), r.date ? h('span', { class: 'when' }, fmtDay(r.date)) : null),
+      h('span', { class: 'card-top' }, h('span', { class: 'tag' }, catShort(r.category)), r.date ? h('span', { class: 'when' }, fmtDay(r.date)) : (r.nextDueDate ? h('span', { class: 'when' }, 'Due ' + fmtDay(r.nextDueDate) + (r.nextDueTime ? ' · ' + fmtTime(r.nextDueTime) : '')) : null)),
       h('span', { class: 'card-title' }, r.title || r.vendor || 'Untitled'),
       meta ? h('span', { class: 'card-meta' }, meta) : null,
       work ? h('span', { class: 'card-work' }, work) : null),
@@ -1679,7 +1762,8 @@ function editView() {
   if (d.idea) {
     wrap.append(h('p', { class: 'notice' }, 'Quick add: ' + d.idea.title + '. ' + (d.idea.tip ? d.idea.tip + ' ' : '')
       + 'Fill in what you have and tap Save record.' + (d.idea.months ? ' The reminder date is a starting point.' : '')
-      + (d.autoSubject ? ' The name is the only one on file, so it is filled in. Change it if this is for a different one.' : '')));
+      + (d.autoSubject ? ' The name is the only one on file, so it is filled in. Change it if this is for a different one.' : '')
+      + ' Already booked? Tap Coming up below.'));
   }
   if (d.unsure.length) {
     wrap.append(h('p', { class: 'notice warn' }, 'Claude was not sure about the highlighted spots. Compare them with your photo.'));
@@ -1752,8 +1836,10 @@ function editView() {
     onclick: () => { d.details.push({ label: '', value: '' }); render(); const el = byId('f-dl-' + (d.details.length - 1)); if (el) el.focus(); },
   }, 'Add a detail'));
 
+  const coming = d.mode === 'coming';
   const nextDate = h('input', { id: 'f-nextDueDate', type: 'date', value: d.nextDueDate });
-  const nextNote = h('input', { id: 'f-nextDueNote', type: 'text', maxlength: 160, placeholder: 'Next oil change at 53,000 mi', value: d.nextDueNote });
+  const nextTime = h('input', { id: 'f-nextDueTime', type: 'time', value: d.nextDueTime });
+  const nextNote = h('input', { id: 'f-nextDueNote', type: 'text', maxlength: 160, placeholder: coming ? 'Dentist appointment' : 'Next oil change at 53,000 mi', value: d.nextDueNote });
   const nextWord = { health: 'Next visit', pet: 'Next visit', car: 'Next service', home: 'Next service' }[d.category] || 'Follow up';
   const setNext = months => {
     const iso = addMonthsISO(d.date || todayISO(), months);
@@ -1768,33 +1854,45 @@ function editView() {
       h('button', { class: 'chip', type: 'button', id: 'btnNext' + m, onclick: () => setNext(m) }, label)));
   const nextUnsure = d.unsure.includes('nextDueDate') || d.unsure.includes('nextDueNote');
   const nextBox = h('div', { class: 'field' + (nextUnsure ? ' unsure' : ''), 'data-key': 'nextDue' },
-    h('span', { class: 'label' }, 'Next due', nextUnsure ? h('span', { class: 'flag' }, 'Check this') : null),
-    h('div', { class: 'row2' }, nextDate, nextNote),
-    presets,
-    h('p', { class: 'hint' }, 'With a date, this shows up under Coming up on the home screen. The shortcuts count from the date of the paper.'));
-  nextDate.setAttribute('aria-label', 'Next due date');
-  nextNote.setAttribute('aria-label', 'What is due next');
+    h('span', { class: 'label' }, coming ? 'When' : 'Next due', nextUnsure ? h('span', { class: 'flag' }, 'Check this') : null),
+    h('div', { class: 'row2 tight' }, nextDate, nextTime),
+    coming ? null : nextNote,
+    coming ? null : presets,
+    h('p', { class: 'hint' }, coming
+      ? 'Shows up under Coming up on the home screen. The time is optional. Paper Trail does not send alerts, so check back here.'
+      : 'With a date, this shows up under Coming up on the home screen. The time is optional. The shortcuts count from the date of the paper.'));
+  nextDate.setAttribute('aria-label', 'Date');
+  nextTime.setAttribute('aria-label', 'Time (optional)');
+  nextNote.setAttribute('aria-label', coming ? 'What is coming up' : 'What is due next');
   const clearNext = () => { clearUnsure('nextDueDate', nextBox); clearUnsure('nextDueNote', nextBox); };
   nextDate.addEventListener('input', () => { d.nextDueDate = nextDate.value; clearNext(); });
+  nextTime.addEventListener('input', () => { d.nextDueTime = nextTime.value; });
   nextNote.addEventListener('input', () => { d.nextDueNote = nextNote.value; clearNext(); });
 
   const fields = h('fieldset', state.canWrite ? null : { disabled: true },
     catField,
-    text('title', 'Title', { placeholder: 'Oil change' }),
-    h('div', { class: 'row2 tight' }, text('date', 'Date', { type: 'date' }), totalField),
+    text('title', coming ? 'What is it?' : 'Title', { placeholder: coming ? 'Dentist appointment' : 'Oil change' }),
+    coming ? nextBox : null,
+    coming ? null : h('div', { class: 'row2 tight' }, text('date', 'Date', { type: 'date' }), totalField),
     h('div', { class: 'row2' },
-      text('vendor', 'Shop or provider', { placeholder: 'Who it was from' }),
+      text('vendor', coming ? 'Where' : 'Shop or provider', { placeholder: coming ? 'Office or place' : 'Who it was from' }),
       text('subject', cat.who, { placeholder: cat.hint, list: 'subjects' })),
-    d.category === 'car' ? text('mileage', 'Mileage', { inputmode: 'numeric', placeholder: '48210', num: true }) : null,
-    field('work', cat.work, workArea, 'One item per line.'),
+    !coming && d.category === 'car' ? text('mileage', 'Mileage', { inputmode: 'numeric', placeholder: '48210', num: true }) : null,
+    coming ? null : field('work', cat.work, workArea, 'One item per line.'),
     details,
-    nextBox,
+    coming ? null : nextBox,
     field('notes', 'Notes', h('textarea', { id: 'f-notes', rows: 3, maxlength: 600, value: d.notes })));
 
   const form = h('form', { class: 'fields', onsubmit: e => e.preventDefault() },
     h('datalist', { id: 'subjects' }, subjects.map(s => h('option', { value: s }))),
     fields);
 
+  const showMode = state.canWrite && (isNew ? (!state.scans.length || d.wasReminder) : (d.mode === 'coming' || d.wasReminder));
+  if (showMode) {
+    wrap.append(h('div', { class: 'mode', role: 'group', 'aria-label': 'Is this done or coming up?' },
+      h('button', { class: 'mode-btn', type: 'button', id: 'modeDid', 'aria-pressed': String(d.mode === 'did'), onclick: () => { setMode(d, 'did'); render(); } }, d.wasReminder ? 'It happened' : 'I did this'),
+      h('button', { class: 'mode-btn', type: 'button', id: 'modeComing', 'aria-pressed': String(d.mode === 'coming'), onclick: () => { setMode(d, 'coming'); render(); } }, 'Coming up')));
+  }
   const grid = h('div', { class: 'edit-grid' }, scansPanel(d, false), form);
   wrap.append(grid, actionsBar(isNew));
   return wrap;
@@ -1804,7 +1902,7 @@ function actionsBar(isNew) {
   const bar = h('div', { class: 'actions' });
   if (state.confirm) {
     const kind = state.confirm;
-    const text = kind === 'discard' ? 'Throw away this scan without saving?' : kind === 'revert' ? 'Throw away your changes?' : 'Delete this record and its photo?';
+    const text = kind === 'discard' ? (state.scans.length ? 'Throw away this scan without saving?' : 'Throw away this without saving?') : kind === 'revert' ? 'Throw away your changes?' : 'Delete this record and its photo?';
     const yes = kind === 'discard' ? 'Yes, discard' : kind === 'revert' ? 'Yes, discard changes' : 'Yes, delete it';
     const go = kind === 'discard' ? leaveNew : kind === 'revert' ? () => showDetail(state.editingId) : deleteRecord;
     bar.append(
@@ -1813,7 +1911,7 @@ function actionsBar(isNew) {
       h('button', { class: 'btn ghost', type: 'button', id: 'btnKeep', onclick: () => { state.confirm = null; render(); } }, kind === 'revert' ? 'Keep editing' : 'Keep it'));
     return bar;
   }
-  if (state.canWrite) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnSave', onclick: save }, 'Save record'));
+  if (state.canWrite) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnSave', onclick: save }, state.draft && state.draft.mode === 'coming' ? 'Save reminder' : 'Save record'));
   bar.append(h('button', { class: 'btn ghost', type: 'button', id: 'btnClose', onclick: requestLeave }, isNew && state.canWrite ? 'Discard' : 'Cancel'));
   if (!isNew && state.canWrite) {
     bar.append(h('span', { class: 'spacer' }), h('button', { class: 'btn danger', type: 'button', id: 'btnDelete', onclick: () => { state.confirm = 'delete'; render(); } }, 'Delete'));
@@ -1844,14 +1942,15 @@ function detailView() {
     h('span', { class: 'fact-label' }, label),
     value ? h('span', { class: 'fact-value' }, value) : h('span', { class: 'fact-value empty' }, 'Not filled in', add(label.toLowerCase(), focusId)));
 
+  const rem = isReminder(r);
   const core = h('section', { class: 'fact-block' }, h('div', { class: 'facts-grid' },
-    fact('Date', r.date ? fmtDay(r.date) : '', 'f-date'),
-    fact('Shop or provider', r.vendor, 'f-vendor'),
+    rem ? null : fact('Date', r.date ? fmtDay(r.date) : '', 'f-date'),
+    fact(rem ? 'Where' : 'Shop or provider', r.vendor, 'f-vendor'),
     fact(cat.who, r.subject, 'f-subject'),
-    r.category === 'car' ? fact('Mileage', r.mileage != null ? miles(r.mileage) : '', 'f-mileage') : null,
-    r.total == null ? fact('Total', '', 'f-total') : null));
+    !rem && r.category === 'car' ? fact('Mileage', r.mileage != null ? miles(r.mileage) : '', 'f-mileage') : null,
+    !rem && r.total == null ? fact('Total', '', 'f-total') : null));
 
-  const work = h('section', { class: 'fact-block' }, h('h3', null, cat.work),
+  const work = rem && !r.work.length ? null : h('section', { class: 'fact-block' }, h('h3', null, cat.work),
     r.work.length ? h('ul', { class: 'work-list' }, r.work.map(w => h('li', null, w))) : empty(cat.work.toLowerCase(), 'f-work'));
 
   const details = h('section', { class: 'fact-block' }, h('h3', null, 'Other details'),
@@ -1864,19 +1963,22 @@ function detailView() {
     r.details.length ? add('another detail', 'detail-new', 'Add a detail') : null);
 
   const days = r.nextDueDate ? daysFromToday(r.nextDueDate) : null;
-  const next = h('section', { class: 'fact-block' }, h('h3', null, 'Next due'),
+  const whenText = [r.nextDueDate ? fmtDay(r.nextDueDate) + (r.nextDueTime ? ' at ' + fmtTime(r.nextDueTime) : '') : '', rem && r.nextDueNote === r.title ? '' : r.nextDueNote].filter(Boolean).join(' · ');
+  const next = h('section', { class: 'fact-block' }, h('h3', null, rem ? 'When' : 'Next due'),
     r.nextDueDate || r.nextDueNote
       ? h('div', { class: 'next' },
-        h('span', { class: 'fact-value' }, [r.nextDueDate ? fmtDay(r.nextDueDate) : '', r.nextDueNote].filter(Boolean).join(' · ')),
+        h('span', { class: 'fact-value' }, whenText),
         r.nextDueDate && !r.nextDueDone && days != null ? h('span', { class: 'due-pill' + (days < 0 ? ' late' : '') }, dueLabel(days, r.nextDueDate)) : null,
         r.nextDueDone ? h('span', { class: 'due-pill done' }, 'Marked done') : null,
-        r.nextDueDate && !r.nextDueDone && canEdit ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnDoneNext', onclick: () => markDone(r) }, 'Mark done') : null)
+        r.nextDueDate && !r.nextDueDone && canEdit ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnDoneNext', onclick: () => markDone(r) }, 'Mark done') : null,
+        r.nextDueDate ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnCopyReminder', onclick: () => copyText(reminderText(r), 'the reminder') }, 'Copy reminder') : null,
+        rem && canEdit ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnHappened', onclick: () => openEdit(null, 'did') }, 'It happened: add details') : null)
       : empty('next due', 'f-nextDueDate'));
 
   const notes = h('section', { class: 'fact-block' }, h('h3', null, 'Notes'),
     r.notes ? h('p', { class: 'notes-text' }, r.notes) : empty('notes', 'f-notes'));
 
-  wrap.append(h('div', { class: 'detail-grid' }, scansPanel(toDraft(r, []), true), h('div', { class: 'facts' }, core, work, details, next, notes)));
+  wrap.append(h('div', { class: 'detail-grid' }, scansPanel(toDraft(r, []), true), h('div', { class: 'facts' }, rem ? [next, core, work, details, notes] : [core, work, details, next, notes])));
 
   const bar = h('div', { class: 'actions' });
   if (canEdit) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnEdit', onclick: () => openEdit() }, 'Edit'));
