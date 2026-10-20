@@ -4,6 +4,16 @@ Scan a receipt, bill, or form. Claude reads it, you check the details, and it ge
 
 Example: a photo of an oil change receipt becomes a record with the date, shop, total, mileage, vehicle, work done, VIN, and when the next change is due.
 
+## The home screen
+
+- **App bar:** the Paper Trail mark, today's date, and two round buttons: search (jumps to the search box) and ideas.
+- **Scan hero:** a scan illustration, a big **Take a photo** button, **Pick photos** (up to 4 pages of one paper), and **Add by hand**. A floating **Scan** button appears once you scroll past it.
+- **Coming up:** anything due in the next 90 days, plus anything overdue.
+- **Your files:** a tile for each of the 15 types, with an icon, its color, and how many papers it holds. Tap a tile with papers to filter the list below (tap again to clear). Tap an empty tile to see ideas for that type. Once you have records, the six biggest types show first and **Show all** reveals the rest. View-only people see only the types that have papers.
+- **Quick add ideas** and **Your papers** (search, type chips, the list) follow.
+
+The scan illustration, the logo, and every icon are inline SVG in the file, so nothing loads from outside. The icons are one table (`ICONS`) near the home screen code.
+
 ## Quick add ideas
 
 Not sure what is worth filing? The home screen has a **Quick add ideas** row: Oil change, HVAC filter change, Vet checkup, Dental cleaning, Annual physical, Passport, Appliance warranty, Permission slip, Electric bill. **See all ideas** opens 66 ideas in 14 groups (Car, Home, Pet, School, Health, Dental, Bills, Insurance, Banking, Taxes, Legal and ID, Travel, Purchases, Business), with filter chips and a color for each type.

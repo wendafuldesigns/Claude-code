@@ -22,6 +22,10 @@
   --hero-btn-bg: #fdfff0;
   --hero-btn-fg: #3b4a42;
   --hero-line: rgba(253, 255, 240, 0.5);
+  --hero-bg-2: #3e4d45;
+  --ill-paper: #fdfff0;
+  --ill-line: #94a69c;
+  --ill-beam: #c4f0d6;
   --tag-bg: #dadfdc;
   --tag-fg: #3b4a42;
   --cat-soft-l: 90%;
@@ -54,7 +58,7 @@
     --hero-fg: #eef1e6;
     --hero-btn-bg: #dadfdc;
     --hero-btn-fg: #25322b;
-    --hero-line: rgba(238, 241, 230, 0.45);
+    --hero-line: rgba(238, 241, 230, 0.45); --hero-bg-2: #222d28;
     --tag-bg: #2f3a33;
     --tag-fg: #cbd6cf; --cat-soft-l: 24%; --cat-ink-l: 86%; --cat-dot-l: 62%; --cat-solid-l: 66%; --cat-solid-ink: #14201a;
     --warn: #e2b765;
@@ -81,7 +85,7 @@
   --hero-fg: #eef1e6;
   --hero-btn-bg: #dadfdc;
   --hero-btn-fg: #25322b;
-  --hero-line: rgba(238, 241, 230, 0.45);
+  --hero-line: rgba(238, 241, 230, 0.45); --hero-bg-2: #222d28;
   --tag-bg: #2f3a33;
   --tag-fg: #cbd6cf; --cat-soft-l: 24%; --cat-ink-l: 86%; --cat-dot-l: 62%; --cat-solid-l: 66%; --cat-solid-ink: #14201a;
   --warn: #e2b765;
@@ -116,9 +120,15 @@ p { margin: 0; }
 .small { font-size: 14px; }
 
 /* top bar */
-.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.brand { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.01em; }
-.brand-sub { color: var(--muted); font-size: 13px; margin-left: 8px; }
+/* app bar */
+.appbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.logo { width: 42px; height: 42px; flex: none; display: block; }
+.appname-wrap { display: grid; gap: 1px; min-width: 0; }
+.appname { font-family: var(--display); font-weight: 600; font-size: 22px; line-height: 1.1; }
+.today { color: var(--muted); font-size: 13px; }
+.appbar .spacer { flex: 1; }
+.round { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; box-shadow: var(--shadow); }
+.round:active { transform: scale(0.95); }
 
 /* buttons */
 .btn {
@@ -133,15 +143,33 @@ p { margin: 0; }
 .linkish { background: none; border: 0; padding: 8px 0; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
 /* scan card */
-.scan { background: var(--hero-bg); color: var(--hero-fg); border-radius: 20px; padding: 22px 20px 18px; }
-.scan h1 { font-size: 28px; line-height: 1.15; }
-.scan-lead { margin-top: 8px; max-width: 34rem; }
-.scan-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.scan {
+  position: relative; overflow: hidden; color: var(--hero-fg); border-radius: 26px; padding: 22px 20px 14px;
+  background: radial-gradient(rgba(253, 255, 240, 0.09) 1px, transparent 1.6px) 0 0 / 16px 16px, linear-gradient(155deg, var(--hero-bg) 0%, var(--hero-bg-2) 100%);
+  box-shadow: 0 10px 28px rgba(30, 42, 36, 0.28);
+}
+.scan-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.scan-copy { min-width: 0; }
+.scan h1 { font-size: 30px; line-height: 1.1; }
+.scan-lead { margin-top: 8px; max-width: 24rem; }
+.scan-art { flex: none; width: 104px; }
+.scan-art svg { display: block; width: 100%; height: auto; }
+.scan-actions { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; margin-top: 18px; max-width: 32rem; }
+@media (max-width: 340px) { .scan-actions { grid-template-columns: 1fr; } }
 .scan .btn { background: var(--hero-btn-bg); color: var(--hero-btn-fg); }
 .scan .btn.ghost { background: transparent; color: var(--hero-fg); border-color: var(--hero-line); }
-.scan-note { margin-top: 14px; font-size: 14px; opacity: 0.9; max-width: 36rem; }
-.scan .linkish { color: var(--hero-fg); font-size: 15px; }
+.btn.big { min-height: 54px; padding: 0 10px; gap: 6px; border-radius: 16px; font-size: 15px; white-space: nowrap; }
+.scan-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 14px; margin-top: 10px; }
+.scan .linkish { display: inline-flex; align-items: center; gap: 6px; color: var(--hero-fg); font-size: 15px; padding: 8px 0; }
+.scan-note { font-size: 13px; opacity: 0.85; max-width: 22rem; }
 .scan-off { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--hero-line); border-radius: 12px; font-size: 15px; }
+.art-paper { fill: var(--ill-paper); }
+.art-line { fill: var(--ill-line); }
+.art-ink { fill: var(--hero-bg); }
+.art-beam { fill: var(--ill-beam); animation: beam 2.8s ease-in-out infinite alternate; }
+.art-glow { fill: var(--ill-beam); opacity: 0.22; animation: beam 2.8s ease-in-out infinite alternate; }
+.art-frame { fill: none; stroke: var(--hero-fg); stroke-width: 3; stroke-linecap: round; opacity: 0.7; }
+@keyframes beam { from { transform: translateY(-24px); } to { transform: translateY(26px); } }
 
 /* section heads */
 .section { margin-top: 28px; }
@@ -158,7 +186,9 @@ p { margin: 0; }
 .due-for { color: var(--muted); font-size: 14px; }
 
 /* filters */
-.search { width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--surface); }
+.search { width: 100%; min-height: 48px; padding: 0 14px 0 42px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--surface); }
+.searchbox { position: relative; }
+.searchbox svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; cursor: pointer; font-size: 14px; }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
@@ -268,6 +298,22 @@ p { margin: 0; }
 .due-pill.done { color: var(--muted); }
 .notes-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* file tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr)); gap: 10px; }
+.tile { position: relative; display: grid; align-content: space-between; justify-items: start; gap: 12px; min-height: 100px; padding: 12px; text-align: left; border-radius: 18px; border: 2px solid transparent; background: var(--cat-soft); color: var(--cat-ink); cursor: pointer; }
+.tile:active { transform: scale(0.97); }
+.tile[aria-pressed="true"] { border-color: var(--cat-dot); background: var(--cat-soft); box-shadow: 0 4px 14px rgba(30, 42, 36, 0.18); }
+.tile-ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; background: var(--cat-solid); color: var(--cat-solid-ink); }
+.tile-name { font-weight: 600; font-size: 14.5px; line-height: 1.2; overflow-wrap: anywhere; }
+.tile-count { position: absolute; top: 10px; right: 12px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile-add { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; border: 1.5px dashed var(--cat-dot); color: var(--cat-ink); }
+.tiles-more { margin-top: 10px; }
+.fab { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 20; display: none; align-items: center; gap: 8px; height: 56px; padding: 0 22px 0 18px; border: 0; border-radius: 28px; background: var(--accent); color: var(--accent-ink); font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28); }
+.fab.show { display: inline-flex; }
+.fab:active { transform: scale(0.96); }
+.home { padding-bottom: 40px; }
+.home-foot { margin-top: 28px; color: var(--muted); font-size: 13px; text-align: center; }
+
 /* quick add ideas */
 .quick > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
 .quick > summary::-webkit-details-marker { display: none; }
@@ -356,6 +402,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 1
 
 @media (prefers-reduced-motion: reduce) {
   .paper.scanning::after { animation: none; top: 40%; }
+  .art-beam, .art-glow { animation: none; }
 }
 </style>
 
@@ -499,6 +546,7 @@ const state = {
   ideaCat: 'all',          // type filter on the ideas screen
   quickOpen: null,         // null = open while the list is short, then whatever the person chose
   returnTo: 'home',        // where Discard goes for a new record
+  tilesAll: null,          // null = every type while the list is empty, otherwise the top six
 };
 const caps = { db: null, sample: null, assets: null, downloads: null, user: null, images: null };
 let sampleBlocked = false;
@@ -950,6 +998,10 @@ function startFromIdea(idea, from) {
   state.view = 'edit';
   render();
 }
+function openIdeas(cat) {
+  state.ideaCat = cat || 'all';
+  showIdeas();
+}
 function showIdeas() {
   if (state.view === 'home') state.homeScroll = window.scrollY;
   clearScans();
@@ -1130,6 +1182,7 @@ function render() {
     state.view = 'home';
     state.viewId = null;
   }
+  if (state.view !== 'home' && heroObserver) { heroObserver.disconnect(); heroObserver = null; }
   const v = state.view === 'home' ? homeView() : state.view === 'ideas' ? ideasView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : editView();
   byId('app').replaceChildren(v);
   if (lastView !== state.view) window.scrollTo(0, 0);
@@ -1146,22 +1199,179 @@ function render() {
   }
 }
 
+/* ---------- icons and art ---------- */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const ICONS = {
+  car: '<path d="M5.5 11 7.3 7.1A1.9 1.9 0 0 1 9 6h6a1.9 1.9 0 0 1 1.7 1.1L18.5 11"/><rect x="3.5" y="11" width="17" height="6" rx="2"/><circle cx="7.5" cy="17.3" r="1.6"/><circle cx="16.5" cy="17.3" r="1.6"/>',
+  home: '<path d="M3.8 11.2 12 4.5l8.2 6.7"/><path d="M6.2 9.8V19h11.6V9.8"/><path d="M10.2 19v-4.6h3.6V19"/>',
+  pet: '<circle cx="6.4" cy="11" r="1.7"/><circle cx="9.7" cy="6.6" r="1.7"/><circle cx="14.3" cy="6.6" r="1.7"/><circle cx="17.6" cy="11" r="1.7"/><path d="M12 11.5c-2.9 0-5.2 2.5-5.2 4.8 0 1.5 1.3 2.3 2.8 2.3.9 0 1.4-.4 2.4-.4s1.5.4 2.4.4c1.5 0 2.8-.8 2.8-2.3 0-2.3-2.3-4.8-5.2-4.8z"/>',
+  school: '<path d="M2.8 9.2 12 4.6l9.2 4.6L12 13.8z"/><path d="M6.6 11.5v4.3c0 1.3 2.5 2.9 5.4 2.9s5.4-1.6 5.4-2.9v-4.3"/><path d="M21.2 9.2v5.2"/>',
+  health: '<path d="M12 19.6s-7.2-4.3-7.2-9.6A3.9 3.9 0 0 1 12 7.7 3.9 3.9 0 0 1 19.2 10c0 5.3-7.2 9.6-7.2 9.6z"/><path d="M12 10.2v3.4M10.3 11.9h3.4"/>',
+  dental: '<path d="M8.1 4.6c-2 0-3.6 1.6-3.6 3.8 0 1.9.8 3 1.2 5 .4 2.1.6 5.9 2.2 5.9 1.5 0 1-3.5 4.1-3.5s2.6 3.5 4.1 3.5c1.6 0 1.8-3.8 2.2-5.9.4-2 1.2-3.1 1.2-5 0-2.2-1.6-3.8-3.6-3.8-1.7 0-2.3.8-3.9.8S9.8 4.6 8.1 4.6z"/>',
+  money: '<path d="M6.5 3.8h11v16.4l-1.83-1.3-1.84 1.3-1.83-1.3-1.84 1.3-1.83-1.3-1.83 1.3z"/><path d="M9.2 8.6h5.6M9.2 12h5.6M9.2 15.3h3"/>',
+  insurance: '<path d="M12 3.6 19 6.2v5.4c0 4.2-2.9 7.1-7 8.8-4.1-1.7-7-4.6-7-8.8V6.2z"/><path d="M8.9 12l2.2 2.2L15.2 10"/>',
+  bank: '<path d="M3.6 9.4 12 4.6l8.4 4.8z"/><path d="M5.8 11.2v6.2M9.6 11.2v6.2M14.4 11.2v6.2M18.2 11.2v6.2"/><path d="M4.2 19.6h15.6"/>',
+  tax: '<path d="M18.2 5.8 5.8 18.2"/><circle cx="7.6" cy="7.6" r="2.2"/><circle cx="16.4" cy="16.4" r="2.2"/>',
+  legal: '<rect x="3" y="5.6" width="18" height="12.8" rx="2.4"/><circle cx="8.6" cy="11" r="1.8"/><path d="M5.9 15.8c.6-1.5 1.7-2.2 2.7-2.2s2.1.7 2.7 2.2"/><path d="M14 10h4.4M14 13.4h3.2"/>',
+  travel: '<path d="M20.6 3.6 3.6 10.4l6.4 3.2 3.2 6.4z"/><path d="M20.6 3.6 10 13.6"/>',
+  purchase: '<path d="M5.4 8.2h13.2l-1 11.4H6.4z"/><path d="M9 10.4V7.6a3 3 0 0 1 6 0v2.8"/>',
+  business: '<rect x="3.4" y="8" width="17.2" height="11.6" rx="2.2"/><path d="M9 8V6.4A1.8 1.8 0 0 1 10.8 4.6h2.4A1.8 1.8 0 0 1 15 6.4V8"/><path d="M3.4 13.2h17.2"/>',
+  other: '<path d="M3.6 7.6a2 2 0 0 1 2-2h3.9l2 2.4h6.9a2 2 0 0 1 2 2v7.4a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2z"/>',
+  camera: '<path d="M4.4 8.6a2 2 0 0 1 2-2h1.7l1.2-1.8h5.4l1.2 1.8h1.7a2 2 0 0 1 2 2v8.6a2 2 0 0 1-2 2H6.4a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.9" r="3.4"/>',
+  image: '<rect x="3.6" y="4.6" width="16.8" height="14.8" rx="2.6"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.9-4.6 3.5 3.2 3-2.7 5 4.4"/>',
+  pencil: '<path d="M4.2 19.8l.9-3.9L16.4 4.6a1.9 1.9 0 0 1 2.7 0l.3.3a1.9 1.9 0 0 1 0 2.7L8.1 18.9z"/><path d="M14.6 6.4l3 3"/>',
+  bulb: '<path d="M9.6 18.2h4.8M10.2 21h3.6"/><path d="M12 3.4a5.6 5.6 0 0 0-3.3 10.1c.5.4.8.9.8 1.5v.2h5v-.2c0-.6.3-1.1.8-1.5A5.6 5.6 0 0 0 12 3.4z"/>',
+  search: '<circle cx="10.8" cy="10.8" r="6"/><path d="M15.3 15.3l4.6 4.6"/>',
+  plus: '<path d="M12 5.5v13M5.5 12h13"/>',
+};
+// the icon strings above are fixed markup written in this file, never data from a record
+function icon(name, size) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', size || 22);
+  svg.setAttribute('height', size || 22);
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.8');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.innerHTML = ICONS[name] || ICONS.other;
+  return svg;
+}
+function svgFrom(markup, cls) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  if (cls) svg.setAttribute('class', cls);
+  svg.innerHTML = markup;
+  return svg;
+}
+function logoMark() {
+  const svg = svgFrom('<rect width="40" height="40" rx="11" style="fill:var(--hero-bg)"/>'
+    + '<path d="M12.5 9.5h10.2l6 6V29a2 2 0 0 1-2 2H12.5a2 2 0 0 1-2-2V11.5a2 2 0 0 1 2-2z" style="fill:var(--hero-fg)"/>'
+    + '<path d="M22.7 9.5v6h6z" style="fill:var(--sage)"/>'
+    + '<path d="M14.6 20.4h9.8M14.6 24.4h6" style="stroke:var(--hero-bg);stroke-width:2;stroke-linecap:round;fill:none"/>', 'logo');
+  svg.setAttribute('viewBox', '0 0 40 40');
+  return svg;
+}
+function heroArt() {
+  const svg = svgFrom('<path class="art-frame" d="M10 30V16a6 6 0 0 1 6-6h14M90 10h14a6 6 0 0 1 6 6v14M110 98v14a6 6 0 0 1-6 6H90M30 118H16a6 6 0 0 1-6-6V98"/>'
+    + '<path class="art-paper" d="M32 18h56v88l-7-4.7-7 4.7-7-4.7-7 4.7-7-4.7-7 4.7-7-4.7-7 4.7z"/>'
+    + '<rect class="art-line" x="40" y="27" width="26" height="5" rx="2.5"/>'
+    + '<rect class="art-line" x="40" y="39" width="40" height="3.5" rx="1.75" opacity="0.7"/>'
+    + '<rect class="art-line" x="40" y="47" width="32" height="3.5" rx="1.75" opacity="0.7"/>'
+    + '<rect class="art-line" x="40" y="55" width="38" height="3.5" rx="1.75" opacity="0.7"/>'
+    + '<rect class="art-line" x="40" y="63" width="26" height="3.5" rx="1.75" opacity="0.7"/>'
+    + '<rect class="art-line" x="40" y="71" width="34" height="3.5" rx="1.75" opacity="0.7"/>'
+    + '<rect class="art-ink" x="40" y="84" width="18" height="5" rx="2.5"/>'
+    + '<rect class="art-ink" x="64" y="84" width="16" height="5" rx="2.5"/>'
+    + '<rect class="art-glow" x="22" y="52" width="76" height="14" rx="7"/>'
+    + '<rect class="art-beam" x="22" y="57" width="76" height="4" rx="2"/>', 'art');
+  svg.setAttribute('viewBox', '0 0 120 128');
+  return svg;
+}
+
+function canScanNow() {
+  return !!(caps.sample && caps.images && !sampleBlocked && state.storage === 'ready' && state.canWrite);
+}
+function pickCamera() { const i = byId('fileCamera'); i.value = ''; i.click(); }
+function pickPhotos() { const i = byId('filePick'); i.value = ''; i.click(); }
+function focusSearch() {
+  const el = byId('f-search');
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.focus({ preventScroll: true });
+}
+
+function appBar() {
+  const date = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  return h('header', { class: 'appbar' },
+    logoMark(),
+    h('div', { class: 'appname-wrap' }, h('span', { class: 'appname' }, 'Paper Trail'), h('span', { class: 'today' }, date)),
+    h('span', { class: 'spacer' }),
+    h('button', { class: 'round', type: 'button', id: 'btnFindTop', 'aria-label': 'Search your papers', onclick: focusSearch }, icon('search', 20)),
+    state.canWrite && state.storage === 'ready' ? h('button', { class: 'round', type: 'button', id: 'btnIdeasTop', 'aria-label': 'Ideas to add', onclick: () => openIdeas() }, icon('bulb', 20)) : null);
+}
+
+let heroObserver = null;
+function watchHero() {
+  if (heroObserver) heroObserver.disconnect();
+  heroObserver = null;
+  const hero = byId('scanHero');
+  const fab = byId('fabScan');
+  if (!hero || !fab || !('IntersectionObserver' in window)) return;
+  heroObserver = new IntersectionObserver(entries => { fab.classList.toggle('show', !entries[0].isIntersecting); }, { threshold: 0 });
+  heroObserver.observe(hero);
+}
+
+function tiles() {
+  const frag = document.createDocumentFragment();
+  if (!(state.storage === 'ready' && state.loaded)) return frag;
+  const counts = {};
+  state.records.forEach(r => { counts[r.category] = (counts[r.category] || 0) + 1; });
+  const hasRecords = state.records.length > 0;
+  let list = CATS.slice();
+  if (!state.canWrite) list = list.filter(c => counts[c.id]);
+  if (!list.length) return frag;
+  if (hasRecords) list.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0) || CATS.indexOf(a) - CATS.indexOf(b));
+  const showAll = state.tilesAll != null ? state.tilesAll : !hasRecords;
+  let shown = showAll ? list : list.slice(0, 6);
+  if (!showAll && state.filter !== 'all' && !shown.some(c => c.id === state.filter)) shown = shown.concat(CAT[state.filter]);
+  const grid = h('div', { class: 'tiles' }, shown.map(c => {
+    const n = counts[c.id] || 0;
+    return h('button', {
+      class: 'tile', type: 'button', 'data-cat': c.id, 'data-tile': c.id,
+      'aria-pressed': n ? String(state.filter === c.id) : null,
+      'aria-label': n ? c.long + ', ' + n + (n === 1 ? ' paper' : ' papers') : c.long + ', nothing yet. See ideas to add.',
+      onclick: () => onTile(c, n),
+    },
+      h('span', { class: 'tile-ic' }, icon(c.id, 22)),
+      h('span', { class: 'tile-name' }, c.short),
+      n ? h('span', { class: 'tile-count' }, n) : h('span', { class: 'tile-add', 'aria-hidden': 'true' }, icon('plus', 14)));
+  }));
+  const section = h('section', { class: 'section', id: 'files' }, h('div', { class: 'section-head' }, h('h2', null, 'Your files')), grid);
+  if (hasRecords && list.length > 6) {
+    section.append(h('button', { class: 'linkish tiles-more', type: 'button', id: 'btnTilesMore', onclick: () => { state.tilesAll = !showAll; refreshList(); } }, showAll ? 'Show fewer' : 'Show all ' + list.length + ' types'));
+  }
+  frag.append(section);
+  return frag;
+}
+function onTile(c, n) {
+  if (!n) {
+    if (!state.canWrite) return;
+    openIdeas(c.id);
+    return;
+  }
+  const clearing = state.filter === c.id;
+  state.filter = clearing ? 'all' : c.id;
+  state.subject = 'all';
+  refreshList();
+  if (!clearing) { const top = byId('papers'); if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
 function homeView() {
   const wrap = h('div', { class: 'home' });
   wrap.append(
-    h('div', { class: 'top' },
-      h('div', null, h('span', { class: 'brand' }, 'Paper Trail'), h('span', { class: 'brand-sub' }, 'Household records'))),
+    appBar(),
     scanCard(),
     h('div', { id: 'comingArea' }),
+    h('div', { id: 'tilesArea' }),
     h('div', { id: 'quickArea' }),
-    h('section', { class: 'section' },
+    h('section', { class: 'section', id: 'papers' },
       h('div', { class: 'section-head' }, h('h2', null, 'Your papers')),
-      h('input', {
-        class: 'search', id: 'f-search', type: 'search', placeholder: 'Search by shop, car, name, or item',
-        'aria-label': 'Search your papers', value: state.q, autocomplete: 'off',
-        oninput: e => { state.q = e.target.value; refreshList(); },
-      }),
-      h('div', { id: 'listArea' })));
+      h('div', { class: 'searchbox' },
+        icon('search', 18),
+        h('input', {
+          class: 'search', id: 'f-search', type: 'search', placeholder: 'Search by shop, car, name, or item',
+          'aria-label': 'Search your papers', value: state.q, autocomplete: 'off',
+          oninput: e => { state.q = e.target.value; refreshList(); },
+        })),
+      h('div', { id: 'listArea' })),
+    h('p', { class: 'home-foot' }, 'Photos are sent to Claude to be read. Your records stay private unless you share this page.'),
+    canScanNow() ? h('button', { class: 'fab', id: 'fabScan', type: 'button', 'aria-label': 'Scan a paper', onclick: pickCamera }, icon('camera', 22), 'Scan') : null);
+  queueMicrotask(watchHero);
   queueMicrotask(refreshHome);
   return wrap;
 }
@@ -1177,6 +1387,8 @@ function refreshHome() {
 function refreshList() {
   const l = byId('listArea');
   if (l) l.replaceChildren(listContent());
+  const t = byId('tilesArea');
+  if (t) t.replaceChildren(tiles());
 }
 
 function quickAdd() {
@@ -1188,7 +1400,7 @@ function quickAdd() {
     h('p', { class: 'muted small' }, 'Not sure what to file? Tap an idea. The form opens with the basics filled in.'),
     h('div', { class: 'idea-chips' },
       FEATURED.map(i => h('button', { class: 'idea-chip', 'data-cat': i.cat, type: 'button', onclick: () => startFromIdea(i, 'home') }, i.title)),
-      h('button', { class: 'idea-chip more', type: 'button', id: 'btnMoreIdeas', onclick: showIdeas }, 'See all ideas')));
+      h('button', { class: 'idea-chip more', type: 'button', id: 'btnMoreIdeas', onclick: () => openIdeas() }, 'See all ideas')));
   if (open) det.setAttribute('open', '');
   frag.append(h('section', { class: 'section' }, det));
   return frag;
@@ -1224,16 +1436,16 @@ function ideasView() {
 }
 
 function scanCard() {
-  const canScan = caps.sample && caps.images && !sampleBlocked && state.storage === 'ready' && state.canWrite;
-  const card = h('section', { class: 'scan' },
-    h('h1', null, 'Scan a paper'),
-    h('p', { class: 'scan-lead' }, 'Snap a receipt, bill, or form. Claude reads it, you check it, then it gets filed.'));
-  if (canScan) {
-    card.append(
-      h('div', { class: 'scan-actions' },
-        h('button', { class: 'btn', type: 'button', id: 'btnCamera', onclick: () => { byId('fileCamera').value = ''; byId('fileCamera').click(); } }, 'Take a photo'),
-        h('button', { class: 'btn ghost', type: 'button', id: 'btnPick', onclick: () => { byId('filePick').value = ''; byId('filePick').click(); } }, 'Choose photos')),
-      h('p', { class: 'scan-note' }, 'Get close so the text fills the photo. For a paper with more than one page, choose all its photos together.'));
+  const card = h('section', { class: 'scan', id: 'scanHero' },
+    h('div', { class: 'scan-top' },
+      h('div', { class: 'scan-copy' },
+        h('h1', null, 'Scan a paper'),
+        h('p', { class: 'scan-lead' }, 'Snap a receipt, bill, or form. Claude reads it, you check it, it gets filed.')),
+      h('div', { class: 'scan-art', 'aria-hidden': 'true' }, heroArt())));
+  if (canScanNow()) {
+    card.append(h('div', { class: 'scan-actions' },
+      h('button', { class: 'btn big', type: 'button', id: 'btnCamera', onclick: pickCamera }, icon('camera', 20), 'Take a photo'),
+      h('button', { class: 'btn ghost big', type: 'button', id: 'btnPick', onclick: pickPhotos }, icon('image', 20), 'Pick photos')));
   } else if (state.storage === 'loading') {
     card.append(h('p', { class: 'scan-note' }, 'Getting ready...'));
   } else {
@@ -1243,10 +1455,12 @@ function scanCard() {
     else if (state.storage === 'none') why = 'Saving is not available in this view. Open Paper Trail from your Claude account.';
     card.append(h('p', { class: 'scan-off' }, why));
   }
+  const foot = h('div', { class: 'scan-foot' });
   if (state.canWrite && state.storage !== 'none') {
-    card.append(h('div', null, h('button', { class: 'linkish', type: 'button', id: 'btnHand', onclick: () => addByHand(false) }, 'Add a record by hand')));
+    foot.append(h('button', { class: 'linkish', type: 'button', id: 'btnHand', onclick: () => addByHand(false) }, icon('pencil', 16), 'Add by hand'));
   }
-  card.append(h('p', { class: 'scan-note' }, 'Photos are sent to Claude to be read. Your records stay private unless you share this page.'));
+  if (canScanNow()) foot.append(h('p', { class: 'scan-note' }, 'Tip: get close so the text fills the photo. More than one page? Pick all the photos together.'));
+  if (foot.childNodes.length) card.append(foot);
   return card;
 }
 
