@@ -4,19 +4,32 @@ Scan a receipt, bill, or form. Claude reads it, you check the details, and it ge
 
 Example: a photo of an oil change receipt becomes a record with the date, shop, total, mileage, vehicle, work done, VIN, and when the next change is due.
 
+## Finding and grabbing things
+
+- **Search** matches the title, shop, name, work done, VIN and other details, notes, and dates. Type more than one word to narrow it down ("highlander brake").
+- **Type chips** (Car, Home, Health, Pet, and so on) filter the list. Pick a type and a row of names appears under it: one car, one person, one pet. Tap a name for a history card with the latest mileage, VIN, plate, total spent, and what is due next.
+- **Copy history** puts a car's (or person's, or pet's) full history on the clipboard as plain text, newest first. If the view blocks the clipboard, the text opens in a box, already selected.
+- **Copy summary** (inside any record) copies that one record.
+- **Photos** show as a small thumbnail on each card. Open a record to see them, tap one to view it full screen, or tap **Save photo** to download it.
+- **Save as a spreadsheet** exports whatever you are looking at as a CSV: everything, one type, one search, or one car.
+- **Coming up** lists anything with a next-due date in the next 90 days, plus anything overdue. Tap **Done** when it is handled.
+- **Remind me in 3 months, 6 months, or 1 year** (in the Next due section) sets the date from the paper's date. It is meant for vet, dentist, and doctor visits that do not print a next date.
+
 ## How it works
 
-`paper-trail.html` is a single file that runs as a Claude artifact. It uses four artifact capabilities, so it needs the Claude viewer and will not do much if you open the file in a plain browser.
+`paper-trail.html` is a single file that runs as a Claude artifact. It uses artifact capabilities, so it needs the Claude viewer and will not do much if you open the file in a plain browser.
 
 | Capability | What it does here |
 | --- | --- |
 | `sample` (with images) | Sends the photo to Claude and gets back the fields as JSON. No API key needed. |
 | `db` | Stores the records in a `records` collection. |
 | `assets` | Keeps the photo with its record. Only people who can edit the artifact can store photos. |
-| `downloads` | Saves all records as a CSV spreadsheet. |
+| `downloads` | Saves spreadsheets and photos. |
 | `user` | Hides the add and edit controls from view-only people. |
 
 Nothing is saved until you check the details and tap Save. Fields Claude was unsure about are highlighted.
+
+Names stay consistent: the names you already use are sent along with each scan so Claude writes "2019 Toyota Highlander" the same way every time. Names are also matched ignoring capital letters and extra spaces, so close variants group together.
 
 ## Record types
 
@@ -32,3 +45,4 @@ Publish the same file to the same artifact URL to keep the saved records. The re
 - Up to 4 photos per paper, read together as pages of one paper.
 - Photos are downsized before they are read, so hold the camera close to the paper.
 - The prompt tells Claude to leave out full card, bank, and Social Security numbers. Still, check each record before saving.
+- Renaming a car (or person or pet) across all its records is not built yet. Fix a name inside a record, and the other records keep theirs.
