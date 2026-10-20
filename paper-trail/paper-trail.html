@@ -24,6 +24,11 @@
   --hero-line: rgba(253, 255, 240, 0.5);
   --tag-bg: #dadfdc;
   --tag-fg: #3b4a42;
+  --cat-soft-l: 90%;
+  --cat-ink-l: 22%;
+  --cat-dot-l: 46%;
+  --cat-solid-l: 32%;
+  --cat-solid-ink: #fdfff0;
   --warn: #7a4f0e;
   --warn-bg: #fbeed6;
   --warn-line: #e3c58a;
@@ -51,7 +56,7 @@
     --hero-btn-fg: #25322b;
     --hero-line: rgba(238, 241, 230, 0.45);
     --tag-bg: #2f3a33;
-    --tag-fg: #cbd6cf;
+    --tag-fg: #cbd6cf; --cat-soft-l: 24%; --cat-ink-l: 86%; --cat-dot-l: 62%; --cat-solid-l: 66%; --cat-solid-ink: #14201a;
     --warn: #e2b765;
     --warn-bg: #3a2f18;
     --warn-line: #6b5527;
@@ -78,7 +83,7 @@
   --hero-btn-fg: #25322b;
   --hero-line: rgba(238, 241, 230, 0.45);
   --tag-bg: #2f3a33;
-  --tag-fg: #cbd6cf;
+  --tag-fg: #cbd6cf; --cat-soft-l: 24%; --cat-ink-l: 86%; --cat-dot-l: 62%; --cat-solid-l: 66%; --cat-solid-ink: #14201a;
   --warn: #e2b765;
   --warn-bg: #3a2f18;
   --warn-line: #6b5527;
@@ -170,7 +175,7 @@ p { margin: 0; }
 .card:hover { border-color: var(--sage); }
 .card-main { display: grid; gap: 3px; min-width: 0; flex: 1; }
 .card-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.tag { font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; background: var(--tag-bg); color: var(--tag-fg); padding: 2px 9px; border-radius: 999px; }
+.tag { font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; background: var(--cat-soft, var(--tag-bg)); color: var(--cat-ink, var(--tag-fg)); padding: 2px 9px; border-radius: 999px; }
 .when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .card-title { font-family: var(--display); font-weight: 600; font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
 .card-meta, .card-work { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
@@ -181,6 +186,39 @@ p { margin: 0; }
 .notice { padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
 .notice.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn); }
 .notice.bad { background: var(--bad-bg); border-color: var(--line-strong); color: var(--bad); }
+
+/* category colors: one hue per type. Lightness comes from the theme tokens, so light and dark both stay readable. */
+[data-cat] {
+  --cat-soft: hsl(var(--ch) var(--cs) var(--cat-soft-l));
+  --cat-ink: hsl(var(--ch) var(--cs) var(--cat-ink-l));
+  --cat-dot: hsl(var(--ch) var(--cs) var(--cat-dot-l));
+  --cat-solid: hsl(var(--ch) var(--cs) var(--cat-solid-l));
+}
+[data-cat="car"]       { --ch: 208; --cs: 46%; }
+[data-cat="home"]      { --ch: 24;  --cs: 54%; }
+[data-cat="pet"]       { --ch: 100; --cs: 40%; }
+[data-cat="school"]    { --ch: 272; --cs: 40%; }
+[data-cat="health"]    { --ch: 354; --cs: 48%; }
+[data-cat="dental"]    { --ch: 176; --cs: 46%; }
+[data-cat="money"]     { --ch: 46;  --cs: 58%; }
+[data-cat="insurance"] { --ch: 238; --cs: 44%; }
+[data-cat="bank"]      { --ch: 214; --cs: 14%; }
+[data-cat="tax"]       { --ch: 74;  --cs: 46%; }
+[data-cat="legal"]     { --ch: 302; --cs: 36%; }
+[data-cat="travel"]    { --ch: 330; --cs: 48%; }
+[data-cat="purchase"]  { --ch: 30;  --cs: 24%; }
+[data-cat="business"]  { --ch: 146; --cs: 42%; }
+[data-cat="other"]     { --ch: 150; --cs: 10%; }
+.card[data-cat] { padding-left: 20px; box-shadow: inset 6px 0 0 var(--cat-dot), var(--shadow); }
+.card.example[data-cat] { box-shadow: inset 6px 0 0 var(--cat-dot); }
+.chip[data-cat] { background: var(--cat-soft); color: var(--cat-ink); border-color: transparent; }
+.chip[data-cat][aria-pressed="true"] { background: var(--cat-solid); color: var(--cat-solid-ink); }
+.subject-row[data-cat] .chip.sub { background: var(--cat-soft); color: var(--cat-ink); border-color: transparent; }
+.subject-row[data-cat] .chip.sub[aria-pressed="true"] { background: var(--cat-solid); color: var(--cat-solid-ink); font-weight: 600; }
+.history[data-cat] { border-top: 6px solid var(--cat-dot); }
+.due[data-cat] { padding-left: 20px; box-shadow: inset 6px 0 0 var(--cat-dot); }
+.edit[data-cat] { border-top: 6px solid var(--cat-dot); border-radius: 6px 6px 0 0; padding-top: 14px; }
+.edit[data-cat] #f-category { border-left: 6px solid var(--cat-dot); }
 
 /* subject history, thumbnails, reminders */
 .subject-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -2px 0 12px; }
@@ -213,8 +251,8 @@ p { margin: 0; }
 .pages { position: absolute; right: 8px; bottom: 8px; background: var(--hero-bg); color: var(--hero-fg); font-size: 12px; padding: 2px 8px; border-radius: 999px; }
 
 /* edit */
-.bar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.bar-title { font-size: 24px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 14px; }
+.bar-title { font-size: 22px; white-space: nowrap; }
 .edit-grid { display: grid; gap: 18px; margin-top: 14px; }
 @media (min-width: 760px) {
   .wrap { padding-block: 28px 72px; }
@@ -289,15 +327,23 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 1
 
 /* ---------- categories ---------- */
 const CATS = [
-  { id: 'car',      short: 'Car',       long: 'Car',                    who: 'Vehicle',           hint: '2019 Toyota Highlander', work: 'Work done' },
-  { id: 'home',     short: 'Home',      long: 'Home',                   who: 'Room or item',      hint: 'Water heater',           work: 'Work done' },
-  { id: 'health',   short: 'Health',    long: 'Health',                 who: 'Who it was for',    hint: 'First name',             work: 'What happened' },
-  { id: 'pet',      short: 'Pet',       long: 'Pet',                    who: 'Pet',               hint: 'Pet name',               work: 'What happened' },
-  { id: 'school',   short: 'School',    long: 'School and kids',        who: 'Child',             hint: 'First name',             work: 'Details' },
-  { id: 'money',    short: 'Bills',     long: 'Bills and insurance',    who: 'Account or policy', hint: 'Auto insurance',         work: 'What it covers' },
-  { id: 'purchase', short: 'Purchases', long: 'Purchases and warranties', who: 'Item',            hint: 'Dishwasher',             work: 'Items bought' },
-  { id: 'other',    short: 'Other',     long: 'Other',                  who: 'For',               hint: '',                       work: 'Details' },
+  { id: 'car',       short: 'Car',          long: 'Car',                      group: 'Car and travel',    who: 'Vehicle',          hint: '2019 Toyota Highlander', work: 'Work done',      about: 'oil changes, repairs, registration, smog checks, tires' },
+  { id: 'home',      short: 'Home',         long: 'Home',                     group: 'Home and family',   who: 'Room or item',     hint: 'Water heater',           work: 'Work done',      about: 'home repairs, maintenance, contractors, yard work' },
+  { id: 'pet',       short: 'Pet',          long: 'Pet',                      group: 'Home and family',   who: 'Pet',              hint: 'Pet name',               work: 'What happened',  about: 'vet visits, vaccines, grooming, pet supplies' },
+  { id: 'school',    short: 'School',       long: 'School and activities',    group: 'Home and family',   who: 'Child',            hint: 'First name',             work: 'Details',        about: 'school forms, tuition, sports and activity sign-ups, camps' },
+  { id: 'health',    short: 'Health',       long: 'Health',                   group: 'Health',            who: 'Who it was for',   hint: 'First name',             work: 'What happened',  about: 'doctor visits, pharmacy, lab results, medical bills' },
+  { id: 'dental',    short: 'Dental',       long: 'Dental and vision',        group: 'Health',            who: 'Who it was for',   hint: 'First name',             work: 'What was done',  about: 'dentist, orthodontist, eye doctor, glasses and contacts' },
+  { id: 'money',     short: 'Bills',        long: 'Bills and utilities',      group: 'Money and papers',  who: 'Account',          hint: 'Electric',               work: 'What it covers', about: 'utility, phone, internet, and other regular bills' },
+  { id: 'insurance', short: 'Insurance',    long: 'Insurance',                group: 'Money and papers',  who: 'Policy',           hint: 'Auto policy',            work: 'What it covers', about: 'insurance policies, claims, and statements' },
+  { id: 'bank',      short: 'Banking',      long: 'Banking and loans',        group: 'Money and papers',  who: 'Account or loan',  hint: 'Mortgage',               work: 'Details',        about: 'bank, credit card, mortgage, and loan statements' },
+  { id: 'tax',       short: 'Taxes',        long: 'Taxes',                    group: 'Money and papers',  who: 'Tax year or item', hint: '2025 return',            work: 'Details',        about: 'tax forms, returns, and tax bills such as property tax' },
+  { id: 'legal',     short: 'Legal and ID', long: 'Legal and ID',             group: 'Money and papers',  who: 'Whose',            hint: 'First name',             work: 'Details',        about: 'IDs, passports, birth and marriage certificates, wills, deeds, titles, contracts' },
+  { id: 'travel',    short: 'Travel',       long: 'Travel',                   group: 'Car and travel',    who: 'Trip',             hint: 'Hawaii 2027',            work: 'Details',        about: 'tickets, bookings, hotel and rental car receipts' },
+  { id: 'purchase',  short: 'Purchases',    long: 'Purchases and warranties', group: 'Shopping and work', who: 'Item',             hint: 'Dishwasher',             work: 'Items bought',   about: 'store receipts and warranties for things bought for the home or family' },
+  { id: 'business',  short: 'Business',     long: 'Business',                 group: 'Shopping and work', who: 'Project or item',  hint: 'Camera gear',            work: 'Items bought',   about: 'receipts and invoices for work or a business, not the household' },
+  { id: 'other',     short: 'Other',        long: 'Other',                    group: 'Other',             who: 'For',              hint: '',                       work: 'Details',        about: 'anything that does not fit the others' },
 ];
+const SENSITIVE = new Set(['legal', 'tax', 'bank', 'insurance']);
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 const UNSURE_KEYS = new Set(['category', 'title', 'date', 'vendor', 'subject', 'total', 'mileage', 'work', 'details', 'nextDueDate', 'nextDueNote', 'notes']);
 
@@ -573,7 +619,7 @@ function buildPrompt() {
     '',
     'Reply with only one JSON object using these keys:',
     '"readable": false if the photos do not show a readable paper, otherwise true.',
-    '"category": one of "car", "home", "health", "pet", "school", "money", "purchase", "other". Use "money" for insurance, utility, tax and other bills, and "purchase" for store receipts and warranties.',
+    '"category": the best fit, one of: ' + CATS.map(c => c.id + ' (' + c.about + ')').join('; ') + '.',
     '"title": a short plain title like "Oil change", "Dentist visit", or "Water bill".',
     '"date": the date of the service, purchase, or statement as YYYY-MM-DD, or null. If the year is missing, use the most recent past date that fits.',
     '"vendor": the business or provider name, or null.',
@@ -934,7 +980,7 @@ function comingUp() {
   const items = state.showAllDue ? all : all.slice(0, 4);
   const list = h('div', { class: 'due-list' });
   items.forEach(({ r, days }) => {
-    list.append(h('div', { class: 'due' + (days < 0 ? ' late' : '') },
+    list.append(h('div', { class: 'due' + (days < 0 ? ' late' : ''), 'data-cat': r.category },
       h('button', { class: 'due-body', type: 'button', onclick: () => openRecord(r) },
         h('span', { class: 'due-when' }, dueLabel(days, r.nextDueDate), h('span', { class: 'tag' }, catShort(r.category))),
         h('span', { class: 'due-note' }, r.nextDueNote || ('Follow up: ' + (r.title || r.vendor))),
@@ -953,7 +999,7 @@ function comingUp() {
 }
 
 function exampleCard() {
-  return h('div', { class: 'card example' },
+  return h('div', { class: 'card example', 'data-cat': 'car' },
     h('span', { class: 'card-main' },
       h('span', { class: 'card-top' }, h('span', { class: 'example-flag' }, 'Example'), h('span', { class: 'tag' }, 'Car'), h('span', { class: 'when' }, 'Jan 14, 2026')),
       h('span', { class: 'card-title' }, 'Oil change'),
@@ -980,7 +1026,7 @@ function listContent() {
   if (state.filter !== 'all' && !counts[state.filter]) state.filter = 'all';
   const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter by type' });
   const chip = (id, label, n) => h('button', {
-    class: 'chip', type: 'button', 'data-type': id, 'aria-pressed': String(state.filter === id),
+    class: 'chip', type: 'button', 'data-type': id, 'data-cat': id === 'all' ? null : id, 'aria-pressed': String(state.filter === id),
     onclick: () => { state.filter = id; state.subject = 'all'; refreshList(); },
   }, label, h('span', { class: 'n' }, n));
   chips.append(chip('all', 'All', state.records.length));
@@ -1000,7 +1046,7 @@ function listContent() {
     });
     if (state.subject !== 'all' && !groups.has(state.subject)) state.subject = 'all';
     if (groups.size) {
-      const row = h('div', { class: 'subject-row', role: 'group', 'aria-label': 'Filter by ' + cat.who.toLowerCase() });
+      const row = h('div', { class: 'subject-row', 'data-cat': state.filter, role: 'group', 'aria-label': 'Filter by ' + cat.who.toLowerCase() });
       row.append(h('span', { class: 'subject-label' }, cat.who + ':'));
       Array.from(groups.entries()).sort((a, b) => b[1].recs.length - a[1].recs.length).forEach(([k, g]) => {
         row.append(h('button', {
@@ -1044,7 +1090,7 @@ function historyCard(name, recs, isCar) {
   const actions = h('div', { class: 'history-actions' },
     h('button', { class: 'btn small', type: 'button', id: 'btnCopyHistory', onclick: () => copyText(historyText(name, recs, isCar), 'the history') }, 'Copy history'),
     caps.downloads ? h('button', { class: 'btn ghost small', type: 'button', id: 'btnExportSubject', onclick: () => exportCsv(recs, name) }, 'Save as spreadsheet') : null);
-  return h('section', { class: 'history', 'aria-label': 'History for ' + name }, h('h3', null, name), h('dl', null, rows), actions);
+  return h('section', { class: 'history', 'data-cat': recs[0].category, 'aria-label': 'History for ' + name }, h('h3', null, name), h('dl', null, rows), actions);
 }
 
 function cardThumb(id) {
@@ -1056,7 +1102,7 @@ function cardThumb(id) {
 function recordCard(r) {
   const meta = [r.vendor, r.subject, r.mileage != null ? miles(r.mileage) : ''].filter(Boolean).join(' · ');
   const work = r.work.length ? r.work.slice(0, 3).join(', ') + (r.work.length > 3 ? ', and more' : '') : '';
-  return h('button', { class: 'card', type: 'button', onclick: () => openRecord(r) },
+  return h('button', { class: 'card', 'data-cat': r.category, type: 'button', onclick: () => openRecord(r) },
     h('span', { class: 'card-main' },
       h('span', { class: 'card-top' }, h('span', { class: 'tag' }, catShort(r.category)), r.date ? h('span', { class: 'when' }, fmtDay(r.date)) : null),
       h('span', { class: 'card-title' }, r.title || r.vendor || 'Untitled'),
@@ -1134,10 +1180,11 @@ function editView() {
   const d = state.draft;
   const isNew = !state.editingId;
   const cat = CAT[d.category] || CAT.other;
-  const wrap = h('div', { class: 'edit' });
+  const wrap = h('div', { class: 'edit', 'data-cat': d.category });
   wrap.append(h('div', { class: 'bar' },
     h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: requestLeave }, '← Back'),
     h('h2', { class: 'bar-title' }, isNew ? 'Check the details' : 'Edit record'),
+    h('span', { class: 'tag' }, cat.short),
     isNew ? null : h('span', { class: 'spacer' }),
     isNew ? null : h('button', { class: 'btn ghost small', type: 'button', id: 'btnCopyRecord', onclick: () => copyText(recordText(recordFromDraft(d)), 'the summary') }, 'Copy summary')));
   if (d.unsure.length) {
@@ -1171,7 +1218,14 @@ function editView() {
     return field(key, label, input, o.hint);
   };
 
-  const catSelect = h('select', { id: 'f-category', value: d.category }, CATS.map(c => h('option', { value: c.id }, c.long)));
+  const groups = [];
+  CATS.forEach(c => {
+    let g = groups.find(x => x.name === c.group);
+    if (!g) groups.push(g = { name: c.group, items: [] });
+    g.items.push(c);
+  });
+  const catSelect = h('select', { id: 'f-category', value: d.category },
+    groups.map(g => h('optgroup', { label: g.name }, g.items.map(c => h('option', { value: c.id }, c.long)))));
   catSelect.addEventListener('change', () => { d.category = catSelect.value; render(); });
   const catField = field('category', 'Type', catSelect);
   // field() wired a plain assignment; the extra listener above re-renders so labels follow the type
@@ -1188,7 +1242,9 @@ function editView() {
   const detailsUnsure = d.unsure.includes('details');
   const details = h('div', { class: 'field details' + (detailsUnsure ? ' unsure' : '') },
     h('span', { class: 'label' }, 'Other details', detailsUnsure ? h('span', { class: 'flag' }, 'Check this') : null),
-    h('p', { class: 'hint' }, 'VIN, plate, phone number, invoice number, and anything else worth keeping.'));
+    h('p', { class: 'hint' }, SENSITIVE.has(d.category)
+      ? 'Policy numbers, phone numbers, and anything else worth keeping. Keep account and ID numbers to the last 4 digits.'
+      : 'VIN, plate, phone number, invoice number, and anything else worth keeping.'));
   d.details.forEach((row, i) => {
     const l = h('input', { id: 'f-dl-' + i, 'aria-label': 'Detail name', placeholder: 'Name', maxlength: 60, value: row.label });
     const v = h('input', { id: 'f-dv-' + i, 'aria-label': 'Detail value', placeholder: 'Value', maxlength: 200, value: row.value });

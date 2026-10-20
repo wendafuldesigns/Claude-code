@@ -33,7 +33,24 @@ Names stay consistent: the names you already use are sent along with each scan s
 
 ## Record types
 
-Car, Home, Health, Pet, School, Bills and insurance, Purchases and warranties, Other. Each type relabels the form. Car records also get a mileage field.
+Fifteen types, each with its own color:
+
+| Group | Types |
+| --- | --- |
+| Car and travel | Car, Travel |
+| Home and family | Home, Pet, School and activities |
+| Health | Health, Dental and vision |
+| Money and papers | Bills and utilities, Insurance, Banking and loans, Taxes, Legal and ID |
+| Shopping and work | Purchases and warranties, Business |
+| Other | Other |
+
+Each type relabels the form (a car asks for the vehicle and mileage, a pet for the pet's name, and so on). The list lives in one place in the file (`CATS`), and the prompt that tells Claude how to sort a paper is built from it, so adding a type means adding one line there plus one color line in the CSS.
+
+## Colors
+
+Each type has one hue. Chips, a stripe on each card, tags, the history card, and the top of the edit screen all use it. The lightness comes from a few theme tokens, so light and dark mode each get readable text. Every type's chip, selected chip, and tag was measured at 4.5 to 1 contrast or better in both themes, and no two types share a color. Color is never the only cue. Every chip, tag, and card also says the type in words.
+
+Existing records keep their type. Anything saved under the old "Bills and insurance" type now shows as Bills and utilities. Open a record and change its type to move it to Insurance.
 
 ## Updating
 
