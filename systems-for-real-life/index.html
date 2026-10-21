@@ -94,6 +94,10 @@ h4{font-size:1.25rem;line-height:1.15}
 .mk{width:16px;height:16px;border:1.5px solid var(--sage);border-radius:50%;position:relative;flex:none;background:transparent}
 .mk.on{background:var(--btn);border-color:var(--btn)}
 .mk.on::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:7px;border:solid var(--btn-ink);border-width:0 1.8px 1.8px 0;transform:rotate(45deg)}
+.sidehead{font:600 11px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:16px 4px 2px}
+.sidesub{font:600 .75rem/1.3 var(--sans);color:var(--muted);padding:12px 10px 2px}
+.bul{width:16px;height:16px;flex:none;position:relative}
+.bul::after{content:"";position:absolute;left:6px;top:6px;width:4px;height:4px;border-radius:50%;background:var(--sage)}
 .savenote{margin-top:14px;padding:12px;background:var(--panel);font-size:.8125rem;color:var(--muted);line-height:1.45}
 
 /* ---------- page frame ---------- */
@@ -659,34 +663,72 @@ function lesson(mid, def) {
   def.mod = m; m.lessons.push(def); def.idx = LESSONS.length; LESSONS.push(def); BYID[def.id] = def;
   return def;
 }
+
+/* The short path. These pages are "the course" and the only ones that count toward progress.
+   Every other page is still here, just optional: "Go deeper" inside a level, or the Toolbox.
+   To change what is in the course, add or remove ids in this list. */
+const CORE_IDS = [
+  "s-story", "s-find", "s-system",
+  "l1-needs", "l1-parts", "l1-route",
+  "l2-rhythm", "l2-weekly", "l2-daily", "l2-ready",
+  "l3-checkin", "l3-pick", "l3-decisions", "l3-mvd",
+  "l4-builder", "l4-home", "l4-test", "l4-glance",
+  "next"
+];
+let PATH = [], CORE = [];
+function setupPath() {
+  LESSONS.forEach(l => { l.core = CORE_IDS.includes(l.id); });
+  MODS.forEach(m => {
+    m.core = m.lessons.filter(l => l.core);
+    m.deep = m.lessons.filter(l => !l.core && !l.cover);
+    m.hasCore = m.core.length > 0;
+  });
+  PATH = LESSONS.filter(l => l.core || (l.cover && l.mod.hasCore));
+  CORE = PATH.filter(l => l.core);
+  PATH.forEach((l, i) => { l.pidx = i; });
+  CORE.forEach((l, i) => { l.cidx = i; });
+}
 const isDone = id => !!S["done." + id];
-const modDone = m => m.lessons.filter(l => isDone(l.id)).length;
-const totalDone = () => LESSONS.filter(l => isDone(l.id)).length;
+const modDone = m => m.core.filter(l => isDone(l.id)).length;
+const totalDone = () => CORE.filter(l => isDone(l.id)).length;
+const groupOf = l => (l.core || (l.cover && l.mod.hasCore)) ? l.mod.id : (l.mod.hasCore ? "deep" : l.mod.id);
 
 /* ============ chrome: header, side list ============ */
 const elMain = document.getElementById("main");
 const elSide = document.getElementById("side");
-const navRefs = { items: {}, mods: {} };
+const navRefs = { items: {}, groups: {} };
 const OPENMOD = {};
+let GROUPS = [];
 
+function setupGroups() {
+  GROUPS = [];
+  MODS.filter(m => m.hasCore).forEach(m => GROUPS.push({ id: m.id, label: m.label, title: m.title, marks: true, items: m.lessons.filter(l => l.core || l.cover), mod: m }));
+  const deep = MODS.filter(m => m.hasCore && m.deep.length);
+  GROUPS.push({ id: "deep", label: "Extra pages", title: "Go deeper", marks: false, sections: deep.map(m => ({ title: m.title, items: m.deep })) });
+  MODS.filter(m => !m.hasCore).forEach(m => GROUPS.push({ id: m.id, label: "Toolbox", title: m.title, marks: false, items: m.lessons, mod: m }));
+}
 function buildSide() {
-  navRefs.items = {}; navRefs.mods = {};
+  setupGroups();
+  navRefs.items = {}; navRefs.groups = {};
   const inner = h("div", { class: "side-in" });
   const top = h("div", { class: "nv-top" });
   const mk = (id, label, target) => { const b = h("button", { type: "button", class: "nv", onclick: () => nav(target) }, h("span", { class: "serif" }, label)); navRefs.items[id] = b; return b; };
   top.append(mk("home", "Course home", "home"), mk("workbook", "My workbook", "workbook"));
-  inner.append(top);
-  MODS.forEach(m => {
+  inner.append(top, h("div", { class: "sidehead" }, "The course · " + CORE.length + " steps"));
+  const item = (l, marks) => {
+    const b = h("button", { type: "button", class: "nv", onclick: () => nav(l.id) }, marks && l.core ? h("span", { class: "mk" }) : h("span", { class: "bul", "aria-hidden": "true" }), h("span", null, l.title));
+    navRefs.items[l.id] = b; return b;
+  };
+  GROUPS.forEach(g => {
+    if (g.id === "deep") inner.append(h("div", { class: "sidehead" }, "Optional"));
     const head = h("button", { type: "button", class: "nh", "aria-expanded": "false" },
-      h("span", { class: "t" }, h("span", { class: "eyebrow" }, m.label), h("b", null, m.title)),
+      h("span", { class: "t" }, h("span", { class: "eyebrow" }, g.label), h("b", null, g.title)),
       h("span", { class: "cnt" }), h("span", { class: "chev", "aria-hidden": "true" }));
     const list = h("div", { class: "nl" });
-    m.lessons.forEach(l => {
-      const b = h("button", { type: "button", class: "nv", onclick: () => nav(l.id) }, h("span", { class: "mk" }), h("span", null, l.title));
-      navRefs.items[l.id] = b; list.append(b);
-    });
-    head.addEventListener("click", () => { OPENMOD[m.id] = !OPENMOD[m.id]; paintMods(); });
-    navRefs.mods[m.id] = { head, list };
+    if (g.items) g.items.forEach(l => list.append(item(l, g.marks)));
+    if (g.sections) g.sections.forEach(s => { list.append(h("div", { class: "sidesub" }, s.title)); s.items.forEach(l => list.append(item(l, false))); });
+    head.addEventListener("click", () => { OPENMOD[g.id] = !OPENMOD[g.id]; paintMods(); });
+    navRefs.groups[g.id] = { head, list, g };
     inner.append(head, list);
   });
   inner.append(h("div", { class: "savenote", id: "saveNote" }, "Your answers are saved on this device."));
@@ -694,25 +736,29 @@ function buildSide() {
   paintMods(); refreshChrome(); paintSave(false);
 }
 function paintMods() {
-  MODS.forEach(m => {
-    const r = navRefs.mods[m.id]; const open = !!OPENMOD[m.id];
+  GROUPS.forEach(g => {
+    const r = navRefs.groups[g.id]; const open = !!OPENMOD[g.id];
     r.head.setAttribute("aria-expanded", open ? "true" : "false");
     r.list.classList.toggle("open", open);
   });
 }
 function refreshChrome() {
-  const total = LESSONS.length, done = totalDone();
+  const total = CORE.length, done = totalDone();
   const tc = document.getElementById("topCount"), tf = document.getElementById("topFill");
-  if (tc) tc.textContent = done + " of " + total + " done";
+  if (tc) tc.textContent = done + " of " + total + " steps done";
   if (tf) tf.style.width = (total ? Math.round(done / total * 100) : 0) + "%";
-  LESSONS.forEach(l => { const b = navRefs.items[l.id]; if (b) b.querySelector(".mk").classList.toggle("on", isDone(l.id)); });
-  MODS.forEach(m => { const r = navRefs.mods[m.id]; if (r) r.head.querySelector(".cnt").textContent = modDone(m) + "/" + m.lessons.length; });
+  CORE.forEach(l => { const b = navRefs.items[l.id]; const m = b && b.querySelector(".mk"); if (m) m.classList.toggle("on", isDone(l.id)); });
+  GROUPS.forEach(g => {
+    const r = navRefs.groups[g.id]; if (!r) return;
+    const c = r.head.querySelector(".cnt");
+    c.textContent = g.marks ? modDone(g.mod) + "/" + g.mod.core.length : (g.items ? g.items.length : g.sections.reduce((n, s) => n + s.items.length, 0)) + " pages";
+  });
 }
 function setActive() {
   Object.keys(navRefs.items).forEach(id => navRefs.items[id].classList.remove("on"));
   const key = CUR.view === "lesson" ? CUR.id : CUR.view === "modend" ? null : CUR.view;
   if (key && navRefs.items[key]) navRefs.items[key].classList.add("on");
-  if (CUR.view === "lesson") { Object.keys(OPENMOD).forEach(k => delete OPENMOD[k]); OPENMOD[BYID[CUR.id].mod.id] = true; paintMods(); }
+  if (CUR.view === "lesson") { Object.keys(OPENMOD).forEach(k => delete OPENMOD[k]); OPENMOD[groupOf(BYID[CUR.id])] = true; paintMods(); }
   const b = key && navRefs.items[key];
   if (b && elSide.scrollHeight > elSide.clientHeight) {
     const r = b.getBoundingClientRect(), s = elSide.getBoundingClientRect();
@@ -726,7 +772,8 @@ function openDrawer(on) {
 }
 
 /* ============ routing ============ */
-let CUR = { view: "home" };
+let CUR = { view: "home" }, PREV = null;
+const curTarget = () => CUR.view === "lesson" ? CUR.id : CUR.view === "modend" ? "modend:" + CUR.id : CUR.view;
 function mount(node, o = {}) {
   elMain.replaceChildren(node);
   growAll(elMain);
@@ -738,37 +785,49 @@ function mount(node, o = {}) {
   }
 }
 function nav(target, o = {}) {
+  const was = curTarget();
   if (target === "home") { CUR = { view: "home" }; mount(renderHome(), o); }
   else if (target === "workbook") { CUR = { view: "workbook" }; mount(renderWorkbook(), o); }
   else if (target.startsWith("modend:")) { CUR = { view: "modend", id: target.slice(7) }; mount(renderModEnd(MODS.find(m => m.id === target.slice(7))), o); }
   else {
     const l = BYID[target]; if (!l) return nav("home");
     CUR = { view: "lesson", id: l.id }; set("last", l.id);
+    if (l.pidx != null) set("lastcore", l.id);
     mount(renderLesson(l), o);
   }
+  if (was !== target) PREV = was;
   setActive(); openDrawer(false);
 }
 function finishLesson(l) {
-  set("done." + l.id, true);
-  const m = l.mod, last = m.lessons[m.lessons.length - 1] === l;
-  if (last) nav("modend:" + m.id); else nav(LESSONS[l.idx + 1].id);
+  if (l.core) set("done." + l.id, true);
+  const m = l.mod;
+  if (m.core[m.core.length - 1] === l) { nav("modend:" + m.id); return; }
+  const nxt = PATH[l.pidx + 1];
+  nav(nxt ? nxt.id : "workbook");
 }
 function continueTarget() {
-  const last = BYID[get("last")];
-  const start = last ? last.idx : 0;
-  for (let i = start; i < LESSONS.length; i++) if (!isDone(LESSONS[i].id)) return LESSONS[i];
-  for (let i = 0; i < LESSONS.length; i++) if (!isDone(LESSONS[i].id)) return LESSONS[i];
-  return LESSONS[0];
+  const lc = BYID[get("lastcore")];
+  const start = lc && lc.pidx != null ? lc.pidx : 0;
+  const open = i => PATH[i].core && !isDone(PATH[i].id);
+  for (let i = start; i < PATH.length; i++) if (open(i)) return PATH[i];
+  for (let i = 0; i < PATH.length; i++) if (open(i)) return PATH[i];
+  return CORE[0];
 }
 
 function strip(left, right) { return h("div", { class: "strip" }, h("span", null, left), h("span", null, right)); }
 
+function tocRow(l, marks) {
+  return h("button", { type: "button", class: "toc-row", onclick: () => nav(l.id) },
+    marks ? h("span", { class: "mk" + (isDone(l.id) ? " on" : "") }) : null,
+    h("span", { class: "tx" }, h("strong", null, l.title), h("small", null, l.desc || "")),
+    h("span", { class: "go", "aria-hidden": "true" }, "→"));
+}
+/* the steps in this level, then the optional pages */
 function moduleToc(m) {
-  return h("div", { class: "toc" }, m.lessons.filter(l => !l.cover).map(l =>
-    h("button", { type: "button", class: "toc-row", onclick: () => nav(l.id) },
-      h("span", { class: "mk" + (isDone(l.id) ? " on" : "") }),
-      h("span", { class: "tx" }, h("strong", null, l.title), h("small", null, l.desc || "")),
-      h("span", { class: "go", "aria-hidden": "true" }, "→"))));
+  const deep = m.hasCore ? m.deep : m.lessons.filter(l => !l.cover);
+  return h("div", { class: "stack" },
+    m.core.length ? h("div", { class: "toc" }, m.core.map(l => tocRow(l, true))) : null,
+    deep.length ? h("div", { class: "stack tight" }, m.core.length ? eyebrow("Go deeper (optional)") : null, h("div", { class: "toc" }, deep.map(l => tocRow(l, false)))) : null);
 }
 
 function renderLesson(l) {
@@ -784,16 +843,27 @@ function renderLesson(l) {
       h("div", { class: "head" }, l.eyebrow ? eyebrow(l.eyebrow) : null, h("h1", { class: "h1" }, l.title),
         l.lede ? h("p", { class: "lede" }, rt(l.lede)) : null)));
   }
-  const prev = LESSONS[l.idx - 1], next = LESSONS[l.idx + 1];
-  const last = m.lessons[m.lessons.length - 1] === l;
-  const done = isDone(l.id);
-  const primaryLabel = last ? (l.idx === LESSONS.length - 1 ? "Done. Finish the course" : "Done. Finish this level") : (done ? "Next page →" : "Done, next page →");
-  const pager = h("div", { class: "pager" },
-    prev ? btn("← Back", () => nav(prev.id), "ghost") : h("span"),
-    h("div", { class: "row" },
-      done ? link("Mark as not done", () => { set("done." + l.id, false); nav(l.id); }) : null,
-      btn(primaryLabel, () => finishLesson(l))),
-    h("div", { class: "where" }, h("span", null, "Page " + (l.idx + 1) + " of " + LESSONS.length), h("span", null, "wendaful.com")));
+  const onPath = l.pidx != null, done = isDone(l.id);
+  let pager;
+  if (onPath) {
+    const prev = PATH[l.pidx - 1];
+    const lastInLevel = l.core && m.core[m.core.length - 1] === l;
+    const primaryLabel = l.cover ? "Let’s start →" : lastInLevel ? (l === CORE[CORE.length - 1] ? "Done. Finish the course" : "Done. Finish this level") : (done ? "Next step →" : "Done, next step →");
+    pager = h("div", { class: "pager" },
+      prev ? btn("← Back", () => nav(prev.id), "ghost") : h("span"),
+      h("div", { class: "row" },
+        l.core && done ? link("Mark as not done", () => { set("done." + l.id, false); nav(l.id); }) : null,
+        btn(primaryLabel, () => finishLesson(l))),
+      h("div", { class: "where" }, h("span", null, l.core ? "Step " + (l.cidx + 1) + " of " + CORE.length : m.title), h("span", null, "wendaful.com")));
+  } else {
+    const at = m.lessons.indexOf(l), pv = !m.hasCore ? m.lessons[at - 1] : null, nx = !m.hasCore ? m.lessons[at + 1] : null;
+    pager = h("div", { class: "pager" },
+      pv ? btn("← " + pv.title, () => nav(pv.id), "ghost") : btn("← Back", () => nav(PREV && PREV !== curTarget() ? PREV : "home"), "ghost"),
+      h("div", { class: "row" },
+        nx ? btn(nx.title + " →", () => nav(nx.id), "ghost") : null,
+        btn("Back to the course", () => nav(continueTarget().id))),
+      h("div", { class: "where" }, h("span", null, m.hasCore ? "Optional · go deeper" : "Toolbox · use any time"), h("span", null, "wendaful.com")));
+  }
   const built = [].concat(l.build());
   art.append(h("div", { class: "wrap" }, h("div", { class: "body" }, ...built), pager));
   return art;
@@ -811,7 +881,7 @@ function wireChrome() {
 <script>
 "use strict";
 /* ============ modules, in course order ============ */
-mod({ id: "start", label: "Start here", title: "Start here", strip: "Start here", finish: "a clear picture of where you are.",
+mod({ id: "start", label: "Begin", title: "Start here", strip: "Start here", finish: "a clear picture of where you are.",
   end: { head: "You’re ready to build.", text: "You know your starting point and what a system really is. Level 1 is next. It’s a small one: four parts and a place for everything to land.", next: "l1-intro", cta: "Start Level 1" } });
 mod({ id: "l1", label: "Level 1", title: "Build your system", strip: "Level 1 · Build", finish: "a home for everything.",
   end: { head: "Level 1 is done.", text: "Live with your four parts for a week. Sort your inbox once or twice and see what feels easy. When you’re ready, Level 2 turns these parts into a weekly rhythm.", next: "l2-intro", cta: "Start Level 2" } });
@@ -820,7 +890,7 @@ mod({ id: "l2", label: "Level 2", title: "Live your system", strip: "Level 2 · 
 mod({ id: "l3", label: "Level 3", title: "Design better systems", strip: "Level 3 · Design better", finish: "systems that feel easy to keep.",
   end: { head: "Level 3 is done.", text: "One idea at a time is plenty. Try your floors and your minimum viable day for a week. When they feel easy, start Level 4.", next: "l4-intro", cta: "Start Level 4" } });
 mod({ id: "l4", label: "Level 4", title: "Apply your systems", strip: "Level 4 · Apply", finish: "one small system for each part of your life.",
-  end: { head: "Level 4 is done.", text: "One area at a time. Finish one small system before you start the next. Then come back to the area plan and pick a new one.", next: "cp-intro", cta: "Open the Consistency Pack" } });
+  end: { head: "Level 4 is done.", text: "One area at a time. Finish one small system before you start the next. Then come back to the area plan and pick a new one.", next: "next", cta: "See what to do next" } });
 mod({ id: "cp", label: "Bonus", title: "The Consistency Pack", strip: "Bonus · Consistency Pack", finish: "tools for the all-or-nothing brain.",
   end: { head: "That’s the Consistency Pack.", text: "You don’t need to use every page. Come back to the one that sounds like you on the day you need it.", next: "lib-intro", cta: "Open the Systems Library" } });
 mod({ id: "lib", label: "Bonus", title: "Systems Library", strip: "Bonus · Systems Library", finish: "menus and resets you can copy.",
@@ -857,6 +927,7 @@ lesson("start", { id: "s-story", title: "My story", tag: "Planning is personal",
     card({ cls: "", eyebrow: "This workbook helps you build a system that", kids: [
       checks("story", ["Lowers overwhelm so you can focus on what matters.", "Helps you feel in control, even on the busiest days.", "Fits your real life and works with your brain."], { }),
       p("Tap the ones you want most.", "muted small")] }),
+    field("why", { label: "Why I picked up this workbook", rows: 4 }),
     h("p", { class: "quote" }, "planning is personal.")
   ] });
 
@@ -1249,8 +1320,8 @@ lesson("l3", { id: "l3-intro", title: "Level 3 overview", desc: "", cover: { eye
       ["Protect white space", "Leave room for rest and surprises.", [["Protect white space", "l3-space"]]],
       ["Recover after rough weeks", "A small floor and a quick reset get you going again.", [["Floor and More", "l3-floor"], ["Minimum viable day", "l3-mvd"], ["Excuse answers", "l3-excuse"], ["After a rough week", "l3-rough"]]]];
     return [
-      bar("**Start with two quick pages.** The life check-in and your focus areas. Then work through the six ideas and check them off as you go.",
-        { extra: h("div", { class: "row" }, btn("Life check-in", () => nav("l3-checkin"), "sm"), btn("Pick 1 to 3 areas", () => nav("l3-pick"), "ghost sm")) }),
+      bar("**Your steps in this level:** the life check-in, your focus areas, the repeat decision finder, and your minimum viable day. The six ideas below are optional. Open one when you want to go deeper.",
+        { extra: h("div", { class: "row" }, btn("Start with the life check-in", () => nav("l3-checkin"), "sm")) }),
       sec(eyebrow("Six ways to make a system easier"), h("div", { class: "rows" },
         S6.map((s, i) => h("div", { class: "rw", style: { "--cols": "34px 1.2fr 1.2fr 60px" } },
           h("span", { class: "num solid" }, h("span", { class: "n" }, String(i + 1))),
@@ -1574,8 +1645,8 @@ function exampleCard(d, badge) {
 /* ============ LEVEL 4 ============ */
 lesson("l4", { id: "l4-intro", title: "Level 4 overview", desc: "", cover: { eyebrow: "Level 4", title: "Apply your systems", sub: "Use the same five steps in every part of your life." },
   build: () => {
-    const F = [["Capture", "Get everything about this area out of your head.", "My area plan", "l4-area"], ["Organize", "Give each thing a home so you can find it.", "Give each system a home", "l4-home"],
-      ["Plan", "Choose what fits and how often it runs.", "How often does it run", "l4-often"], ["Do", "Build one small system and start using it.", "System builder", "l4-builder"], ["Review", "Try it for two weeks. Keep what works.", "Two-week test", "l4-test"]];
+    const F = [["Capture", "Get everything about this area out of your head.", "My area plan (optional)", "l4-area"], ["Organize", "Give each thing a home so you can find it.", "Give each system a home", "l4-home"],
+      ["Plan", "Choose what fits and how often it runs.", "How often does it run (optional)", "l4-often"], ["Do", "Build one small system and start using it.", "System builder", "l4-builder"], ["Review", "Try it for two weeks. Keep what works.", "Two-week test", "l4-test"]];
     const first = field("l4.first", { label: "The focus area I’m taking through first", cls: "inl", ph: focusNames()[0] || "Meals" });
     return [
       bar("**One system, every area.** The same five steps fit your home, your work, your family, and you. Learn them once and use them anywhere."),
@@ -1766,26 +1837,26 @@ const BLURB = {
 };
 function levelTiles() {
   return h("div", { class: "tiles" }, MODS.slice(1, 5).map((m, i) => {
-    const n = m.lessons.filter(l => !l.cover).length, d = m.lessons.filter(l => !l.cover && isDone(l.id)).length;
+    const n = m.core.length, d = m.core.filter(l => isDone(l.id)).length;
     return h("button", { type: "button", class: "tile" + (i >= 2 ? " d" : ""), onclick: () => nav(m.lessons[0].id) },
       h("div", { class: "stack tight" }, eyebrow(m.label), h("h3", null, m.title), p(BLURB[m.id])),
-      h("div", { class: "stack tight" }, p("**You finish with:** " + m.finish, "fin"), h("div", { class: "pg" }, h("div", { class: "track" }, h("i", { style: { width: (n ? Math.round(d / n * 100) : 0) + "%" } })), h("span", null, d + "/" + n))));
+      h("div", { class: "stack tight" }, p("**You finish with:** " + m.finish, "fin"), h("div", { class: "pg" }, h("div", { class: "track" }, h("i", { style: { width: (n ? Math.round(d / n * 100) : 0) + "%" } })), h("span", null, d + "/" + n + " steps"))));
   }));
 }
 function renderHome() {
-  const total = LESSONS.length, done = totalDone(), pct = Math.round(done / total * 100);
-  const cont = continueTarget(), started = done > 0 || get("last");
+  const total = CORE.length, done = totalDone(), pct = Math.round(done / total * 100);
+  const cont = continueTarget(), started = done > 0 || get("lastcore");
   const nameFld = field("name", { label: "This workbook belongs to", cls: "inl", ph: "Your name" });
   const art = h("article", { class: "lesson" },
     h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Wendaful Planning · Workbook course", "wendaful.com"),
       h("div", { class: "cv" }, eyebrow("The 4-level Wendaful Planning workbook"), h("h1", { class: "h1" }, "Systems for Real Life"),
-        h("p", { class: "sub" }, "Build, Live, Design, Apply."), p("Plus two bonus sections: The Consistency Pack and My Done-for-You Systems Library.", "small"),
+        h("p", { class: "sub" }, "Build, Live, Design, Apply."), p(total + " short steps. Plus a toolbox of bonus menus and restarts for when you need them.", "small"),
         nameFld,
         h("div", { class: "row", style: { paddingTop: "8px" } },
           h("button", { type: "button", class: "btn light", onclick: () => nav(cont.id) }, started ? "Pick up where you left off" : "Start here"),
           started ? h("span", { class: "small" }, cont.title) : null)))),
     h("div", { class: "wrap" }, h("div", { class: "body" },
-      h("div", { class: "stack tight" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "lbl" }, done + " of " + total + " pages done"),
+      h("div", { class: "stack tight" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "lbl" }, done + " of " + total + " steps done"),
         get("lvl.most") ? h("span", { class: "pill" }, "Slowing down at: " + get("lvl.most")) : null), h("div", { class: "track" }, h("i", { style: { width: pct + "%" } }))),
       done === total ? bar("**You finished.** Every row in your workbook is one less thing your brain has to hold.", { cls: "good", extra: btn("See my workbook", () => nav("workbook"), "sm") }) : null,
       bar("**Not sure where to begin?** Check the lines that sound like you today. The level with the most checks is a good place to slow down.", { extra: btn("Find your level", () => nav("s-find"), "sm") }),
@@ -1793,30 +1864,63 @@ function renderHome() {
         "**Go in order.** Each level builds on the one before it.",
         "**Write right on the page.** Messy is fine. Your answers save on this device, and you can change them any time.",
         "**Stay as long as you need.** Live with each level for a week or two before you start the next one."]),
-        bar("**Go at your own pace.** One page a day is plenty. Something is always better than nothing.")),
+        bar("**Go at your own pace.** One step a day is plenty. Something is always better than nothing.")),
+      sec("What’s here", cols(240,
+        card({ title: "The course", text: total + " steps across the four levels. This is the whole path." }),
+        card({ title: "Go deeper", text: "Extra pages inside each level. Skip them and you still finish." }),
+        card({ title: "Toolbox", text: "The Consistency Pack and the Systems Library. Open them when you need a menu or a restart." }))),
       sec("The four levels", levelTiles(), bar("**How to move through them.** Do Level 1 first. Live with it for a week, then start Level 2. Give that rhythm two or three weeks before you move on to Levels 3 and 4.")),
-      sec("Bonus sections", cols(300,
+      sec("Toolbox", p("Open these any time. They are not part of your steps.", "muted"), cols(300,
         h("button", { type: "button", class: "bonus", onclick: () => nav("cp-intro") }, eyebrow("Bonus"), h("h4", null, "The Consistency Pack"), h("p", { class: "small muted" }, "Trackers and restart pages for the all-or-nothing brain.")),
         h("button", { type: "button", class: "bonus", onclick: () => nav("lib-intro") }, eyebrow("Bonus"), h("h4", null, "My Done-for-You Systems Library"), h("p", { class: "small muted" }, "My own routines, menus, and resets, ready to copy.")))),
       legal())));
   return art;
 }
 
+/* the finish line: what they built and what to do this week */
+function builtCard() {
+  const homes = ["inbox", "cal", "tasks", "notes"].filter(k => get("part." + k + ".home")).length;
+  const mvd = [0, 1, 2, 3, 4].filter(i => get("mvd." + i)).length;
+  const sort = [get("sort.day"), get("sort.time")].filter(Boolean).join(" at ");
+  const R = [
+    ["My level", get("lvl.most"), "s-find"],
+    ["My four parts", homes ? homes + " of 4 have a home" : "", "l1-parts"],
+    ["Weekly sort time", sort, "l1-parts"],
+    ["Focus areas", focusNames().join(", "), "l3-pick"],
+    ["Minimum viable day", mvd ? mvd + " of 5 small things" : "", "l3-mvd"],
+    ["Systems I built", builderNames().join(", "), "l4-builder"]];
+  return card({ title: "What you built", h: "h3", sub: "Anything blank is a page you can fill in later.",
+    kids: [h("dl", { class: "dl" }, R.map(r => [h("dt", null, r[0]), h("dd", null, r[1] ? r[1] : link("Add this", () => nav(r[2])))]).flat())] });
+}
+function keepGoing() {
+  const day = get("sort.day");
+  return sec("Keep it going", steps([
+    "**Do your weekly reset" + (day ? " on " + day : "") + ".** Even the short version counts.",
+    "**Run your first system for two weeks.** Tap a box each day in the two-week test. The low-energy version counts.",
+    "**Hit a rough week?** Do the floor version and call today day one again."]),
+    h("div", { class: "row" }, link("Two-week test", () => nav("l4-test")), link("After a rough week", () => nav("l3-rough")), link("Systems Library", () => nav("lib-intro"))));
+}
 function renderModEnd(m) {
-  const e = m.end, last = m.lessons[m.lessons.length - 1];
+  const e = m.end, final = m.id === "next", last = m.core[m.core.length - 1] || m.lessons[m.lessons.length - 1];
+  const left = CORE.length - totalDone(), all = left === 0;
+  const count = final ? totalDone() + " of " + CORE.length + " steps done" : modDone(m) + " of " + m.core.length + " steps done in this level";
+  const head = final && !all ? "That’s the last step." : e.head;
+  const text = final && !all ? left + (left === 1 ? " step still has" : " steps still have") + " no check mark. Skip them or go back, whichever fits your week. Your workbook keeps everything you’ve filled in so far." : e.text;
   return h("article", { class: "lesson" },
     h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Systems for Real Life", m.strip),
-      h("div", { class: "cv" }, eyebrow(modDone(m) + " of " + m.lessons.length + " pages done"), h("h1", { class: "h1" }, e.head), h("p", { class: "sub" }, e.text)))),
+      h("div", { class: "cv" }, eyebrow(count), h("h1", { class: "h1" }, head), h("p", { class: "sub" }, text)))),
     h("div", { class: "wrap" }, h("div", { class: "body" },
-      bar("**You finish with: " + m.finish + "**"),
-      h("div", { class: "row" }, btn(e.cta, () => nav(e.next)), btn("Course home", () => nav("home"), "ghost"), link("Back to the last page", () => nav(last.id))))));
+      final ? null : bar("**You finish with: " + m.finish + "**"),
+      final ? builtCard() : null, final ? keepGoing() : null,
+      h("div", { class: "row" }, btn(e.cta, () => nav(e.next)), btn("Course home", () => nav("home"), "ghost"), final && !all ? link("Go to my next unfinished step", () => nav(continueTarget().id)) : link("Back to the last page", () => nav(last.id))),
+      final ? legal() : null)));
 }
 
 /* ============ my workbook ============ */
 const v = k => get(k).trim();
 function summary() {
   const out = [], add = (title, lessonId, rows) => { rows = rows.filter(r => r[1]); if (rows.length) out.push({ title, lessonId, rows }); };
-  add("Why I picked this up", "s-how", [["", v("why")]]);
+  add("Why I picked this up", "s-story", [["", v("why")]]);
   add("My level", "s-find", [["Slowing down at", v("lvl.most")]]);
   add("What my planner is for", "l1-needs", [["Style", v("tool.mode")], ["Should help me", v("needs.help")], ["My tools", v("needs.tools")], ["What bugs me", v("needs.bugs")]]);
   const part = (l, a, bl, b) => [l, [v("part." + a + ".home"), v("part." + a + "." + b) ? bl + ": " + v("part." + a + "." + b) : ""].filter(Boolean).join("\n")];
@@ -2266,8 +2370,9 @@ lesson("lib", { id: "lib-yours", title: "Make it yours", tag: "Systems library �
 "use strict";
 (function boot() {
   wireChrome();
+  setupPath();
   const last = BYID[get("last")];
-  OPENMOD[last ? last.mod.id : "start"] = true;
+  OPENMOD[last ? groupOf(last) : "start"] = true;
   buildSide();
   const hash = (location.hash || "").replace(/^#/, "");
   if (hash === "workbook") nav("workbook");
