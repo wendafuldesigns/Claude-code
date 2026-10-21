@@ -1,4 +1,4 @@
-<title>Systems for Real Life</title>
+<title>Real Life System Assistant</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -178,7 +178,7 @@ select.ln{appearance:none;background-image:linear-gradient(45deg,transparent 50%
 /* checkboxes and radios */
 .chkgrid{display:grid;grid-template-columns:repeat(var(--c,1),minmax(0,1fr));gap:0 28px}
 .chk{display:flex;gap:12px;align-items:flex-start;cursor:pointer;line-height:1.4;padding:7px 0;position:relative;min-width:0}
-.chk input{position:absolute;opacity:0;width:24px;height:24px;margin:0;left:0;top:5px;cursor:pointer}
+.chk>input{position:absolute;opacity:0;width:24px;height:24px;margin:0;left:0;top:5px;cursor:pointer}
 .chk .box{flex:none;width:20px;height:20px;border:1.5px solid var(--edge);background:var(--surface);margin-top:1px;border-radius:2px;position:relative;transition:background .15s,border-color .15s}
 .chk .box::after{content:"";position:absolute;left:5.5px;top:1.5px;width:6px;height:11px;border:solid var(--btn-ink);border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .15s}
 .chk input:checked+.box{background:var(--btn);border-color:var(--btn)}
@@ -326,10 +326,44 @@ select.ln{appearance:none;background-image:linear-gradient(45deg,transparent 50%
 .mvday .tg{width:32px;height:32px;font-size:.75rem}
 .card .stack.tight .fld{min-width:0}
 .tired .opt{display:none}
+.coach{display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--btn);padding:16px 18px;border-radius:2px}
+.coach>.stack{min-width:0;flex:1}
+.coach-av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--btn);color:var(--btn-ink);font:400 1.55rem/40px var(--serif);text-align:center}
+.coach-line{font:400 1.25rem/1.35 var(--serif);color:var(--accent);max-width:none}
+.cl-tools{gap:8px}
+.one-t{font:400 clamp(1.5rem,3.6vw,2rem)/1.15 var(--serif);color:var(--accent);max-width:none}
+.editrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.editrow.crossed span{text-decoration:line-through;color:var(--muted)}
+.gen{background:var(--surface);border:1px dashed var(--edge);padding:12px 14px;white-space:pre-wrap;font-size:.9375rem;line-height:1.5;border-radius:2px;overflow-wrap:anywhere}
+.part{padding-top:4px}
+.part+.part{border-top:1px solid var(--rule);padding-top:34px}
+.part-body{display:flex;flex-direction:column;gap:30px}
 .chip.ex{font-size:.8125rem;padding:7px 11px;min-height:34px;font-weight:450}
 .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .flow .st{padding:9px 14px;background:var(--panel);border-radius:2px;font-weight:600;font-size:.9375rem}
 .flow .arr{color:var(--muted)}
+/* ---------- assistant chat ---------- */
+.chat{display:flex;flex-direction:column}
+.chat-log{display:flex;flex-direction:column;gap:12px;padding:4px 0 20px}
+.cm{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.cm.u{justify-content:flex-end}
+.cm.block{margin-left:44px;max-width:680px;display:block}
+.cm.block>.card,.cm.block>.gen{margin:0}
+.bubble{max-width:min(62ch,88%);padding:10px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--rule);line-height:1.5;overflow-wrap:anywhere}
+.cm.a .bubble{border-top-left-radius:3px}
+.cm.u .bubble{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);border-top-right-radius:3px}
+.bubble.typing{display:inline-flex;gap:5px;align-items:center;padding:15px 16px}
+.bubble.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1s infinite ease-in-out}
+.bubble.typing i:nth-child(2){animation-delay:.15s}
+.bubble.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.coach-av.sm{width:34px;height:34px;font-size:1.3rem;line-height:34px}
+.chat-dock{position:sticky;bottom:0;z-index:3;background:var(--bg);border-top:1px solid var(--rule);padding:12px 0 calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.chat-dock:empty{display:none}
+.chat-dock .chip{min-height:44px}
+.chip.rec{border-color:var(--accent);font-weight:600}
+.dockrow{align-items:center;flex-wrap:wrap}
+.dockrow .ln{flex:1;min-width:150px}
 @media (max-width:900px){
   .menu{display:inline-flex}
   .shell{grid-template-columns:minmax(0,1fr)}
@@ -353,6 +387,8 @@ select.ln{appearance:none;background-image:linear-gradient(45deg,transparent 50%
   .days14{grid-template-columns:repeat(7,minmax(0,1fr))}
   .cover .cv{padding:40px 0 34px;min-height:240px}
   .tab{padding:11px 12px}
+  .cm.block{margin-left:0;max-width:none}
+  .bubble{max-width:92%}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
@@ -364,11 +400,11 @@ select.ln{appearance:none;background-image:linear-gradient(45deg,transparent 50%
     <button class="menu" id="menuBtn" type="button" aria-label="Open the page list" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <button class="brand" id="brandBtn" type="button" aria-label="Course home"><span class="wm">wendaful</span><span class="ttl">Systems for Real Life</span></button>
+    <button class="brand" id="brandBtn" type="button" aria-label="Home"><span class="wm">wendaful</span><span class="ttl">Real Life System Assistant</span></button>
     <div class="topstat"><span id="topCount">0 of 0 done</span><div class="mini" aria-hidden="true"><i id="topFill"></i></div></div>
   </div></header>
   <div class="shell">
-    <nav class="side" id="side" aria-label="Course pages"></nav>
+    <nav class="side" id="side" aria-label="Pages"></nav>
     <main class="main" id="main" tabindex="-1"></main>
   </div>
   <div class="scrim" id="scrim" hidden></div>
@@ -413,6 +449,7 @@ function rt(s) {
 }
 
 /* ============ saved answers ============ */
+const APP_NAME = "Real Life System Assistant";
 const KEY = "wendaful-sfrl-v1";
 let S = {};
 let storageOK = true;
@@ -422,7 +459,7 @@ let saveT = null;
 function paintSave(pending) {
   const n = document.getElementById("saveNote");
   if (!n) return;
-  n.textContent = !storageOK ? "This browser will not keep your answers. Use Backup in My workbook before you leave."
+  n.textContent = !storageOK ? "This browser will not keep your answers. Use Backup in My system before you leave."
     : pending ? "Saving…" : "Your answers are saved on this device.";
 }
 function flush() {
@@ -659,7 +696,7 @@ function timer(o = {}) {
   return root;
 }
 
-/* ============ course registry ============ */
+/* ============ method registry ============ */
 const MODS = [], LESSONS = [], BYID = {};
 function mod(def) { def.lessons = []; MODS.push(def); return def; }
 function lesson(mid, def) {
@@ -668,15 +705,15 @@ function lesson(mid, def) {
   return def;
 }
 
-/* The short path. These pages are "the course" and the only ones that count toward progress.
-   Every other page is still here, just optional: "Go deeper" inside a level, or the Toolbox.
-   To change what is in the course, add or remove ids in this list. */
+/* The short path. These pages are the core guides of the method and the only ones that get a check mark.
+   Related pages are folded into these steps. The Consistency Pack and Systems Library stay in the Toolbox.
+   To change which guides get a check mark, add or remove ids in this list. */
 const CORE_IDS = [
   "s-story", "s-find", "s-system",
-  "l1-needs", "l1-parts", "l1-route",
+  "l1-needs", "l1-parts", "l1-setup", "l1-route", "l1-yours",
   "l2-rhythm", "l2-weekly", "l2-daily", "l2-ready",
-  "l3-checkin", "l3-pick", "l3-decisions", "l3-mvd",
-  "l4-builder", "l4-home", "l4-test", "l4-glance",
+  "l3-checkin", "l3-friction", "l3-brain", "l3-season", "l3-floor", "l3-excuse",
+  "l4-area", "l4-builder", "l4-home", "l4-test", "l4-glance",
   "next"
 ];
 let PATH = [], CORE = [];
@@ -708,7 +745,7 @@ function setupGroups() {
   GROUPS = [];
   MODS.filter(m => m.hasCore).forEach(m => GROUPS.push({ id: m.id, label: m.label, title: m.title, marks: true, items: m.lessons.filter(l => l.core || l.cover), mod: m }));
   const deep = MODS.filter(m => m.hasCore && m.deep.length);
-  GROUPS.push({ id: "deep", label: "Extra pages", title: "Go deeper", marks: false, sections: deep.map(m => ({ title: m.title, items: m.deep })) });
+  if (deep.length) GROUPS.push({ id: "deep", label: "Extra pages", title: "Go deeper", marks: false, sections: deep.map(m => ({ title: m.title, items: m.deep })) });
   MODS.filter(m => !m.hasCore).forEach(m => GROUPS.push({ id: m.id, label: "Toolbox", title: m.title, marks: false, items: m.lessons, mod: m }));
 }
 function buildSide() {
@@ -717,14 +754,15 @@ function buildSide() {
   const inner = h("div", { class: "side-in" });
   const top = h("div", { class: "nv-top" });
   const mk = (id, label, target) => { const b = h("button", { type: "button", class: "nv", onclick: () => nav(target) }, h("span", { class: "serif" }, label)); navRefs.items[id] = b; return b; };
-  top.append(mk("home", "Course home", "home"), mk("workbook", "My workbook", "workbook"));
-  inner.append(top, h("div", { class: "sidehead" }, "The course · " + CORE.length + " steps"));
+  top.append(mk("home", "Assistant", "home"), mk("today", "Today", "today"), mk("workbook", "My system", "workbook"), mk("learn", "Learn the method", "learn"));
+  inner.append(top, h("div", { class: "sidehead" }, "The method · optional · " + CORE.length + " short guides"));
   const item = (l, marks) => {
     const b = h("button", { type: "button", class: "nv", onclick: () => nav(l.id) }, marks && l.core ? h("span", { class: "mk" }) : h("span", { class: "bul", "aria-hidden": "true" }), h("span", null, l.title));
     navRefs.items[l.id] = b; return b;
   };
+  let optShown = false;
   GROUPS.forEach(g => {
-    if (g.id === "deep") inner.append(h("div", { class: "sidehead" }, "Optional"));
+    if (!g.marks && !optShown) { inner.append(h("div", { class: "sidehead" }, "Toolbox · optional")); optShown = true; }
     const head = h("button", { type: "button", class: "nh", "aria-expanded": "false" },
       h("span", { class: "t" }, h("span", { class: "eyebrow" }, g.label), h("b", null, g.title)),
       h("span", { class: "cnt" }), h("span", { class: "chev", "aria-hidden": "true" }));
@@ -747,9 +785,9 @@ function paintMods() {
   });
 }
 function refreshChrome() {
-  const total = CORE.length, done = totalDone();
+  const total = ASST_TOTAL(), done = asstComplete() ? total : asstDone();
   const tc = document.getElementById("topCount"), tf = document.getElementById("topFill");
-  if (tc) tc.textContent = done + " of " + total + " steps done";
+  if (tc) tc.textContent = asstComplete() ? "System built" : "Setup " + done + " of " + total;
   if (tf) tf.style.width = (total ? Math.round(done / total * 100) : 0) + "%";
   CORE.forEach(l => { const b = navRefs.items[l.id]; const m = b && b.querySelector(".mk"); if (m) m.classList.toggle("on", isDone(l.id)); });
   GROUPS.forEach(g => {
@@ -785,13 +823,17 @@ function mount(node, o = {}) {
   elMain.scrollTop = 0;
   if (o.focus) {
     const t = elMain.querySelector('[data-card="' + o.focus + '"]');
-    if (t) { t.scrollIntoView({ block: "center" }); t.classList.add("flash"); }
+    if (t) { t.scrollIntoView({ block: t.classList.contains("part") ? "start" : "center" }); t.classList.add("flash"); }
   }
 }
 function nav(target, o = {}) {
+  const al = ALIAS[target];
+  if (al) { target = al.id; if (!o.focus) o = Object.assign({}, o, { focus: al.focus }); }
   const was = curTarget();
-  if (target === "home") { CUR = { view: "home" }; mount(renderHome(), o); }
+  if (target === "home") { CUR = { view: "home" }; mount(renderAssistant(), o); }
+  else if (target === "learn") { CUR = { view: "learn" }; mount(renderLearn(), o); }
   else if (target === "workbook") { CUR = { view: "workbook" }; mount(renderWorkbook(), o); }
+  else if (target === "today") { CUR = { view: "today" }; mount(renderToday(), o); }
   else if (target.startsWith("modend:")) { CUR = { view: "modend", id: target.slice(7) }; mount(renderModEnd(MODS.find(m => m.id === target.slice(7))), o); }
   else {
     const l = BYID[target]; if (!l) return nav("home");
@@ -803,7 +845,7 @@ function nav(target, o = {}) {
   setActive(); openDrawer(false);
 }
 function finishLesson(l) {
-  if (l.core) set("done." + l.id, true);
+  if (l.core) { set("done." + l.id, true); toast(cheer()); }
   const m = l.mod;
   if (m.core[m.core.length - 1] === l) { nav("modend:" + m.id); return; }
   const nxt = PATH[l.pidx + 1];
@@ -852,24 +894,24 @@ function renderLesson(l) {
   if (onPath) {
     const prev = PATH[l.pidx - 1];
     const lastInLevel = l.core && m.core[m.core.length - 1] === l;
-    const primaryLabel = l.cover ? "Let’s start →" : lastInLevel ? (l === CORE[CORE.length - 1] ? "Done. Finish the course" : "Done. Finish this level") : (done ? "Next step →" : "Done, next step →");
+    const primaryLabel = l.cover ? "Let’s start →" : lastInLevel ? (l === CORE[CORE.length - 1] ? "Done. See what I built" : "Done. Finish this level") : (done ? "Next guide →" : "Done, next guide →");
     pager = h("div", { class: "pager" },
       prev ? btn("← Back", () => nav(prev.id), "ghost") : h("span"),
       h("div", { class: "row" },
         l.core && done ? link("Mark as not done", () => { set("done." + l.id, false); nav(l.id); }) : null,
         btn(primaryLabel, () => finishLesson(l))),
-      h("div", { class: "where" }, h("span", null, l.core ? "Step " + (l.cidx + 1) + " of " + CORE.length : m.title), h("span", null, "wendaful.com")));
+      h("div", { class: "where" }, h("span", null, l.core ? "Guide " + (l.cidx + 1) + " of " + CORE.length : m.title), h("span", null, "wendaful.com")));
   } else {
     const at = m.lessons.indexOf(l), pv = !m.hasCore ? m.lessons[at - 1] : null, nx = !m.hasCore ? m.lessons[at + 1] : null;
     pager = h("div", { class: "pager" },
       pv ? btn("← " + pv.title, () => nav(pv.id), "ghost") : btn("← Back", () => nav(PREV && PREV !== curTarget() ? PREV : "home"), "ghost"),
       h("div", { class: "row" },
         nx ? btn(nx.title + " →", () => nav(nx.id), "ghost") : null,
-        btn("Back to the course", () => nav(continueTarget().id))),
+        btn("Back to the method", () => nav("learn"))),
       h("div", { class: "where" }, h("span", null, m.hasCore ? "Optional · go deeper" : "Toolbox · use any time"), h("span", null, "wendaful.com")));
   }
   const built = [].concat(l.build());
-  art.append(h("div", { class: "wrap" }, h("div", { class: "body" }, ...built), pager));
+  art.append(h("div", { class: "wrap" }, h("div", { class: "body" }, coachNote(l), ...built, coachCheck(l)), pager));
   return art;
 }
 
@@ -884,7 +926,7 @@ function wireChrome() {
 </script>
 <script>
 "use strict";
-/* ============ modules, in course order ============ */
+/* ============ the four levels, in order ============ */
 mod({ id: "start", label: "Begin", title: "Start here", strip: "Start here", finish: "a clear picture of where you are.",
   end: { head: "You’re ready to build.", text: "You know your starting point and what a system really is. Level 1 is next. It’s a small one: four parts and a place for everything to land.", next: "l1-intro", cta: "Start Level 1" } });
 mod({ id: "l1", label: "Level 1", title: "Build your system", strip: "Level 1 · Build", finish: "a home for everything.",
@@ -900,7 +942,7 @@ mod({ id: "cp", label: "Bonus", title: "The Consistency Pack", strip: "Bonus · 
 mod({ id: "lib", label: "Bonus", title: "Systems Library", strip: "Bonus · Systems Library", finish: "menus and resets you can copy.",
   end: { head: "That’s the Systems Library.", text: "Pick one. Follow it. Done. Cross out what doesn’t fit your life and add your own.", next: "next", cta: "See what to do next" } });
 mod({ id: "next", label: "Last page", title: "What to do next", strip: "What comes next", finish: "the next small step.",
-  end: { head: "You finished Systems for Real Life.", text: "Your systems are built. Every row in your workbook is one less thing your brain has to hold. Come back any time you need a reset.", next: "workbook", cta: "See my workbook" } });
+  end: { head: "You finished Systems for Real Life.", text: "Every row in your system is one less thing your brain has to hold. Come back to your assistant any time you need a reset.", next: "workbook", cta: "See my system" } });
 
 /* shared quiz row used in a few pages */
 function quiz(k, text, opts, correct, yes, no, onChange) {
@@ -928,26 +970,24 @@ lesson("start", { id: "s-story", title: "My story", tag: "Planning is personal",
       p("My planning story did not start with perfectly color-coded tabs or a pretty planner spread. It started out of necessity. I was juggling motherhood, running a business, and trying to keep my sanity. Sound familiar?"),
       p("Over the years, I tried all the planning systems. Paper planners, digital tools, hybrid setups, you name it. Each one taught me something. None felt like “the one” until I saw that a good system fits your life, your brain, and your goals. That’s when everything clicked."),
       h("p", { class: "sig" }, "Wenda")),
-    card({ cls: "", eyebrow: "This workbook helps you build a system that", kids: [
+    card({ cls: "", eyebrow: "This method helps you build a system that", kids: [
       checks("story", ["Lowers overwhelm so you can focus on what matters.", "Helps you feel in control, even on the busiest days.", "Fits your real life and works with your brain."], { }),
       p("Tap the ones you want most.", "muted small")] }),
-    field("why", { label: "Why I picked up this workbook", rows: 4 }),
     h("p", { class: "quote" }, "planning is personal.")
   ] });
 
-lesson("start", { id: "s-how", title: "How to use this course", tag: "Start here", desc: "Three simple rules and what you’ll need.",
-  lede: "A planner works best when it has a system behind it. This course walks you through my four levels, one small page at a time.",
+lesson("start", { id: "s-how", title: "How the method works", tag: "Start here", desc: "What your assistant does, and what these pages are for.",
+  lede: "A planner works best when it has a system behind it. The method has four levels. Your assistant already set up the first one for you.",
   build: () => [
     steps([
-      "**Go in order.** Each level builds on the one before it. Find your level on the next few pages to see where to slow down.",
-      "**Write right on the page.** Messy is fine. This is a working copy, so change anything, any time.",
-      "**Stay as long as you need.** Live with each level for a week or two before you start the next one."]),
+      "**Your assistant does the setup.** It picks homes for your inbox, calendar, tasks, and notes, sets your weekly sort, and builds your first system.",
+      "**These pages explain why.** Read the ones you’re curious about. Skip the rest.",
+      "**Change anything, any time.** Whatever you write here updates your system, your Today page, and your printable plan."]),
     cols(300,
-      card({ eyebrow: "What you’ll need", kids: [checks("how", ["The planner or calendar you already own", "A pen or pencil, if you like to copy things onto paper", "Ten quiet minutes"], { })] }),
-      card({ eyebrow: "Pages that repeat", text: "The weekly and daily pages come with extra copies for your first month. After that, the same steps move into your own planner." })),
-    bar("**A small promise to yourself.** Some weeks will go sideways, and that is part of the plan. Every step has a small version for tired days."),
-    bar("**Go at your own pace.** One page a day is plenty. Something is always better than nothing."),
-    field("why", { label: "Why I picked up this workbook", rows: 5 })
+      card({ eyebrow: "Works with what you have", text: "Paper planner, phone, computer, or a mix. Every guide shows the planner way and the digital way side by side." }),
+      card({ eyebrow: "Made for real weeks", text: "Some weeks go sideways. Every guide has a small version for tired days, so you never have to start over." })),
+    bar("**Go at your own pace.** One guide a day is plenty. Something is always better than nothing."),
+    field("why", { label: "Why I’m here", rows: 5 })
   ] });
 
 lesson("start", { id: "s-levels", title: "The four levels", tag: "Start here", desc: "How the levels fit together.",
@@ -1008,7 +1048,7 @@ lesson("start", { id: "s-system", title: "What a system really is", tag: "Start 
     paint();
     return [
       sec("What it looks like in real life", h("div", { class: "chips" }, ...segs), cols(220, ...cs)),
-      sec("Where this course takes you",
+      sec("Where this takes you",
         cols(170, ...MODS.slice(1, 5).map(m => h("button", { type: "button", class: "card", onclick: () => nav(m.lessons[0].id) }, eyebrow(m.label), h("strong", null, m.title)))),
         p("Levels 1 and 2 set up your planner and your weekly rhythm. Levels 3 and 4 help you build small systems like the ones above, for any part of your life.")),
       field("spots", { label: "A few spots in my life that could use a system", hint: "Where do I keep making the same choice or hunting for the same thing?", rows: 6 }),
@@ -1037,7 +1077,7 @@ lesson("start", { id: "s-habit", title: "System, routine, or habit?", tag: "Star
         card({ title: "It bends on hard days", text: "A sick kid or a late practice can knock out a routine. A system has a low-energy version ready." }),
         card({ title: "It lives outside your head", text: "It sits on paper or in an app, so it still works when you’re tired. Someone else in the house can run it too." }),
         card({ title: "It saves your energy", text: "The choice is made ahead of time. You keep your energy for the things you can’t plan." }))),
-      bar("**In this course you’ll build systems.** Your routines and habits will have a place to land inside them.")
+      bar("**With this method you’ll build systems.** Your routines and habits will have a place to land inside them.")
     ];
   } });
 
@@ -1153,6 +1193,7 @@ lesson("l1", { id: "l1-route", title: "Where does it go?", tag: "Level 1 · Wher
       sec(h("div", { class: "row" }, h("h2", null, "Practice round"), score), p("Tap where each one goes.", "muted"),
         card({ cls: "out", kids: PR.map((x, i) => [i ? h("hr", { class: "hr" }) : null, quiz("route.p." + i, x[0], ["Calendar", "Tasks", "Notes"], x[1], "", "Ask the three questions again.", upd)]) })),
       sec("Now sort your own", own),
+      sec("How to do your weekly sort", p("The three questions stay the same. The steps change a little with the tool. Open the one you use.", "muted"), toolGuide("sort", SORT_STEPS)),
       card({ title: "Quick setup checklist", h: "h4", kids: [checks("setup", ["I picked one inbox", "I picked one calendar", "I picked one task list", "I picked one spot for notes", "I set a weekly sort time", "I sorted my inbox one time"], { cols: 2 })] })
     ];
   } });
@@ -1257,6 +1298,7 @@ lesson("l2", { id: "l2-weekly", title: "Weekly reset and plan", tag: "Level 2 ·
         card({ kids: [field(k + "cal", { label: "Already on the calendar this week", hint: "Appointments, practices, deadlines", rows: 4 })] }));
     };
     return [tabs("wk", ["Week 1 of 4", "Week 2 of 4", "Week 3 of 4", "Week 4 of 4"], [1, 2, 3, 4].map(week)),
+      sec("How to run it on your phone, computer, or planner", toolGuide("weekly", WEEKLY_STEPS), p(HYBRID_NOTE, "muted small")),
       bar("**After week 4,** the same steps move into your own planner.")];
   } });
 
@@ -1283,6 +1325,7 @@ lesson("l2", { id: "l2-daily", title: "Daily plan and evening review", tag: "Lev
       return root;
     };
     return [tabs("day", ["Practice day 1 of 2", "Practice day 2 of 2"], [1, 2].map(day)),
+      sec("Plan tomorrow on your phone, computer, or planner", toolGuide("daily", DAILY_STEPS)),
       bar("**Everything after your top 3 is a bonus.** On a tired day, pick one task in the morning and write one win at night. That still counts as a full day in your system.")];
   } });
 
@@ -1319,24 +1362,101 @@ const builderName = n => get("sb." + n + ".name");
 const builderNames = () => [1, 2, 3].map(builderName).filter(Boolean);
 const focusNames = () => [1, 2, 3].map(n => get("focus." + n + ".name")).filter(Boolean);
 
-/* a card of tick boxes. groups: [{h?, items:[...]}] or items:[...] */
+/* ===== lists you can use, not just read =====
+   Every library list can be made yours (cross out, add your own), worked one item at a time,
+   picked from for you, and copied into a phone, computer, or planner. */
+const LIBREG = {};
+/* the items on a list the way this person sees them: crossed-out ones gone, their own added */
+function cardItems(o) {
+  const id = o.id, out = [];
+  let idx = 0;
+  (o.groups || [{ items: o.items }]).forEach(g => g.items.forEach(t => {
+    const i = idx++;
+    if (!get("cl." + id + ".x." + i)) out.push({ key: "cl." + id + ".c." + i, t, g: g.h || "" });
+  }));
+  for (let n = 0; n < 6; n++) {
+    const t = String(get("cl." + id + ".a." + n + ".t") || "").trim();
+    if (t) out.push({ key: "cl." + id + ".a." + n + ".c", t, g: "MY OWN" });
+  }
+  return out;
+}
+function checklistText(o, boxes) {
+  const items = cardItems(o), lines = [o.title];
+  let g = null;
+  items.forEach(it => { if (it.g && it.g !== g) { g = it.g; lines.push("", it.g); } lines.push((boxes ? "☐ " : "") + it.t); });
+  return lines.join("\n");
+}
 function checklistCard(o) {
-  const id = o.id, k = i => "cl." + id + "." + i;
+  LIBREG[o.id] = o;
+  const id = o.id;
   if (o.daily && get("cl." + id + ".d") !== today()) {
-    Object.keys(S).forEach(x => { if (x.startsWith("cl." + id + ".") && x !== "cl." + id + ".d") delete S[x]; });
+    Object.keys(S).forEach(x => { if (x.startsWith("cl." + id + ".c.") || (x.startsWith("cl." + id + ".a.") && x.endsWith(".c"))) delete S[x]; });
     set("cl." + id + ".d", today());
   }
-  const body = h("div", { class: "cl strike" }), boxes = [];
-  let idx = 0;
-  (o.groups || [{ items: o.items }]).forEach(g => {
-    if (g.h) body.append(h("div", { class: "grp" }, g.h));
-    g.items.forEach(t => { const i = idx++; const c = chkEl(k(i), t, { onChange: upd }); boxes.push(c.input); body.append(c); });
-  });
-  const cnt = h("span"), clr = link("Clear checks", () => { boxes.forEach((b, i) => { b.checked = false; set(k(i), false); }); upd(); });
-  function upd() { const n = boxes.filter(b => b.checked).length; cnt.textContent = n + " of " + boxes.length + (o.daily ? " · fresh each day" : ""); clr.hidden = !n; }
-  upd();
+  let mode = o.startMode || "view", at = 0;
+  const body = h("div", { class: "cl strike" }), tools = h("div", { class: "row cl-tools" });
+  const pickBox = h("div", { class: "res", hidden: true });
+  const cnt = h("span"), clr = link("Clear checks", () => { cardItems(o).forEach(it => set(it.key, false)); draw(); });
+  const foot = h("div", { class: "cl-foot" }, cnt, h("span", { class: "row" },
+    link("Copy checklist", () => copyText(checklistText(o, true))), link("Copy for my task app", () => copyText(cardItems(o).map(it => it.t).join("\n"))), clr));
+  function counts() {
+    const items = cardItems(o), n = items.filter(it => get(it.key)).length;
+    cnt.textContent = n + " of " + items.length + (o.daily ? " · fresh each day" : "");
+    clr.hidden = !n;
+  }
+  function doPick() {
+    const open = cardItems(o).filter(it => !get(it.key));
+    pickBox.hidden = false;
+    if (!open.length) { pickBox.replaceChildren(p("Everything on this list is done. That counts.")); return; }
+    const it = open[Math.floor(Math.random() * open.length)];
+    pickBox.replaceChildren(eyebrow("Do this one"), h("p", { class: "one-t" }, it.t),
+      h("div", { class: "row" }, btn("I’ll do it", () => { set(it.key, 1); pickBox.hidden = true; draw(); }, "sm"), btn("Pick another", doPick, "ghost sm")));
+  }
+  function drawOne(items) {
+    if (!items.length) { body.append(p("This list is empty. Use Edit list to add your own.", "muted")); return; }
+    if (at >= items.length) {
+      body.append(h("div", { class: "res" }, p("**That’s the whole list.** Nice work."), h("div", { class: "row" }, btn("Back to the list", () => { mode = "view"; draw(); }, "sm"))));
+      return;
+    }
+    const it = items[at];
+    body.append(h("div", { class: "stack" }, h("div", { class: "track" }, h("i", { style: { width: Math.round(at / items.length * 100) + "%" } })), eyebrow("Item " + (at + 1) + " of " + items.length),
+      h("p", { class: "one-t" }, it.t),
+      h("div", { class: "row" }, btn("Done", () => { set(it.key, 1); at++; draw(); }), btn("Skip", () => { at++; draw(); }, "ghost"), at > 0 ? btn("Back", () => { at--; draw(); }, "ghost sm") : null),
+      link("Back to the list", () => { mode = "view"; draw(); })));
+  }
+  function drawEdit() {
+    let idx = 0;
+    (o.groups || [{ items: o.items }]).forEach(g => {
+      if (g.h) body.append(h("div", { class: "grp" }, g.h));
+      g.items.forEach(t => {
+        const i = idx++, xk = "cl." + id + ".x." + i;
+        const b = btn(get(xk) ? "Put back" : "Cross out", () => { const on = !get(xk); set(xk, on ? 1 : false); row.classList.toggle("crossed", on); b.textContent = on ? "Put back" : "Cross out"; }, "ghost sm");
+        const row = h("div", { class: "editrow" + (get(xk) ? " crossed" : "") }, h("span", null, t), b);
+        body.append(row);
+      });
+    });
+    body.append(h("div", { class: "grp" }, "Add my own"));
+    for (let n = 0; n < 6; n++) body.append(cellInput("cl." + id + ".a." + n + ".t", { aria: "My own item " + (n + 1), ph: "Add your own" }));
+    body.append(h("div", { class: "row" }, btn("Done editing", () => { mode = "view"; draw(); }, "sm")));
+  }
+  function draw() {
+    body.replaceChildren(); tools.replaceChildren();
+    const items = cardItems(o);
+    counts();
+    foot.hidden = mode !== "view";
+    if (mode === "one") { drawOne(items); return; }
+    if (mode === "edit") { tools.append(p("Cross out what does not fit your life. Add your own below.", "muted small")); drawEdit(); return; }
+    tools.append(btn("One at a time", () => { at = Math.max(0, items.findIndex(it => !get(it.key))); mode = "one"; pickBox.hidden = true; draw(); }, "ghost sm"),
+      o.pick ? btn("Pick one for me", doPick, "ghost sm") : null, btn("Make it mine", () => { mode = "edit"; pickBox.hidden = true; draw(); }, "ghost sm"));
+    let g = null;
+    items.forEach(it => {
+      if (it.g && it.g !== g) { g = it.g; body.append(h("div", { class: "grp" }, it.g)); }
+      body.append(chkEl(it.key, it.t, { onChange: counts }));
+    });
+  }
+  draw();
   return card({ id, cls: o.tone === "tint" ? "" : "out", badge: o.badge, badgeCls: o.badge === "Yours" ? "you" : "", title: o.title, h: "h3", sub: o.sub,
-    kids: [body, o.after ? p(o.after, "small") : null, h("div", { class: "cl-foot" }, cnt, clr)] });
+    kids: [tools, pickBox, body, o.after ? p(o.after, "small") : null, foot] });
 }
 /* a card of blank lines with tick boxes, rows can be added */
 function customList(id, o = {}) {
@@ -1352,9 +1472,15 @@ function customList(id, o = {}) {
     }
   };
   draw();
+  const copyIt = () => {
+    const n = Number(get(nk, o.n || 6)), lines = [];
+    for (let i = 0; i < n; i++) { const t = String(get(tk(i)) || "").trim(); if (t) lines.push("☐ " + t); }
+    copyText([get("cx." + id + ".title") ? "When I feel " + get("cx." + id + ".title") : (o.title || "My list")].concat(lines).join("\n"));
+  };
   const add = o.fixed ? null : btn("Add a row", () => { const n = Number(get(nk, o.n || 6)); if (n < max) { set(nk, n + 1); draw(); } }, "ghost sm");
   return card({ id, cls: o.tone === "tint" ? "" : "out", badge: o.badge, badgeCls: o.badge === "Yours" ? "you" : "", title: o.title, h: "h3", sub: o.sub,
-    kids: [o.titleLabel ? field("cx." + id + ".title", { label: o.titleLabel, cls: "inl" }) : null, o.useLabel ? field("cx." + id + ".use", { label: o.useLabel, cls: "inl" }) : null, box, add ? h("div", null, add) : null] });
+    kids: [o.titleLabel ? field("cx." + id + ".title", { label: o.titleLabel, cls: "inl" }) : null, o.useLabel ? field("cx." + id + ".use", { label: o.useLabel, cls: "inl" }) : null, box,
+      h("div", { class: "row" }, add, link("Copy my list", copyIt))] });
 }
 /* a two-column library page */
 function libPage(left, right) { return h("div", { class: "libcols" }, h("div", { class: "libcol" }, ...left), h("div", { class: "libcol" }, ...right)); }
@@ -1369,14 +1495,14 @@ lesson("l3", { id: "l3-intro", title: "Level 3 overview", desc: "", cover: { eye
       ["Protect white space", "Leave room for rest and surprises.", [["Protect white space", "l3-space"]]],
       ["Recover after rough weeks", "A small floor and a quick reset get you going again.", [["Floor and More", "l3-floor"], ["Minimum viable day", "l3-mvd"], ["Excuse answers", "l3-excuse"], ["After a rough week", "l3-rough"]]]];
     return [
-      bar("**Your steps in this level:** the life check-in, your focus areas, the repeat decision finder, and your minimum viable day. The six ideas below are optional. Open one when you want to go deeper.",
+      bar("**Six steps, in order.** They cover the six ideas below. Each step is one page with a few short parts.",
         { extra: h("div", { class: "row" }, btn("Start with the life check-in", () => nav("l3-checkin"), "sm")) }),
       sec(eyebrow("Six ways to make a system easier"), h("div", { class: "rows" },
-        S6.map((s, i) => h("div", { class: "rw", style: { "--cols": "34px 1.2fr 1.2fr 60px" } },
+        S6.map((s, i) => h("div", { class: "rw", style: { "--cols": "34px 1.2fr 1.4fr" } },
           h("span", { class: "num solid" }, h("span", { class: "n" }, String(i + 1))),
           h("div", { class: "cell" }, h("strong", null, s[0]), h("span", { class: "muted small" }, s[1])),
           h("div", { class: "cell", "data-label": "Where to do it" }, h("div", { class: "row" }, ...s[2].map(x => link(x[0], () => nav(x[1]))))),
-          h("div", { class: "cell", "data-label": "Done" }, tg("six." + i, { aria: s[0] + " done" }))))
+          ))
       )),
       bar("**You finish with: systems that feel easy to keep.** One idea at a time is plenty.")
     ];
@@ -1491,7 +1617,7 @@ lesson("l3", { id: "l3-brain", title: "Design around your brain", tag: "Level 3 
       card({ eyebrow: "What that means for your systems", kids: [out] }),
       field("brain.live", { label: "Where my systems should live so I’ll see them", rows: 3 }),
       field("brain.change", { label: "One change that would make my systems feel more like me", rows: 3 }),
-      bar("**Next up:** day menus are a system built around your energy.", { extra: btn("What kind of day is this?", () => nav("l3-days"), "sm") })
+      bar("**Next up:** day menus. They are a system built around your energy.")
     ];
   } });
 
@@ -1499,9 +1625,9 @@ lesson("l3", { id: "l3-days", title: "What kind of day is this?", tag: "Level 3 
   lede: "Some systems work best as a menu. You check your energy, open the list that fits, and pick a few things from it. Here are two of mine.",
   build: () => [
     cols(320,
-      checklistCard({ id: "ex-low", tone: "tint", badge: "From Wenda", daily: true, title: "Low-energy day", sub: "I’m running at 20%. I pick 1 to 3.",
+      checklistCard({ id: "ex-low", tone: "tint", badge: "From Wenda", daily: true, pick: true, title: "Low-energy day", sub: "I’m running at 20%. I pick 1 to 3.",
         items: ["Answer emails or DMs from the couch", "Schedule content that’s already made", "Do low-brain tasks like filing", "Brain dump into my task app", "Rest completely. It counts as recovery."] }),
-      checklistCard({ id: "ex-frozen", tone: "tint", badge: "From Wenda", daily: true, title: "Overwhelmed and frozen", sub: "My brain is full. I pick one thing only.",
+      checklistCard({ id: "ex-frozen", tone: "tint", badge: "From Wenda", daily: true, pick: true, title: "Overwhelmed and frozen", sub: "My brain is full. I pick one thing only.",
         items: ["Brain dump everything onto paper", "Do one task that takes under 10 minutes", "Clean one surface", "Go outside for 10 minutes", "Move 3 tasks out of today"] })),
     sec(eyebrow("Now write two of yours"), cols(320,
       customList("mymenu1", { badge: "Yours", titleLabel: "When I feel", n: 6 }), customList("mymenu2", { badge: "Yours", titleLabel: "When I feel", n: 6 }))),
@@ -1554,7 +1680,7 @@ lesson("l3", { id: "l3-floor", title: "Floor and More", tag: "Level 3 · Recover
           h("div", { class: "rw exr", style: COLS }, ...r.map((t, i) => h("span", { class: "exv", "data-label": ["Habit or system", "Floor", "Regular", "Bonus"][i] }, t)))));
       const n = Number(get("fam.n", 8));
       for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: COLS },
-        ...["h", "f", "r", "b"].map((c, j) => h("div", { class: "cell", "data-label": ["Habit or system", "Floor", "Regular", "Bonus"][j] }, cellInput("fam." + i + "." + c, { aria: ["Habit or system", "Floor", "Regular", "Bonus"][j] })))));
+        ...["h", "f", "r", "b"].map((c, j) => h("div", { class: "cell", "data-label": ["Habit or system", "Floor", "Regular", "Bonus"][j] }, cellInput("fam." + i + "." + c, { aria: ["Habit or system", "Floor", "Regular", "Bonus"][j], onInput: () => document.dispatchEvent(new Event("fam-changed")) })))));
     };
     draw();
     return [
@@ -1694,8 +1820,8 @@ function exampleCard(d, badge) {
 /* ============ LEVEL 4 ============ */
 lesson("l4", { id: "l4-intro", title: "Level 4 overview", desc: "", cover: { eyebrow: "Level 4", title: "Apply your systems", sub: "Use the same five steps in every part of your life." },
   build: () => {
-    const F = [["Capture", "Get everything about this area out of your head.", "My area plan (optional)", "l4-area"], ["Organize", "Give each thing a home so you can find it.", "Give each system a home", "l4-home"],
-      ["Plan", "Choose what fits and how often it runs.", "How often does it run (optional)", "l4-often"], ["Do", "Build one small system and start using it.", "System builder", "l4-builder"], ["Review", "Try it for two weeks. Keep what works.", "Two-week test", "l4-test"]];
+    const F = [["Capture", "Get everything about this area out of your head.", "My area plan", "l4-area"], ["Organize", "Give each thing a home so you can find it.", "Give each system a home", "l4-home"],
+      ["Plan", "Choose what fits and how often it runs.", "How often does it run", "l4-often"], ["Do", "Build one small system and start using it.", "System builder", "l4-builder"], ["Review", "Try it for two weeks. Keep what works.", "Two-week test", "l4-test"]];
     const first = field("l4.first", { label: "The focus area I’m taking through first", cls: "inl", ph: focusNames()[0] || "Meals" });
     return [
       bar("**One system, every area.** The same five steps fit your home, your work, your family, and you. Learn them once and use them anywhere."),
@@ -1856,7 +1982,7 @@ lesson("l4", { id: "l4-glance", title: "My systems at a glance", tag: "Level 4 �
 
 /* ============ LAST PAGE ============ */
 lesson("next", { id: "next", title: "What to do next", tag: "What comes next", desc: "Keep your systems going.",
-  lede: "Your systems are built. Here’s how to keep them going, plus a few tools that pair well with this workbook.",
+  lede: "Your systems are built. Here’s how to keep them going, plus a few tools that pair well with your system.",
   build: () => [
     h("div", { class: "dark-bar" }, eyebrow("Free · Start here"), h("h3", null, "The Weekly Reset Kit"),
       p("Your systems run best with a weekly check-in. Grab my free kit and give your week ten quiet minutes."),
@@ -1874,10 +2000,10 @@ lesson("next", { id: "next", title: "What to do next", tag: "What comes next", d
   ] });
 
 function legal() {
-  return h("p", { class: "legal" }, h("strong", null, "Systems for Real Life. "), "© 2026 Wenda Benavidez, Wendaful Planning. All rights reserved. This course is for your personal use. Please do not copy, share, or resell the pages. Questions? Email hello@wendaful.com.");
+  return h("p", { class: "legal" }, h("strong", null, "Systems for Real Life. "), "© 2026 Wenda Benavidez, Wendaful Planning. All rights reserved. This is for your personal use. Please do not copy, share, or resell the pages. Questions? Email hello@wendaful.com.");
 }
 
-/* ============ home ============ */
+/* ============ the method overview ============ */
 const BLURB = {
   l1: "Set up four parts: inbox, calendar, tasks, and notes. Each part gets one job.",
   l2: "Turn those four parts into a weekly rhythm with a reset, a plan, and a quick daily check.",
@@ -1889,37 +2015,32 @@ function levelTiles() {
     const n = m.core.length, d = m.core.filter(l => isDone(l.id)).length;
     return h("button", { type: "button", class: "tile" + (i >= 2 ? " d" : ""), onclick: () => nav(m.lessons[0].id) },
       h("div", { class: "stack tight" }, eyebrow(m.label), h("h3", null, m.title), p(BLURB[m.id])),
-      h("div", { class: "stack tight" }, p("**You finish with:** " + m.finish, "fin"), h("div", { class: "pg" }, h("div", { class: "track" }, h("i", { style: { width: (n ? Math.round(d / n * 100) : 0) + "%" } })), h("span", null, d + "/" + n + " steps"))));
+      h("div", { class: "stack tight" }, p("**You finish with:** " + m.finish, "fin"), h("div", { class: "pg" }, h("div", { class: "track" }, h("i", { style: { width: (n ? Math.round(d / n * 100) : 0) + "%" } })), h("span", null, d + "/" + n + " guides"))));
   }));
 }
-function renderHome() {
+function renderLearn() {
   const total = CORE.length, done = totalDone(), pct = Math.round(done / total * 100);
   const cont = continueTarget(), started = done > 0 || get("lastcore");
-  const nameFld = field("name", { label: "This workbook belongs to", cls: "inl", ph: "Your name" });
   const art = h("article", { class: "lesson" },
-    h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Wendaful Planning · Workbook course", "wendaful.com"),
-      h("div", { class: "cv" }, eyebrow("The 4-level Wendaful Planning workbook"), h("h1", { class: "h1" }, "Systems for Real Life"),
-        h("p", { class: "sub" }, "Build, Live, Design, Apply."), p(total + " short steps. Plus a toolbox of bonus menus and restarts for when you need them.", "small"),
-        nameFld,
+    h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Wendaful Planning · The method", "wendaful.com"),
+      h("div", { class: "cv" }, eyebrow("The method behind your assistant"), h("h1", { class: "h1" }, "Systems for Real Life"),
+        h("p", { class: "sub" }, "Build, Live, Design, Apply."), p("Your assistant already did the setup. These " + total + " short guides show you why it works, so you can change it by hand. Skip anything you want.", "small"),
         h("div", { class: "row", style: { paddingTop: "8px" } },
-          h("button", { type: "button", class: "btn light", onclick: () => nav(cont.id) }, started ? "Pick up where you left off" : "Start here"),
+          h("button", { type: "button", class: "btn light", onclick: () => nav(cont.id) }, started ? "Pick up where you left off" : "Start with guide 1"),
           started ? h("span", { class: "small" }, cont.title) : null)))),
     h("div", { class: "wrap" }, h("div", { class: "body" },
-      h("div", { class: "stack tight" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "lbl" }, done + " of " + total + " steps done"),
+      bar("**You don’t need these pages to use your system.** Your assistant runs it for you. Come here when you’re curious, or when you want to rebuild something your way.", { extra: btn("Back to my assistant", () => nav("home"), "sm") }),
+      h("div", { class: "stack tight" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "lbl" }, done + " of " + total + " guides done"),
         get("lvl.most") ? h("span", { class: "pill" }, "Slowing down at: " + get("lvl.most")) : null), h("div", { class: "track" }, h("i", { style: { width: pct + "%" } }))),
-      done === total ? bar("**You finished.** Every row in your workbook is one less thing your brain has to hold.", { cls: "good", extra: btn("See my workbook", () => nav("workbook"), "sm") }) : null,
+      done === total ? bar("**You finished.** Every row in your system is one less thing your brain has to hold.", { cls: "good", extra: btn("See my system", () => nav("workbook"), "sm") }) : null,
       bar("**Not sure where to begin?** Check the lines that sound like you today. The level with the most checks is a good place to slow down.", { extra: btn("Find your level", () => nav("s-find"), "sm") }),
-      sec("How this works", steps([
-        "**Go in order.** Each level builds on the one before it.",
-        "**Write right on the page.** Messy is fine. Your answers save on this device, and you can change them any time.",
-        "**Stay as long as you need.** Live with each level for a week or two before you start the next one."]),
-        bar("**Go at your own pace.** One step a day is plenty. Something is always better than nothing.")),
-      sec("What’s here", cols(240,
-        card({ title: "The course", text: total + " steps across the four levels. This is the whole path." }),
-        card({ title: "Go deeper", text: "Extra pages inside each level. Skip them and you still finish." }),
-        card({ title: "Toolbox", text: "The Consistency Pack and the Systems Library. Open them when you need a menu or a restart." }))),
+      sec("How these pages work", steps([
+        "**Take them in order if you like.** Each level builds on the one before it.",
+        "**Write right on the page.** Messy is fine. Your answers save on this device and show up in My system.",
+        "**Changes here change your system.** Your assistant and your Today page read the same answers."]),
+        bar("**Something is always better than nothing.** One step a day is plenty.")),
       sec("The four levels", levelTiles(), bar("**How to move through them.** Do Level 1 first. Live with it for a week, then start Level 2. Give that rhythm two or three weeks before you move on to Levels 3 and 4.")),
-      sec("Toolbox", p("Open these any time. They are not part of your steps.", "muted"), cols(300,
+      sec("Toolbox", p("Open these any time. They are not part of the steps.", "muted"), cols(300,
         h("button", { type: "button", class: "bonus", onclick: () => nav("cp-intro") }, eyebrow("Bonus"), h("h4", null, "The Consistency Pack"), h("p", { class: "small muted" }, "Trackers and restart pages for the all-or-nothing brain.")),
         h("button", { type: "button", class: "bonus", onclick: () => nav("lib-intro") }, eyebrow("Bonus"), h("h4", null, "My Done-for-You Systems Library"), h("p", { class: "small muted" }, "My own routines, menus, and resets, ready to copy.")))),
       legal())));
@@ -1952,20 +2073,20 @@ function keepGoing() {
 function renderModEnd(m) {
   const e = m.end, final = m.id === "next", last = m.core[m.core.length - 1] || m.lessons[m.lessons.length - 1];
   const left = CORE.length - totalDone(), all = left === 0;
-  const count = final ? totalDone() + " of " + CORE.length + " steps done" : modDone(m) + " of " + m.core.length + " steps done in this level";
-  const head = final && !all ? "That’s the last step." : e.head;
-  const text = final && !all ? left + (left === 1 ? " step still has" : " steps still have") + " no check mark. Skip them or go back, whichever fits your week. Your workbook keeps everything you’ve filled in so far." : e.text;
+  const count = final ? totalDone() + " of " + CORE.length + " guides done" : modDone(m) + " of " + m.core.length + " guides done in this level";
+  const head = final && !all ? "That’s the last guide." : e.head;
+  const text = final && !all ? left + (left === 1 ? " guide still has" : " guides still have") + " no check mark. Skip them or go back, whichever fits your week. My system keeps everything you’ve filled in so far." : e.text;
   return h("article", { class: "lesson" },
     h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Systems for Real Life", m.strip),
       h("div", { class: "cv" }, eyebrow(count), h("h1", { class: "h1" }, head), h("p", { class: "sub" }, text)))),
     h("div", { class: "wrap" }, h("div", { class: "body" },
       final ? null : bar("**You finish with: " + m.finish + "**"),
       final ? builtCard() : null, final ? planCard() : null, final ? keepGoing() : null,
-      h("div", { class: "row" }, btn(e.cta, () => nav(e.next)), btn("Course home", () => nav("home"), "ghost"), final && !all ? link("Go to my next unfinished step", () => nav(continueTarget().id)) : link("Back to the last page", () => nav(last.id))),
+      h("div", { class: "row" }, btn(e.cta, () => nav(e.next)), btn(final ? "Back to my assistant" : "Method overview", () => nav(final ? "home" : "learn"), "ghost"), final && !all ? link("Go to my next unfinished step", () => nav(continueTarget().id)) : link("Back to the last page", () => nav(last.id))),
       final ? legal() : null)));
 }
 
-/* ============ my workbook ============ */
+/* ============ my system ============ */
 const v = k => get(k).trim();
 function summary() {
   const out = [], add = (title, lessonId, rows) => { rows = rows.filter(r => r[1]); if (rows.length) out.push({ title, lessonId, rows }); };
@@ -1998,7 +2119,7 @@ function summary() {
 }
 function summaryText() {
   const name = v("name");
-  return [(name ? name + "’s " : "My ") + "Systems for Real Life workbook", "wendaful.com", ""].concat(summary().map(s => s.title.toUpperCase() + "\n" + s.rows.map(r => (r[0] ? r[0] + ": " : "") + r[1]).join("\n") + "\n")).join("\n");
+  return [(name ? name + "’s " : "My ") + "real life system", "wendaful.com", ""].concat(summary().map(s => s.title.toUpperCase() + "\n" + s.rows.map(r => (r[0] ? r[0] + ": " : "") + r[1]).join("\n") + "\n")).join("\n");
 }
 function backupCode() { return "SFRL1:" + btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
 function restoreFrom(text) {
@@ -2014,17 +2135,17 @@ function renderWorkbook() {
   const code = h("textarea", { class: "ln", rows: "3", placeholder: "Paste a backup code here", "aria-label": "Backup code", style: { border: "1px solid var(--rule)", padding: "10px", minHeight: "84px", resize: "vertical" } });
   const file = h("input", { type: "file", accept: ".json,.txt,application/json,text/plain", "aria-label": "Restore from a file", onchange: e => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => restoreFrom(r.result); r.readAsText(f); } });
   return h("article", { class: "lesson" },
-    h("div", { class: "wrap" }, strip("Systems for Real Life", "My workbook"),
-      h("div", { class: "head" }, eyebrow("Everything you’ve written, in one place"), h("h1", { class: "h1" }, name ? name + "’s workbook" : "My workbook"),
-        p("This page pulls your answers together as you go. Come back to it any time you want to see your whole setup.", "lede"))),
+    h("div", { class: "wrap" }, strip(APP_NAME, "My system"),
+      h("div", { class: "head" }, eyebrow("Everything your assistant set up, in one place"), h("h1", { class: "h1" }, name ? name + "’s system" : "My system"),
+        p("This page pulls your answers together as you go. Come back to it any time you want to see your whole setup. Tap Edit to change a part by hand.", "lede"))),
     h("div", { class: "wrap" }, h("div", { class: "body" },
       secs.length ? secs.map(s => h("section", { class: "sec" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("h2", null, s.title), link("Edit", () => nav(s.lessonId))),
         h("dl", { class: "dl" }, s.rows.map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())))
-        : bar("Nothing here yet. Fill in a few pages and your answers show up here."),
+        : bar("Nothing here yet. Chat with your assistant for five minutes and your system shows up here.", { extra: btn("Open my assistant", () => nav("home"), "sm") }),
       h("hr", { class: "hr" }),
       planCard(),
       sec("Keep a copy", p("Your answers are saved in this browser on this device. A backup lets you move them to a new phone or computer, or keep them safe.", "muted"),
-        h("div", { class: "row" }, btn("Copy my workbook as text", () => copyText(summaryText()), "ghost"), DL ? btn("Save it as a file", () => saveFile("my-systems-for-real-life.txt", summaryText()), "ghost") : null),
+        h("div", { class: "row" }, btn("Copy my system as text", () => copyText(summaryText()), "ghost"), DL ? btn("Save it as a file", () => saveFile("my-systems-for-real-life.txt", summaryText()), "ghost") : null),
         h("div", { class: "row" }, btn("Copy my backup code", () => copyText(backupCode())), DL ? btn("Save a backup file", () => saveFile("systems-for-real-life-backup.json", JSON.stringify(S, null, 2)), "ghost") : null)),
       sec("Restore a backup", code, h("div", { class: "row" }, btn("Restore from this code", () => restoreFrom(code.value), "ghost sm"), h("label", { class: "small muted" }, "Or choose a backup file: ", file))),
       sec("Start over", p("This erases every answer and check mark on this device. Copy a backup first if you might want them back.", "muted"),
@@ -2038,19 +2159,35 @@ function renderWorkbook() {
 /* ============ BONUS: THE CONSISTENCY PACK ============ */
 lesson("cp", { id: "cp-intro", title: "Consistency Pack overview", desc: "", cover: { eyebrow: "Bonus section", title: "The Consistency Pack", sub: "For the all-or-nothing brain. Small, often, and easy to restart." },
   build: () => {
-    const T = [["I go all in, then I stop.", "Floor and More", "l3-floor"], ["I research and plan, and never start.", "Enough to Start", "cp-start"], ["I have hundreds of content ideas.", "This Week’s 3", "cp-week3"],
-      ["I keep skipping my workouts.", "Movement Minimum", "cp-move"], ["I tell myself I’ll do it tomorrow.", "My Excuse Answers", "l3-excuse"], ["My house is tidy but never really clean.", "One Zone a Day", "cp-zone"],
-      ["I have piles that have sat for months.", "The Pile Plan", "cp-pile"], ["I stopped, and now I feel behind.", "Day One Again", "cp-dayone"], ["I want to see that I’m showing up.", "4-Week Tracker", "cp-tracker"]];
+    const C = [["I go all in, then I stop.", "Set a floor. A tiny version you can do on your most tired day. The floor always counts.", "Floor and More", "l3-floor", 2],
+      ["I research and plan, and never start.", "Set a research limit, then take the next step with what you already know.", "Enough to Start", "cp-start", 5],
+      ["I have hundreds of content ideas.", "Leave the list alone. Pull five, keep three, close the list.", "This Week’s 3", "cp-week3", 5],
+      ["I keep skipping my workouts.", "Make the floor tiny: shoes on, 5 minutes. Any circle counts.", "Movement Minimum", "cp-move", 5, "Lately I run every morning. My clothes are out the night before. On days I don’t feel like it, I tell myself I’m just doing the neighborhood loop, and I end up doing interval hill running."],
+      ["I tell myself I’ll do it tomorrow.", "Pick your answer ahead of time. The floor version takes 5 minutes, right now.", "My Excuse Answers", "l3-excuse", 5],
+      ["My house is tidy but never really clean.", "One zone a day. 10 minutes. When the timer rings, you’re done.", "One Zone a Day", "cp-zone", 10],
+      ["I have piles that have sat for months.", "One pile, 10 minutes, four spots. A smaller pile is a win.", "The Pile Plan", "cp-pile", 10],
+      ["I stopped, and now I feel behind.", "Today is day one again. There’s nothing to catch up on.", "Day One Again", "cp-dayone", 5],
+      ["I want to see that I’m showing up.", "Color a box on any day you did the floor or more. A blank box is fine.", "4-Week Tracker", "cp-tracker", 0]];
+    const panel = h("div", { class: "stack" });
+    const draw = () => {
+      panel.replaceChildren();
+      const c = C.find(x => x[0] === get("coach.sel")); if (!c) return;
+      panel.append(card({ cls: "out", eyebrow: "Try this now", title: c[2], h: "h3", text: c[1], kids: [
+        c[5] ? p(c[5], "ex") : null,
+        c[4] ? timer({ minutes: c[4], label: "Start a " + c[4] + "-minute timer", doneMsg: "Time’s up. That counts as showing up." }) : null,
+        h("div", { class: "row" }, btn("Open " + c[2], () => nav(c[3]), "sm"))] }));
+    };
+    draw();
     return [
       cols(260,
         card({ title: "1. Set a floor", text: "Every habit gets a tiny version you can do on your most tired day." }),
         card({ title: "2. Today only", text: "You only need today’s step. The rest of the plan can stay fuzzy for now." }),
         card({ title: "3. Color the box", text: "Mark it when you do it. A floor day counts the same as a big day." }),
         card({ title: "4. Day one again", text: "Missed a day, or four? Today is day one again. There’s nothing to catch up on." })),
-      sec(eyebrow("When this sounds like you, go to this page"), h("div", { class: "toc" }, T.map(t =>
-        h("button", { type: "button", class: "toc-row", onclick: () => nav(t[2]) }, h("span", { class: "tx" }, h("strong", null, t[0]), h("small", null, t[1])), h("span", { class: "go", "aria-hidden": "true" }, "→"))))),
-      p("Using these with a planner? Start with **Using this with your planner**.", "muted"),
-      h("div", null, btn("Using this with your planner", () => nav("cp-planner"), "ghost sm"))
+      sec("What sounds like you?", p("Pick one. You’ll get a small thing to try right now, and the page that goes with it.", "muted"),
+        chips("coach.sel", C.map(x => x[0]), { onChange: draw }), panel),
+      card({ title: "Using these with your planner, phone, or computer?", h: "h4", text: "Start with the setup page. It shows how to build each tool in whatever you already use.",
+        kids: [h("div", null, btn("Set it up in my tools", () => nav("cp-planner"), "ghost sm"))] })
     ];
   } });
 
@@ -2071,7 +2208,7 @@ lesson("cp", { id: "cp-start", title: "Enough to Start", tag: "Consistency Pack 
         h("div", { class: "row" }, h("label", { class: "lbl" }, "Timer, in minutes (try 20)"), mins), t,
         checks("es.src", ["Source 1", "Source 2", "Source 3"], { label: "Sources, three at most", cols: 3 })] }),
       h("div", { class: "row", style: { alignItems: "flex-end" } }, field("es.going", { label: "Good enough for now, I’m going with", cls: "inl", }), checks("es.chg", ["I can change this later"], {})),
-      cols(300, card({ title: "My next step from what I know", h: "h4", kids: [field("es.next", { rows: 2 })] }), card({ title: "My first 3 minutes", h: "h4", kids: [field("es.first", { rows: 2 })] }))
+      cols(300, card({ title: "My next step from what I know", h: "h4", kids: [field("es.next", { rows: 2 })] }), card({ title: "My first 3 minutes", h: "h4", kids: [field("es.first", { rows: 2 }), timer({ minutes: 3, label: "Start my first 3 minutes", doneMsg: "Time’s up. That was your start." })] }))
     ];
   } });
 
@@ -2187,11 +2324,13 @@ lesson("cp", { id: "cp-dayone", title: "Day One Again", tag: "Consistency Pack �
   build: () => {
     const one = n => {
       const k = "d1." + n + ".", back = h("p", { class: "bar good", hidden: !get(k + "done") }, rt("**You’re back.** The days since are only a number."));
+      const cb = chkEl(k + "done", "Did it. I’m back.", { onChange: on => { back.hidden = !on; } });
+      const t = timer({ minutes: 5, label: "Do my floor now (5 min)", doneMsg: "You did it. You’re back.", onDone: () => { set(k + "done", 1); cb.input.checked = true; back.hidden = false; } });
       return card({ cls: "out", kids: [
         h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "h", { label: "The habit I’m picking back up", ph: "Walking" }), field(k + "days", { label: "Days since", ph: "4" })),
         field(k + "w", { label: "What got in the way", hint: "One line is plenty.", rows: 2 }),
         h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "f", { label: "Today’s floor version" }), field(k + "t", { label: "What time today" })),
-        checks(k + "done", ["Did it. I’m back."], { onChange: on => { back.hidden = !on; } }), back] });
+        t, cb, back] });
     };
     return [one(1), one(2), one(3), bar("**The days since are only a number.** Write it down and move on to today’s floor.")];
   } });
@@ -2213,58 +2352,51 @@ lesson("cp", { id: "cp-tracker", title: "4-Week Tracker", tag: "Consistency Pack
       const g = h("div", { class: "trk" }, h("span"), ...D.map(x => h("span", { class: "hd" }, x)));
       for (let w = 1; w <= 4; w++) { g.append(h("span", { class: "wk" }, "Wk " + w)); for (let d = 0; d < 7; d++) g.append(tg(k + w + "." + d, { aria: "Habit " + hb + " week " + w + " " + D[d], onChange: upd })); }
       let n = 0; for (let w = 1; w <= 4; w++) for (let d = 0; d < 7; d++) if (get(k + w + "." + d)) n++; cnt.textContent = n + " boxes colored";
-      return card({ cls: "out", kids: [h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "name", { label: "Habit " + hb }), field(k + "floor", { label: "My floor" })), g, cnt] });
+      return card({ cls: "out", kids: [h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "name", { label: "Habit " + hb, def: get("fam." + (hb - 1) + ".h") }), field(k + "floor", { label: "My floor", def: get("fam." + (hb - 1) + ".f") })), g, cnt] });
     };
     paintCmp();
     return [tabs("tr", ["Round 1 of 2", "Round 2 of 2"], [1, 2].map(r => stack(...[1, 2, 3].map(hb => habit(r, hb))))), cmp,
       bar("**What to look for:** count the boxes you colored, and leave the blank ones out of the math. More colored boxes than last month means it’s working.")];
   } });
 
-lesson("cp", { id: "cp-planner", title: "Using this with your planner", tag: "Consistency Pack · Read once", desc: "What goes in your planner and what stays here.",
-  lede: "Most of these pages get filled out once and kept nearby. Only a few small things go into the planner you already use.",
-  build: () => {
-    const T = [["Right here in this course", "Floor and More, My Excuse Answers, Enough to Start, The Pile Plan, and Day One Again. Fill them out once and come back when you need them."],
-      ["Planner weekly page", "Your three content picks, your zones for the week, and the days you plan to move."],
-      ["Planner daily page", "Today’s floor, in a time block or on your list. One 10-minute spot for a clean or a pile round."],
-      ["Habit tracker", "One row per habit. Color the box for a floor day the same as a big day. If your planner has a tracker, use it and save the 4-Week Tracker pages for later."],
-      ["Brain dump or notes page", "New ideas wait here until the end of the month, so you can keep going on today’s step."]];
-    return [
-      h("div", { class: "rows" }, h("div", { class: "rw hd", style: { "--cols": "220px 1fr" } }, h("span", null, "Where"), h("span", null, "What goes there")),
-        ...T.map(t => h("div", { class: "rw", style: { "--cols": "220px 1fr" } }, h("strong", null, t[0]), h("p", null, t[1])))),
-      bar("**Write the floor right in the plan.** For example: “7:30 Move. Shoes on, 5 minutes.” The small version is the plan, and anything more is a bonus."),
-      sec("When each thing happens", cols(220,
-        card({ cls: "out", title: "Weekly planning", h: "h4", text: "Pull this week’s 3. Write in your zones. Pick your movement days." }),
-        card({ cls: "out", title: "Daily planning", h: "h4", text: "Copy today’s floor into your day." }),
-        card({ cls: "out", title: "Evening", h: "h4", text: "Color your boxes. Set out one thing for tomorrow." }),
-        card({ cls: "out", title: "After a gap", h: "h4", text: "Fill out a Day One Again box and put the floor in tomorrow’s plan." }))),
-      bar("**Start with one habit.** Add the next one once the first feels easy. One small thing done every day gets you further than three big things done for a week.")
-    ];
-  } });
+lesson("cp", { id: "cp-planner", title: "Using this with your planner, phone, or computer", tag: "Consistency Pack · Set it up", desc: "Build these tools in whatever you already use.",
+  lede: "Most of these pages get filled out once and kept nearby. Only a few small things go into the tools you use every day. Pick yours and follow the steps.",
+  build: () => [
+    mediumPicker(),
+    sec("Set it up", toolGuide("cp", CP_STEPS), p(HYBRID_NOTE, "muted small")),
+    bar("**Write the floor right in the plan.** For example: “7:30 Move. Shoes on, 5 minutes.” The small version is the plan, and anything more is a bonus.",
+      { extra: btn("Make my floor copy-ready", () => nav("l3-floor", { focus: "part-l3-floorrun" }), "sm") }),
+    sec("When each thing happens", cols(220,
+      card({ cls: "out", title: "Weekly planning", h: "h4", text: "Pull this week’s 3. Write in your zones. Pick your movement days." }),
+      card({ cls: "out", title: "Daily planning", h: "h4", text: "Copy today’s floor into your day." }),
+      card({ cls: "out", title: "Evening", h: "h4", text: "Color your boxes. Set out one thing for tomorrow." }),
+      card({ cls: "out", title: "After a gap", h: "h4", text: "Fill out a Day One Again box and put the floor in tomorrow’s plan." }))),
+    bar("**Start with one habit.** Add the next one once the first feels easy. One small thing done every day gets you further than three big things done for a week.")
+  ] });
 
 /* ============ BONUS: SYSTEMS LIBRARY ============ */
 const G = (h_, items) => ({ h: h_, items });
 function L(id, title, sub, body, o = {}) {
   const grouped = Array.isArray(body) && body.length && typeof body[0] === "object" && body[0].items;
-  return checklistCard(Object.assign({ id, title, sub, tone: o.tint ? "tint" : "out", badge: o.badge }, grouped ? { groups: body } : { items: body }, o));
+  return checklistCard(Object.assign({ id, title, sub, tone: o.tint ? "tint" : "out", badge: o.badge, pick: PICKABLE.includes(id) }, grouped ? { groups: body } : { items: body }, o));
 }
 const W_ = { badge: "From Wenda" };
+const PICKABLE = ["he", "le", "frozen", "brain", "soft", "selfcare", "flow", "reset"];
 
-lesson("lib", { id: "lib-intro", title: "Systems Library overview", desc: "", cover: { eyebrow: "Bonus section", title: "My Done-for-You Systems Library", sub: "The routines, menus, and resets I use in real family life. Copy what fits and skip the rest." },
-  build: () => {
-    const M = [["High energy and ready to work", "High-energy day menu", "lib-energy", "he"], ["Low energy, barely moving", "Low-energy day menu", "lib-energy", "le"],
-      ["Overwhelmed and frozen", "Overwhelmed and frozen menu", "lib-hard", "frozen"], ["Too full in the head to think", "Brain cleanse menu", "lib-hard", "brain"],
-      ["Ready for a soft, slow day", "Soft day menu", "lib-hard", "soft"], ["It’s a content day", "Content flow menu", "lib-content", "flow"],
-      ["In need of a reset", "Reset day menu", "lib-content", "reset"], ["Like it’s a normal day", "Morning routine", "lib-daily", "morning"]];
-    return [
-      bar("**Think of this as a menu.** You open it, ask yourself what kind of day it is, and pick the list that fits. Nobody does every list every day, me included."),
-      sec(eyebrow("If you feel, open this"), h("div", { class: "toc" }, M.map(m => h("button", { type: "button", class: "toc-row", onclick: () => nav(m[2], { focus: m[3] }) },
-        h("span", { class: "tx" }, h("strong", null, m[0]), h("small", null, m[1])), h("span", { class: "go", "aria-hidden": "true" }, "→"))))),
-      cols(300, card({ title: "Daily habits", h: "h4", text: "Things you do every day without thinking, like making the bed, drinking water, or a 10-minute tidy." }),
-        card({ title: "Routines and menus", h: "h4", text: "Things you choose based on the day, your energy, or the season. Those live in this library." })),
-      sec(eyebrow("All the lists"), moduleToc(MODS[6])),
-      bar("**Pick one. Follow it. Done.** Cross out anything that doesn’t fit your life and add your own on the last two pages.")
-    ];
-  } });
+lesson("lib", { id: "lib-intro", title: "Systems Library overview", desc: "", cover: { eyebrow: "Bonus section", title: "My Done-for-You Systems Library", sub: "The routines, menus, and resets I use in real family life. Use them as they are, or make them yours." },
+  build: () => [
+    bar("**Think of this as a menu.** You open it, ask yourself what kind of day it is, and pick what fits. Nobody does every list every day, me included."),
+    sec("Build my day", libraryHub()),
+    sec("How to use any list", cols(220,
+      card({ title: "Make it mine", h: "h4", text: "Cross out what does not fit your life and add your own. Your changes stay." }),
+      card({ title: "One at a time", h: "h4", text: "Work down a list with one item on the screen. Done, skip, or back." }),
+      card({ title: "Pick one for me", h: "h4", text: "On the energy menus, let the page choose so you do not have to." }),
+      card({ title: "Copy it", h: "h4", text: "Copy any list as a checklist or one per line. Paste it into your notes app, your task app, or write it in your planner." }))),
+    cols(300, card({ title: "Daily habits", h: "h4", text: "Things you do every day without thinking, like making the bed, drinking water, or a 10-minute tidy." }),
+      card({ title: "Routines and menus", h: "h4", text: "Things you choose based on the day, your energy, or the season. Those live in this library." })),
+    sec(eyebrow("All the lists"), moduleToc(MODS[6])),
+    bar("**Pick one. Follow it. Done.** Cross out anything that doesn’t fit your life and add your own on the last two pages.")
+  ] });
 
 lesson("lib", { id: "lib-floor", title: "Start with your floor", tag: "Systems library · Start here", desc: "Decide what you protect when life gets hard.",
   lede: "Before the routines and menus, decide what you protect when life gets hard. Everything else is allowed to flex.",
@@ -2645,15 +2777,840 @@ function planCard() {
 </script>
 <script>
 "use strict";
+/* ============ fold related pages into one step ============
+   Each guide in a level is one page with a few short parts, instead of a pile of extra pages.
+   The old page ids still work as links: they open the step and scroll to the right part. */
+const ABSORBED = {}, ALIAS = {};
+function mergeInto(baseId, o) {
+  const orig = {};
+  o.parts.forEach(q => { orig[q.id] = BYID[q.id]; if (!orig[q.id]) throw new Error("merge: missing " + q.id); });
+  const base = BYID[baseId];
+  const parts = o.parts.map(q => ({ id: q.id, h: q.h || orig[q.id].title, lede: q.lede !== undefined ? q.lede : orig[q.id].lede, build: orig[q.id].build }));
+  o.parts.forEach(q => {
+    if (q.id === baseId) return;
+    const d = orig[q.id];
+    const i = LESSONS.indexOf(d); if (i >= 0) LESSONS.splice(i, 1);
+    const j = d.mod.lessons.indexOf(d); if (j >= 0) d.mod.lessons.splice(j, 1);
+    delete BYID[d.id]; ABSORBED[d.id] = d; ALIAS[d.id] = { id: baseId, focus: "part-" + d.id };
+  });
+  if (o.title) base.title = o.title;
+  if (o.tag) base.tag = o.tag;
+  if (o.desc) base.desc = o.desc;
+  base.lede = o.lede;
+  base.build = () => {
+    const secs = parts.map((b, i) => h("section", { class: "sec part", "data-card": "part-" + b.id },
+      eyebrow("Part " + (i + 1) + " of " + parts.length), h("h2", null, b.h), b.lede ? p(b.lede) : null,
+      h("div", { class: "part-body" }, ...[].concat(b.build()))));
+    const jump = h("div", { class: "row" }, eyebrow("On this page"), ...parts.map(b => h("button", { type: "button", class: "chip ex",
+      onclick: () => { const t = elMain.querySelector('[data-card="part-' + b.id + '"]'); if (t) t.scrollIntoView({ block: "start" }); } }, b.h)));
+    return [jump, ...secs, o.after ? o.after() : null];
+  };
+  LESSONS.forEach((l, k) => { l.idx = k; });
+}
+/* add something to the end of a page that is not merged */
+function appendTo(id, fn) { const l = BYID[id], b = l.build; l.build = () => [].concat(b(), fn()); }
+const toolbox = (text, links) => card({ title: "From the toolbox", h: "h4", sub: text, kids: [h("div", { class: "row" }, ...links.map(l => btn(l[0], () => nav(l[1]), "ghost sm")))] });
+
+function runMerges() {
+  /* Start here */
+  mergeInto("s-story", { title: "Welcome", desc: "A note from Wenda, and how the method works.", lede: "A note from me, and how the method works.",
+    parts: [{ id: "s-story", h: "My story", lede: "" }, { id: "s-how" }] });
+  mergeInto("s-find", { desc: "The four levels, and where to start.", lede: "See how the four levels fit together, then find the one to slow down in.",
+    parts: [{ id: "s-levels" }, { id: "s-find", h: "Which level sounds like you?" }] });
+  mergeInto("s-system", { desc: "What a system is, and how it differs from a habit.", lede: "What a system is, and how it differs from a routine or a habit.",
+    parts: [{ id: "s-system", h: "What is a system?" }, { id: "s-habit" }] });
+  /* Level 1 */
+  mergeInto("l1-route", { desc: "Sort anything, and break big tasks into small steps.", lede: "Two skills for your weekly sort time: sending each thing to its home, and spotting a project hiding in your to-do list.",
+    parts: [{ id: "l1-route", h: "Sort anything with three questions" }, { id: "l1-project" }] });
+  /* Level 3 */
+  mergeInto("l3-checkin", { title: "Life check-in and focus areas", desc: "See what drains you and pick 1 to 3 areas.", lede: "See where life feels easy and where it drains you. Then pick the 1 to 3 areas to work on this season.",
+    parts: [{ id: "l3-checkin", h: "Life check-in" }, { id: "l3-pick" }] });
+  mergeInto("l3-friction", { title: "Remove friction", tag: "Level 3 · Remove friction", desc: "Find the snags and list what you keep deciding.", lede: "Take out what makes things hard. Find the snags, then list what you keep deciding so you can decide once.",
+    parts: [{ id: "l3-friction", h: "Find the snag" }, { id: "l3-decisions" }] });
+  mergeInto("l3-brain", { desc: "Build around how you think, with energy menus.", lede: "Build your systems the way you think, then pick from a menu that fits your energy.",
+    parts: [{ id: "l3-brain", h: "How my brain works" }, { id: "l3-days" }],
+    after: () => toolbox("More ready-made menus for hard and soft days.", [["Energy menus", "lib-energy"], ["Hard and soft days", "lib-hard"]]) });
+  mergeInto("l3-season", { title: "Seasons and white space", tag: "Level 3 · Seasons and white space", desc: "Adjust for your season and protect white space.", lede: "Let your systems shrink and grow with your life, and leave room for rest and surprises.",
+    parts: [{ id: "l3-season" }, { id: "l3-space" }] });
+  mergeInto("l3-floor", { title: "Your floor", desc: "Floor and More, set it up in your tools, and your minimum viable day.", lede: "Give every habit three sizes, put the floor where you will see it, and choose five small things that keep life moving on a hard day.",
+    parts: [{ id: "l3-floor" }, { id: "l3-floorrun", h: "Decide it tonight and set up my floor" }, { id: "l3-mvd" }],
+    after: () => toolbox("Tools that use a floor.", [["Movement Minimum", "cp-move"], ["One Zone a Day", "cp-zone"], ["4-Week Tracker", "cp-tracker"]]) });
+  mergeInto("l3-excuse", { title: "Rough weeks", desc: "Excuse answers, and how to restart after a rough week.", lede: "Answer your excuses ahead of time, and know how to pick things back up after a rough week.",
+    parts: [{ id: "l3-excuse" }, { id: "l3-rough" }],
+    after: () => toolbox("Restart tools for when you stopped.", [["Day One Again", "cp-dayone"], ["The Pile Plan", "cp-pile"], ["Weekly reset", "lib-reset"]]) });
+  /* Level 4 */
+  mergeInto("l4-builder", { desc: "Build one small system, with examples and ideas.", lede: "Build one small system and start using it. Borrow an example or an idea when you want a nudge.",
+    parts: [{ id: "l4-builder", h: "Build a system" }, { id: "l4-examples" }, { id: "l4-ideas" }] });
+  mergeInto("l4-home", { desc: "Pick where each system lives, how often it runs, and put it in your tools.", lede: "Give each system a place to live, decide how often it runs, and put it where it will remind you.",
+    parts: [{ id: "l4-home", h: "Where each system lives" }, { id: "l4-often" }, { id: "l4-run", h: "Make each system run on its own" }] });
+  appendTo("l2-daily", () => toolbox("Ready-made daily routines for mornings and evenings.", [["Daily routines", "lib-daily"], ["Energy menus", "lib-energy"]]));
+}
+</script>
+<script>
+"use strict";
+/* ============ build it and run it in your own tools ============
+   Planner, phone, or computer. Tool names stay generic on purpose, so the steps work with
+   whatever someone already owns. */
+const MEDIA = [["planner", "Planner"], ["phone", "Phone"], ["computer", "Computer"]];
+const firstMed = () => {
+  const m = MEDIA.find(x => get("setup.med." + x[0]));
+  if (m) return m[0];
+  return get("tool.mode") === "Digital" ? "phone" : "planner";
+};
+function mediumPicker(onChange) {
+  const wrap = h("div", { class: "chips", role: "group", "aria-label": "Where I will set this up" });
+  MEDIA.forEach(m => {
+    const b = h("button", { type: "button", class: "chip", "aria-pressed": get("setup.med." + m[0]) ? "true" : "false",
+      onclick: () => { const on = !get("setup.med." + m[0]); set("setup.med." + m[0], on ? 1 : false); b.setAttribute("aria-pressed", on ? "true" : "false"); if (onChange) onChange(m[0], on); } }, m[1]);
+    wrap.append(b);
+  });
+  return wrapField({ label: "Where will you set this up?", hint: "Pick any. Using more than one is great when each tool has one job." }, wrap);
+}
+/* three tabs of steps with tick boxes. Opens on the tool the person picked. */
+function toolGuide(id, steps, o = {}) {
+  const key = "tg-" + id;
+  if (TABMEM[key] === undefined) TABMEM[key] = Math.max(0, MEDIA.findIndex(m => m[0] === firstMed()));
+  return tabs(key, MEDIA.map(m => m[1]), MEDIA.map(m => stack(checks("tg." + id + "." + m[0], steps[m[0]], { strike: true }), o.note ? p(o.note, "muted small") : null)));
+}
+
+const SETUP = {
+  inbox: {
+    planner: ["Pick one page for your inbox. A blank page at the front or back works.", "Write INBOX at the top. Put a sticky note on the edge so you can find it fast.", "Anything new goes here first. A few words is enough.", "Keep a pen clipped to your planner so writing it down is easy."],
+    phone: ["Make a note called Inbox in your notes app. Pin it to the top.", "Put a shortcut to it on your home screen, or keep it where you can reach it fast.", "Try voice typing for the times your hands are full.", "Pick a backup, like a text to yourself, for when your phone note is not handy."],
+    computer: ["Make a note or document called Inbox. Pin the tab or keep it open beside your work.", "Send links and ideas here instead of leaving ten tabs open.", "If you also use your phone, open the same note on both so it syncs.", "Choose one inbox. Two inboxes means a thing gets lost."]
+  },
+  cal: {
+    planner: ["Use the monthly page for big dates and the weekly page for times.", "Write only things with a date or a time. No to-dos here.", "Pick one color or symbol for family events.", "Add repeating things, like birthdays and practices, once. Copy them forward each month."],
+    phone: ["Choose one calendar app and use only that one.", "Make a calendar for each person, or one shared Family calendar. Share it with the people who need to see it.", "Turn on alerts. 30 minutes before works for most appointments.", "Set repeating events for anything that happens every week."],
+    computer: ["Open the same calendar on your computer so it matches your phone.", "Pin the tab. Add events by typing the day, the time, and the name.", "Use one color per person.", "Switch to week view during your weekly plan so you see the whole week."]
+  },
+  tasks: {
+    planner: ["Make a task list page, or use your daily page for your top 3.", "Write one task per line. Start with a verb, like call, email, or buy.", "Star the next one so you always know where to start.", "At your evening review, cross off what is done and move what is left."],
+    phone: ["Open your tasks or reminders app. Make three lists: Today, This week, and Later.", "Add a date only when something has to happen that day. Everything else can sit on a list.", "Flag your top 3.", "At your weekly reset, move tasks between lists instead of making new ones."],
+    computer: ["Use the same task app on your computer so it matches your phone.", "Keep it open in a pinned tab while you work.", "Use the quick-add shortcut so you never lose a task in the middle of something.", "Sort by date or by flagged when you plan your day."]
+  },
+  notes: {
+    planner: ["Use a notes section at the back, or a separate notebook.", "Add tabs or sticky flags: Home, Kids, Work, Ideas.", "Leave the first page as an index so you can find things later.", "Give each project its own page."],
+    phone: ["Make folders in your notes app: Home, Kids, Work, Ideas.", "Start each note with a clear title, like Hallway paint color.", "Pin the notes you open a lot.", "Use search. You do not need perfect folders."],
+    computer: ["Use the same notes app or documents folder as your phone.", "Name things the same way each time: the topic, then what it is.", "Keep a Projects folder with one note per project.", "Search first. Scroll last."]
+  }
+};
+const SORT_STEPS = {
+  planner: ["Open your inbox page.", "Ask three questions about each line: Does it have a date? Does it need doing? Is it info or an idea?", "Date: write it on the calendar page. To-do: copy it to your task list. Info: copy it to your notes.", "Cross out the inbox line once it has moved.", "Stop when the page is empty. That is the goal."],
+  phone: ["Open your Inbox note.", "Ask three questions about each line: date, to-do, or info?", "Date: make a calendar event with a time and an alert. To-do: add it to Today, This week, or Later. Info: move it into a notes folder.", "Delete the line from your inbox once it has moved.", "Stop when the inbox is empty."],
+  computer: ["Open your inbox on one side of the screen and the app it is going to on the other.", "Ask three questions about each line: date, to-do, or info?", "Move each one: paste it into the calendar, the task list, or your notes.", "Delete the line from your inbox once it has moved.", "Close the window when the inbox is empty."]
+};
+const WEEKLY_STEPS = {
+  planner: ["Sort your inbox page into the calendar, your task list, and your notes.", "Look at last week’s page. Write one win. Move what is left over.", "Open this week’s page. Write what is already on the calendar first.", "Pick 3 priorities and write them at the top.", "Name one thing you can let go of this week."],
+  phone: ["Sort your Inbox note into your calendar, your task list, and your notes.", "Look at last week in your calendar. Note one win.", "Open this week in your calendar and see what is already set.", "In your task list, move 3 tasks to This week and flag them.", "Push one thing to Later."],
+  computer: ["Put your inbox and your calendar side by side. Move each line where it goes.", "Open the week view in your calendar so you see the whole week at once.", "In your task list, drag 3 tasks into This week.", "Write your 3 priorities in a pinned note, or send them to your phone.", "Archive or delete what you are not going to do."]
+};
+const DAILY_STEPS = {
+  planner: ["Open tomorrow’s page. Write the times that are already set.", "Pick your top 3 and put them at the top.", "Set out what you need for the morning.", "In the morning, look at the page once, then start with number 1."],
+  phone: ["Open tomorrow in your calendar and see what is set.", "In your task list, move 3 tasks to Today and flag them.", "Set one morning reminder that says Check Today.", "Put your phone where you will see it when you wake up."],
+  computer: ["Open your calendar and your task list side by side.", "Pick your top 3 and move them to Today.", "Close everything else. Leave only Today open for the morning.", "If you will be away from your desk, send your top 3 to your phone as a note."]
+};
+const CP_STEPS = {
+  planner: ["Write your floor right in the plan. For example: 7:30 Move. Shoes on, 5 minutes.", "Color a box on your habit tracker when you do the floor or more.", "Put your three content picks on the weekly page.", "Keep new ideas on your brain dump page until the end of the month."],
+  phone: ["Make a repeating reminder with your floor as the title. For example: Move. Shoes on, 5 minutes.", "Put the time you will do it right in the reminder.", "Keep a note called Boxes with one line per habit. Add a check mark and the date when you do it.", "Keep new ideas in your Inbox note until the end of the month."],
+  computer: ["Make a repeating calendar event for your floor, with an alert.", "Keep your tracker in a pinned note or a simple spreadsheet: one row per habit, one column per day.", "Pin this week’s 3 content picks where you work.", "Keep ideas in one list and close it at the end of the week."]
+};
+const HYBRID_NOTE = "Using paper and a screen? Do the sorting on the screen, then copy your top 3 into your planner by hand. Writing it down helps you remember it.";
+
+/* insert a new page right after another one in the same level */
+function lessonAfter(afterId, modId, def) {
+  lesson(modId, def);
+  const m = def.mod, a = BYID[afterId];
+  m.lessons.splice(m.lessons.indexOf(def), 1); m.lessons.splice(m.lessons.indexOf(a) + 1, 0, def);
+  LESSONS.splice(LESSONS.indexOf(def), 1); LESSONS.splice(LESSONS.indexOf(a) + 1, 0, def);
+  LESSONS.forEach((l, i) => { l.idx = i; });
+}
+
+lessonAfter("l1-parts", "l1", { id: "l1-setup", title: "Set up your 4 parts", tag: "Level 1 · Build", desc: "Build a real home for each part in your planner, phone, or computer.",
+  lede: "Your four homes are picked. Now build them. Choose where you will set this up, then follow the steps for each part and tick them off as you go.",
+  build: () => {
+    const roots = [];
+    const picker = mediumPicker((id, on) => { if (on) roots.forEach(r => r.show(MEDIA.findIndex(m => m[0] === id))); });
+    const part = (name, key, text) => {
+      const g = toolGuide("setup-" + key, SETUP[key]); roots.push(g);
+      const mine = get("part." + key + ".home");
+      return card({ cls: "out", title: name, h: "h3", sub: mine ? "My home: " + mine : text, kids: [g] });
+    };
+    return [picker,
+      cols(340, part("Inbox", "inbox", "Where new stuff lands first."), part("Calendar", "cal", "Anything with a date or a time."),
+        part("Tasks", "tasks", "To-dos with no set time."), part("Notes", "notes", "Info and ideas to keep.")),
+      bar("**One of each.** One inbox, one calendar, one task list, one notes spot. If you use your phone and your computer, let them sync so both show the same thing."),
+      bar("**Using paper and a screen?** Do the sorting on the screen, then copy your top 3 into your planner by hand. Writing it down helps you remember it.")];
+  } });
+
+/* ============ copy-ready text made from their own answers ============ */
+function genBlock(title, how, text) {
+  return card({ cls: "out", title, h: "h4", sub: how, kids: [h("div", { class: "gen" }, text), h("div", null, btn("Copy this", () => copyText(text), "ghost sm"))] });
+}
+const FLOOR_FREQ = ["Every day", "Weekdays", "3 days a week", "Once a week"];
+function floorSetup() {
+  const root = h("div", { class: "stack" });
+  const habits = () => { const o = []; for (let i = 0; i < 14; i++) if (get("fam." + i + ".h")) o.push(i); return o; };
+  function draw() {
+    root.replaceChildren();
+    const hs = habits();
+    if (!hs.length) { root.append(p("Add a habit to the Floor and More table above, then come back here.", "muted")); return; }
+    let sel = Number(get("fam.sel", hs[0])); if (!hs.includes(sel)) sel = hs[0];
+    const k = "fam." + sel + ".", out = h("div", { class: "stack" });
+    const gen = () => {
+      const name = get(k + "h"), f = get(k + "f") || "my floor", r = get(k + "r"), b = get(k + "b"), when = get(k + "when"), freq = get(k + "freq") || "Every day";
+      out.replaceChildren(
+        genBlock("Reminder on my phone or computer", "Open your reminders or task app. Make a new reminder. Paste this into the title and notes, then set it to repeat.",
+          name + ": floor\nFloor: " + f + (r ? "\nRegular: " + r : "") + (b ? "\nBonus: " + b : "") + "\nRepeat: " + freq + (when ? ", " + when : "")),
+        genBlock("Line for my planner", "Write this on your daily page as a time block or a task. The small version is the plan. Anything more is a bonus.",
+          (when ? when + "  " : "") + name + ". " + f + ".  ☐"),
+        genBlock("Repeating event in my calendar", "Open your calendar. Make a new event. Paste the title and note, then set it to repeat and add an alert.",
+          "Title: " + name + " (floor: " + f + ")\nRepeat: " + freq + "\nTime: " + (when || "pick a time") + "\nAlert: 10 minutes before"),
+        checks(k + "set", ["I set this one up"], {}));
+    };
+    root.append(h("div", { class: "stack tight" }, p("Pick a habit.", "muted small"),
+      h("div", { class: "chips" }, ...hs.map(i => h("button", { type: "button", class: "chip", "aria-pressed": i === sel ? "true" : "false", onclick: () => { set("fam.sel", i, true); draw(); } }, get("fam." + i + ".h"))))),
+      h("div", { class: "cols", style: { "--min": "230px" } }, field(k + "when", { label: "What time, or after what?", ph: "7:30 am, or after school drop-off", onInput: gen }),
+        chips(k + "freq", FLOOR_FREQ, { label: "How often", onChange: gen })), out);
+    gen();
+  }
+  const on = () => { if (!root.isConnected) { document.removeEventListener("fam-changed", on); return; } draw(); };
+  document.addEventListener("fam-changed", on);
+  draw();
+  return root;
+}
+lesson("l3", { id: "l3-floorrun", title: "Set up my floor", desc: "",
+  lede: "A floor only helps if it shows up in your day. Pick a habit and copy its floor into your phone, your computer, or your planner.",
+  build: () => [sec("Decide it tonight", nightSetup()), sec("Put my floor in my tools", floorSetup())] });
+
+const RUN_FREQ = ["Daily", "Weekly", "Monthly", "Each quarter", "Yearly"];
+function systemRun() {
+  const root = h("div", { class: "stack" });
+  if (!builderNames().length) return bar("Build a system on the System builder step first. Then come back here to make it run.", { extra: btn("Open the system builder", () => nav("l4-builder"), "sm") });
+  [1, 2, 3].forEach(n => {
+    const name = builderName(n); if (!name) return;
+    const k = "sb." + n + ".", out = h("div", { class: "stack" });
+    const gen = () => {
+      const when = get(k + "when") || get(k + "trigger"), freq = get(k + "freq") || "Daily", low = get(k + "low");
+      const steps = [0, 1, 2, 3, 4].map(i => get(k + "step." + i)).filter(Boolean);
+      out.replaceChildren(
+        genBlock("Reminder on my phone or computer", "Open your reminders or task app. Make a new reminder. Paste this into the title and notes, then set it to repeat.",
+          name + "\nRepeat: " + freq + (when ? ", " + when : "") + (steps.length ? "\nSteps:\n" + steps.map((s, i) => (i + 1) + ". " + s).join("\n") : "") + (low ? "\nLow-energy version: " + low : "")),
+        genBlock("Repeating event in my calendar", "Best for weekly, monthly, and yearly systems. Make a new event, paste this in, and set it to repeat.",
+          "Title: " + name + "\nRepeat: " + freq + "\nAlert: 30 minutes before\nNote: " + (get(k + "trigger") ? "Trigger: " + get(k + "trigger") + ". " : "") + (low ? "Low-energy version: " + low : "")),
+        genBlock("Card for my planner", "Write this on the day it starts, or on a routine card at the back of your planner.",
+          (when ? when + ": " : "") + name + "  ☐" + (steps.length ? "\n  " + steps.join(" · ") : "") + (low ? "\n  Low-energy: " + low : "")),
+        checks(k + "run", ["I set this one up"], {}));
+    };
+    root.append(card({ cls: "out", title: name, h: "h3", kids: [h("div", { class: "cols", style: { "--min": "230px" } },
+      chips(k + "freq", RUN_FREQ, { label: "How often does it run?", onChange: gen }), field(k + "when", { label: "What time, or after what?", ph: get(k + "trigger") || "After dinner cleanup", onInput: gen })), out] }));
+    gen();
+  });
+  return root;
+}
+lesson("l4", { id: "l4-run", title: "Make it run on its own", desc: "",
+  lede: "A system you keep in your head will fade. Put each one where it will remind you: your phone, your computer, or your planner.",
+  build: () => [systemRun()] });
+
+/* ============ the Systems Library, hands-on ============ */
+const HUB = [["High energy and ready to work", "he", "lib-energy"], ["Low energy, barely moving", "le", "lib-energy"], ["Overwhelmed and frozen", "frozen", "lib-hard"],
+  ["Too full in the head to think", "brain", "lib-hard"], ["Ready for a soft, slow day", "soft", "lib-hard"], ["It’s a content day", "flow", "lib-content"],
+  ["In need of a reset", "reset", "lib-content"], ["Like it’s a normal day", "morning", "lib-daily"]];
+function libraryHub() {
+  const root = h("div", { class: "stack" }), dk = () => "myday." + today();
+  const getDay = () => { const v = get(dk(), []); return Array.isArray(v) ? v.map(x => ({ t: x.t, c: !!x.c })) : []; };
+  const setDay = a => set(dk(), a.length ? a : false);
+  const menuBox = h("div", { class: "stack" }), dayBox = h("div", { class: "stack" });
+  const feel = chips("hub.feel", HUB.map(x => x[0]), { label: "What kind of day is this?", onChange: () => drawMenu() });
+  function drawMenu() {
+    menuBox.replaceChildren();
+    const e = HUB.find(x => x[0] === get("hub.feel")); if (!e) return;
+    if (!LIBREG[e[1]]) BYID[e[2]].build();
+    const o = LIBREG[e[1]], items = cardItems(o);
+    const has = t => getDay().some(x => x.t === t);
+    const add = t => { if (has(t)) return; const d = getDay(); d.push({ t, c: false }); setDay(d); drawDay(); drawMenu(); };
+    menuBox.append(h("div", { class: "stack" }, p("**" + o.title + ".** " + (o.sub || "") + " Tap what you want to do today.", "muted"),
+      h("div", { class: "chips" }, ...items.map(it => h("button", { type: "button", class: "chip ex", "aria-pressed": has(it.t) ? "true" : "false", onclick: () => add(it.t) }, it.t))),
+      h("div", { class: "row" }, btn("Pick one for me", () => { const open = items.filter(it => !has(it.t)); if (!open.length) { toast("Everything from this list is already on your day."); return; } add(open[Math.floor(Math.random() * open.length)].t); }, "ghost sm"),
+        link("See the whole list", () => nav(e[2], { focus: e[1] })))));
+  }
+  function drawDay() {
+    dayBox.replaceChildren();
+    const d = getDay(), done = d.filter(x => x.c).length;
+    const list = h("div", { class: "strike" });
+    d.forEach((it, i) => {
+      const inp = h("input", { type: "checkbox" }); inp.checked = it.c;
+      inp.addEventListener("change", () => { const x = getDay(); x[i].c = inp.checked; setDay(x); drawDay(); });
+      list.append(h("div", { class: "editrow" }, h("label", { class: "chk" }, inp, h("span", { class: "box", "aria-hidden": "true" }), h("span", { class: "lbl" }, it.t)),
+        link("Remove", () => { const x = getDay(); x.splice(i, 1); setDay(x); drawDay(); drawMenu(); })));
+    });
+    const mine = cellInput("hub.own", { aria: "Add my own thing", ph: "Add my own" });
+    mine.addEventListener("keydown", e => { if (e.key === "Enter") addOwn(); });
+    const addOwn = () => { const t = mine.value.trim(); if (!t) return; const x = getDay(); x.push({ t, c: false }); setDay(x); mine.value = ""; set("hub.own", ""); drawDay(); };
+    dayBox.append(card({ cls: "out", title: "My day", h: "h3", sub: d.length ? done + " of " + d.length + " done. Starts fresh tomorrow." : "Tap things above and they land here. One to three is plenty.",
+      kids: [d.length ? list : null, h("div", { class: "row" }, mine, btn("Add", addOwn, "ghost sm")),
+        h("div", { class: "row" }, btn("Copy for my planner or phone", () => copyText("My day\n" + d.map(x => "☐ " + x.t).join("\n")), "sm"), d.length ? link("Clear my day", () => { setDay([]); drawDay(); drawMenu(); }) : null)] }));
+    if (d.length && done === d.length) dayBox.append(bar("**Nice.** You picked a few things and did them. The day counts.", { cls: "good" }));
+  }
+  drawMenu(); drawDay();
+  root.append(feel, menuBox, dayBox);
+  return root;
+}
+</script>
+<script>
+"use strict";
+/* ============ the coaching layer ============
+   Wenda talks to the person: what the problem is, what the fix is, what to do right now,
+   and a daily page that keeps them organized and following through. */
+const pad2 = n => String(n).padStart(2, "0");
+const ymd = d => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+const dayPlus = n => { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); };
+const weekKey = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); };
+const DOW3 = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const isSortDay = () => { const s = String(get("sort.day") || "").toLowerCase(); return !!s && s.includes(DOW3[new Date().getDay()]); };
+const avatar = () => h("div", { class: "coach-av", "aria-hidden": "true" }, "W");
+
+const RUNNING_STORY = {
+  title: "How I run every morning",
+  text: [
+    "Lately I run every morning, and I’m not a morning person. What changed is that the choices are made ahead of time. My clothes are out the night before. I drink water first, and I plan my meal before I eat. By the time I wake up, there’s nothing left to decide.",
+    "That means no time for excuses and no time to talk myself out of it. When I don’t feel like it, I still do.",
+    "On those days I use the bare minimum. I don’t tell myself I have to run a full mile. I tell myself I’m just doing the neighborhood loop. Then I end up doing interval hill running.",
+    "That’s a floor. Starting is the win, and anything more is a bonus."
+  ]
+};
+
+const COACH = {
+  "s-story": { time: "5 minutes", problem: "You’ve tried planners and apps, and you still feel behind.", fix: "A system that fits your life and your brain.", now: "Read my story, then write why you’re here. That one line will carry you on the hard days.", check: ["I read my story", "I wrote why I’m here"] },
+  "s-find": { time: "5 minutes", problem: "You don’t know where to start, so you don’t.", fix: "Find your level, start there, and slow down where it counts.", now: "Check every line that sounds like you today.", check: ["I checked what sounds like me", "I know which level I’ll slow down in"] },
+  "s-system": { time: "10 minutes", problem: "You make the same decisions over and over, and it wears you out.", fix: "A system decides once, then you follow the steps.", now: "Write down three spots in your life that could use a system.", check: ["I can say what a system is", "I listed a few spots that could use one"] },
+  "l1-needs": { time: "10 minutes", problem: "Your planner has no job, so it never gets opened.", fix: "Decide what it’s for and pick a tool you’ll really use.", now: "Check what your planner should do, then pick one tool for today.", check: ["I know what my planner is for", "I picked one tool for today"] },
+  "l1-parts": { time: "10 minutes", problem: "Everything lives in ten places, so you spend your day hunting.", fix: "Four parts with one home each: inbox, calendar, tasks, and notes.", now: "Pick one home for each part. You can change it later.", check: ["I picked one home for each part", "I set my weekly sort time"] },
+  "l1-setup": { time: "20 minutes", problem: "A home you only picked in your head will not hold.", fix: "Build each part in your planner, your phone, or your computer.", now: "Choose your tool and do the first step for your inbox.", check: ["I chose where I’m building this", "I set up my inbox", "I set up my calendar"] },
+  "l1-route": { time: "15 minutes", problem: "New stuff piles up and never gets sorted.", fix: "Three questions sort anything, and one weekly time makes it happen.", now: "Sort five real things from your own inbox.", check: ["I sorted five real things", "I know my weekly sort steps"] },
+  "l1-yours": { time: "10 minutes", problem: "A system that looks like someone else’s will not stick.", fix: "Add the small touches that make it feel like yours.", now: "Pick one extra to try. Skip the rest for now.", check: ["I picked one extra to try first"] },
+  "l2-rhythm": { time: "10 minutes", problem: "Your planner is set up, and you forget it exists.", fix: "A weekly rhythm, with a small version for tired days.", now: "Write down when each step happens.", check: ["I wrote when each step happens", "I wrote a small version for tired days"] },
+  "l2-weekly": { time: "15 minutes", problem: "By Wednesday, the plan is gone.", fix: "One reset and one plan each week. Together they take about as long as a cup of coffee.", now: "Do your first reset right now and pick your priorities.", check: ["I did one weekly reset", "I picked my priorities"] },
+  "l2-daily": { time: "10 minutes", problem: "Your days start in a scramble.", fix: "Plan tomorrow tonight: your top 3 and the times that are already set.", now: "Fill in tomorrow’s page before you go to bed.", check: ["I planned tomorrow", "I know my small version for a tired day"] },
+  "l2-ready": { time: "5 minutes", problem: "You can’t tell if it’s working.", fix: "Check in after two or three weeks and look at what’s true.", now: "Check what’s true for you. Be honest and kind.", check: ["I checked what’s true for me", "I know what to make easier next"] },
+  "l3-checkin": { time: "10 minutes", problem: "Everything feels hard at once, so nothing moves.", fix: "Pick 1 to 3 areas to make smoother this season.", now: "Mark every area, then pick one to start with.", check: ["I marked every area", "I picked 1 to 3 focus areas"] },
+  "l3-friction": { time: "15 minutes", problem: "Things fall apart in the same spots every week.", fix: "Find the snag, then decide it once. My clothes are out the night before, so there’s nothing to decide in the morning.", now: "Name one sticky spot and star the decision you’re tired of making.", check: ["I named a sticky spot", "I starred my top repeat decisions"] },
+  "l3-brain": { time: "10 minutes", problem: "Your system fights the way your brain works.", fix: "Build around how you think and how much energy you have today.", now: "Circle one in each row, then try an energy menu.", check: ["I picked one in each row", "I tried an energy menu"] },
+  "l3-season": { time: "10 minutes", problem: "Life changed, and your system didn’t.", fix: "Keep, change, or pause. Then leave room.", now: "Pick one system to change or pause this season.", check: ["I named my season", "I picked one system to change or pause"] },
+  "l3-floor": { time: "20 minutes", problem: "You go all in, then you stop.", fix: "A floor: a tiny version that always counts. Decide it tonight, so you don’t have to decide it in the morning.", now: "Write the floor for one habit, set out what you need tonight, and copy the floor into your phone or planner.",
+    check: ["I wrote a floor for one habit", "I decided tonight’s setup", "I put my floor in my phone, computer, or planner"], story: RUNNING_STORY },
+  "l3-excuse": { time: "10 minutes", problem: "Your brain has a good excuse every time.", fix: "Answer it ahead of time, and know how to restart.", now: "Edit your excuse answers until they sound like you.", check: ["I edited my excuse answers", "I filled in my 10-minute restart"] },
+  "l4-area": { time: "15 minutes", problem: "One big area of life feels like a giant mess.", fix: "Walk it through five steps: capture, organize, plan, do, and review.", now: "Dump everything on your mind about one area.", check: ["I dumped what’s on my mind about one area"] },
+  "l4-builder": { time: "20 minutes", problem: "You know what’s wrong and don’t know what to build.", fix: "One small system with a trigger, steps, and a low-energy version.", now: "Build one system from a decision you starred.", check: ["I built one system", "I wrote its low-energy version"] },
+  "l4-home": { time: "15 minutes", problem: "A system you keep in your head will fade.", fix: "Give it a home and a rhythm, then put it where it will remind you.", now: "Copy one system into your phone, your computer, or your planner.", check: ["I picked a home for each system", "I put one system in my tools"] },
+  "l4-test": { time: "1 minute a day for 2 weeks", problem: "You can’t know if a system works until you use it.", fix: "Run it for two weeks and tap each day you use it.", now: "Pick a start day and tap day 1.", check: ["I picked a start day", "I tapped day 1"] },
+  "l4-glance": { time: "10 minutes", problem: "You can’t hold ten systems in your head.", fix: "Your whole setup on one page.", now: "Add the systems that passed the test.", check: ["I added the systems that passed"] },
+  "next": { time: "5 minutes", problem: "You finish, and then life gets busy.", fix: "Keep it small, reset every week, and come back to the toolbox when it gets hard.", now: "Block your first weekly reset on your calendar.", check: ["I blocked my first weekly reset", "I know where to go when it gets hard"] }
+};
+
+function coachNote(l) {
+  const c = COACH[l.id]; if (!c) return null;
+  return h("div", { class: "stack" },
+    h("div", { class: "coach" }, avatar(), h("div", { class: "stack tight" }, eyebrow("Wenda’s coaching note · about " + c.time),
+      p("**The problem:** " + c.problem), p("**The fix:** " + c.fix), p("**Do this now:** " + c.now))),
+    c.story ? card({ cls: "out", eyebrow: "From my life", title: c.story.title, h: "h3", kids: c.story.text.map(t => p(t)) }) : null);
+}
+function coachCheck(l) {
+  const c = COACH[l.id]; if (!c || !c.check) return null;
+  const msg = p("", "small");
+  const paint = () => {
+    const n = c.check.filter((_, i) => get("chk." + l.id + "." + i)).length;
+    msg.replaceChildren(rt(n === c.check.length ? "**Nice.** That’s this step. Mark it done and keep going." : "**Not all checked?** That’s okay. Something is always better than nothing. Come back when you can."));
+  };
+  paint();
+  return card({ title: "Before you move on", h: "h4", kids: [checks("chk." + l.id, c.check, { onChange: paint }), msg] });
+}
+const CHEERS = ["Nice. That’s one less thing for your brain to hold.", "Done. Small steps still count.", "You showed up. That’s the whole job.", "Good. Keep it small and keep going.",
+  "That’s another one. Take a breath.", "Look at you, building a system.", "One more done. You’re getting somewhere."];
+const cheer = () => { const n = totalDone(); return n === 1 ? "That’s guide one. You started, and that’s the hard part." : CHEERS[n % CHEERS.length] + " " + n + " of " + CORE.length + "."; };
+
+/* ============ what’s getting in your way ============ */
+const STRUGGLES = [
+  ["I forget things and drop the ball.", "Things get lost when they have no home. Give each kind of thing one spot, and your brain can stop holding it.",
+    [["Pick one home for each part", "l1-parts"], ["Set them up in your tools", "l1-setup"], ["Sort your inbox once a week", "l1-route"]], ""],
+  ["I plan, and then I don’t follow through.", "A plan needs a rhythm to come back to. Start with a small weekly reset and a daily top 3.",
+    [["Write your weekly rhythm", "l2-rhythm"], ["Do your first weekly reset", "l2-weekly"], ["Plan tomorrow tonight", "l2-daily"]], ""],
+  ["I start strong, then I stop.", "Big plans break on tired days. A floor keeps you going: a tiny version that always counts. Decide it tonight so you don’t have to decide it in the morning.",
+    [["Build your floor", "l3-floor"], ["Write your excuse answers", "l3-excuse"], ["Pick a restart tool", "cp-intro"]],
+    "Lately I run every morning. My clothes are out the night before, and when I don’t feel like it, I tell myself I’m just doing the neighborhood loop. I end up doing interval hill running."],
+  ["I’m overwhelmed and everything feels urgent.", "Too much at once. Pick one area, take out the snags, and plan a little less than you think you can do.",
+    [["Pick 1 to 3 focus areas", "l3-checkin"], ["Find the snag", "l3-friction"], ["Protect your white space", "l3-season"]], ""],
+  ["I don’t know where to start.", "Start with where you are today. It takes five minutes.",
+    [["Find your level", "s-find"], ["Pick your four homes", "l1-parts"], ["Sort five real things", "l1-route"]], ""],
+  ["My day gets away from me.", "Plan tomorrow tonight, keep your top 3 small, and have a floor ready for the hard days.",
+    [["Plan tomorrow tonight", "l2-daily"], ["Open Today", "today"], ["Build your floor", "l3-floor"]], ""]
+];
+/* ============ decide it tonight ============ */
+const NIGHT_IDEAS = ["Set out my clothes", "Fill my water bottle", "Plan my meal", "Charge my phone", "Pack my bag"];
+function nightSetup() {
+  const list = numbered("night", 4, { label: "Tonight I will set up", name: "Night before item", ph: ["Set out my clothes"] });
+  const inputs = () => [...list.querySelectorAll("input.ln")];
+  const ideas = h("div", { class: "chips" }, ...NIGHT_IDEAS.map(t => h("button", { type: "button", class: "chip ex", onclick: () => {
+    const ins = inputs(); const e = ins.find(x => !x.value);
+    if (!e) { toast("Your list is full. Clear a line first."); return; }
+    if (ins.some(x => x.value === t)) return;
+    e.value = t; e.dispatchEvent(new Event("input"));
+  } }, t)));
+  return stack(
+    p("Make tomorrow’s choice tonight, so you don’t have to make it in the morning. Pick two or three things to set up before bed. Then decide your bare minimum for a day you don’t feel like it."),
+    list, h("div", { class: "stack tight" }, p("Need ideas? Tap one.", "muted small"), ideas),
+    field("night.just", { label: "On a day I don’t feel like it, I’ll just…", ph: "do the neighborhood loop" }));
+}
+
+/* ============ Today: the daily page ============ */
+function renderToday() {
+  const T = today(), TM = dayPlus(1), WK = weekKey(), hour = new Date().getHours(), name = get("name");
+  const hi = (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening") + (name ? ", " + name : "") + ".";
+  const habits = []; for (let i = 0; i < 14 && habits.length < 4; i++) if (get("fam." + i + ".h")) habits.push(i);
+  const line = h("p", { class: "coach-line" });
+  const topSet = d => [0, 1, 2].filter(i => get("top." + d + "." + i + ".t"));
+  const paint = () => {
+    const top = topSet(T), done = top.filter(i => get("top." + T + "." + i + ".c")), floorDone = habits.some(i => get("fl." + T + "." + i));
+    const next = top.find(i => !get("top." + T + "." + i + ".c"));
+    let m;
+    if (hour >= 18) m = done.length ? "Evening. You did " + done.length + " of your top " + top.length + ". Write one win, set up tonight, and pick tomorrow’s top 3. Then you’re done." : "Evening. It’s okay if today went sideways. Write one win, set out what you need, and pick tomorrow’s top 3.";
+    else if (!top.length) m = "Start here: pick your top 3. Just three. Everything else is a bonus.";
+    else if (done.length === top.length) m = "Your top 3 are done. Anything else is a bonus. Rest counts too.";
+    else if (floorDone) m = "Your floor is done, so you showed up today. Now your top 3, one at a time. Start with number " + (next + 1) + ".";
+    else m = "You have " + (top.length - done.length) + " left on your top 3. Start with number " + (next + 1) + ". When you don’t feel like it, don’t decide. Do the floor.";
+    line.textContent = m;
+  };
+  const art = h("article", { class: "lesson" }), body = h("div", { class: "body" });
+
+  const coachCard = h("div", { class: "coach" }, avatar(), h("div", { class: "stack tight" }, eyebrow("Wenda says"), line,
+    isSortDay() ? p("**Today is your sort day.** Ten minutes: empty your inbox into your calendar, tasks, and notes.") : null,
+    isSortDay() ? h("div", null, btn("Open my sort steps", () => nav("l1-route", { focus: "part-l1-route" }), "ghost sm")) : null));
+
+  const just = get("night.just").replace(/^\s*(just\s+)?(i['’]?ll\s+|i['’]m going to\s+|i am going to\s+)?/i, "").trim();
+  const fl0 = habits.length ? get("fam." + habits[0] + ".f") : "";
+  const justCard = (just || fl0) ? card({ cls: "out", eyebrow: "If I don’t feel like it", title: just ? "I’m just going to " + just + "." : "My floor today: " + fl0, h: "h3",
+    kids: [p("No talking myself out of it. Starting is the win, and I usually end up doing more. Anything more is a bonus.", "muted")] }) : null;
+
+  const topCard = (() => {
+    const rows = h("div", { class: "stack tight" });
+    for (let i = 0; i < 3; i++) rows.append(chkEl("top." + T + "." + i + ".c", cellInput("top." + T + "." + i + ".t", { aria: "Top " + (i + 1), ph: i === 0 ? "The one thing I’ll do first" : "", onInput: paint }), { cls: "line", onChange: paint }));
+    return card({ cls: "out", title: "My top 3 today", h: "h3", sub: "Pick them this morning or last night. Everything after these is a bonus.",
+      kids: [rows, h("div", { class: "row" }, btn("Copy for my planner or phone", () => copyText("Top 3 for today\n" + [0, 1, 2].map(i => get("top." + T + "." + i + ".t")).filter(Boolean).map(t => "☐ " + t).join("\n")), "ghost sm"))] });
+  })();
+
+  const floorCard = (() => {
+    if (!habits.length) return card({ title: "My floor today", h: "h3", sub: "Add a habit and its floor on the Your floor step. Then you can check it off here.", kids: [h("div", null, btn("Build my floor", () => nav("l3-floor"), "sm"))] });
+    const rows = h("div", { class: "stack" });
+    habits.forEach(i => {
+      const k = "fl." + T + "." + i, SZ = [["F", "Floor"], ["R", "Regular"], ["B", "Bonus"]];
+      const btns = SZ.map(s => { const b = h("button", { type: "button", class: "tg r", "aria-label": get("fam." + i + ".h") + " " + s[1], "aria-pressed": get(k) === s[0] ? "true" : "false" }, s[0]);
+        b.addEventListener("click", () => { set(k, get(k) === s[0] ? "" : s[0]); btns.forEach((x, j) => x.setAttribute("aria-pressed", get(k) === SZ[j][0] ? "true" : "false")); paint(); }); return b; });
+      rows.append(h("div", { class: "row", style: { justifyContent: "space-between" } }, h("div", null, h("strong", null, get("fam." + i + ".h")), h("div", { class: "muted small" }, "Floor: " + (get("fam." + i + ".f") || "not set yet"))), h("div", { class: "row" }, ...btns)));
+    });
+    return card({ cls: "out", title: "My floor today", h: "h3", sub: "Tap the size you did. Any circle counts.", kids: [rows] });
+  })();
+
+  const mvd = [0, 1, 2, 3, 4].filter(i => get("mvd." + i));
+  const mvdCard = mvd.length ? card({ title: "My minimum viable day", h: "h3", sub: "Hit these and the day counts.",
+    kids: [h("div", { class: "strike" }, ...mvd.map(i => chkEl("mvdt." + T + "." + i, get("mvd." + i), {})))] }) : null;
+
+  const myDay = Array.isArray(get("myday." + T, [])) ? get("myday." + T, []) : [];
+  const dayCard = card({ title: "My day menu", h: "h3", sub: myDay.length ? myDay.filter(x => x.c).length + " of " + myDay.length + " done from the menu." : "Low on energy? Pick one to three things from a menu instead of deciding.",
+    kids: [h("div", null, btn(myDay.length ? "Open my day" : "Pick from a menu", () => nav("lib-intro"), "ghost sm"))] });
+
+  const nightItems = [0, 1, 2, 3].filter(i => get("night." + i));
+  const tomorrow = h("div", { class: "stack tight" });
+  for (let i = 0; i < 3; i++) tomorrow.append(h("div", { class: "num" }, h("span", { class: "n" }, String(i + 1)), cellInput("top." + TM + "." + i + ".t", { aria: "Tomorrow top " + (i + 1), ph: i === 0 ? "The one thing I’ll do first" : "" })));
+  const eveCard = card({ cls: "out", title: "Evening review", h: "h3", sub: "Two minutes. Then you’re done.", kids: [
+    nightItems.length ? h("div", { class: "stack tight" }, h("span", { class: "lbl" }, "Tonight I’m setting up"), h("div", { class: "strike" }, ...nightItems.map(i => chkEl("nt." + T + "." + i, get("night." + i), {})))) : p("Decide tomorrow’s choices tonight. Pick your setup on the Your floor step.", "muted small"),
+    field("win." + T, { label: "One win from today" }), field("let." + T, { label: "What I’ll move or let go" }),
+    h("div", { class: "fld" }, h("div", { class: "lbl" }, "Tomorrow’s top 3"), tomorrow)] });
+
+  const wk = "wc." + WK + ".", reply = h("div", { class: "stack tight" });
+  const drawReply = () => {
+    reply.replaceChildren();
+    const v = get(wk + "how");
+    if (v === "It went great") reply.append(p("**Notice what helped.** Write it down below, keep it, and change nothing else this week."));
+    else if (v === "It went okay") reply.append(p("**Okay is good.** Pick one small thing to make easier next week. Just one."));
+    else if (v === "It was a rough one") reply.append(p("**Rough weeks happen to everyone, me included.** Today is day one again. Do your floor, then pick it back up with the smallest piece."),
+      h("div", { class: "row" }, btn("After a rough week", () => nav("l3-excuse", { focus: "part-l3-rough" }), "sm"), btn("Day One Again", () => nav("cp-dayone"), "ghost sm")));
+  };
+  drawReply();
+  const weekCard = card({ cls: "out", title: "Weekly check-in", h: "h3", sub: "Once a week, look back for two minutes. No grading.", kids: [
+    chips(wk + "how", ["It went great", "It went okay", "It was a rough one"], { label: "How did this week go?", onChange: drawReply }), reply,
+    field(wk + "worked", { label: "What worked" }), field(wk + "change", { label: "One thing to change" }), checks(wk + "reset", ["I did my weekly reset"], {})] });
+
+  const nextCard = (() => { const c = continueTarget(); return card({ title: "Want to know why this works?", h: "h4", text: c.title + (COACH[c.id] ? ". " + COACH[c.id].now : ""), kids: [h("div", null, btn("Read the next guide", () => nav(c.id), "ghost sm"))] }); })();
+
+  const order = hour >= 17 ? [coachCard, eveCard, justCard, topCard, floorCard, mvdCard, dayCard, weekCard, nextCard]
+    : isSortDay() ? [coachCard, justCard, topCard, floorCard, mvdCard, dayCard, weekCard, eveCard, nextCard]
+    : [coachCard, justCard, topCard, floorCard, mvdCard, dayCard, eveCard, weekCard, nextCard];
+  order.filter(Boolean).forEach(x => body.append(x));
+  paint();
+  art.append(h("div", { class: "wrap" }, strip(APP_NAME, "Today"),
+    h("div", { class: "head" }, eyebrow(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })), h("h1", { class: "h1" }, hi),
+      p("Your daily page. Pick your top 3, do your floor, close the day. Everything is decided, so there is nothing to talk yourself out of.", "lede"))),
+    h("div", { class: "wrap" }, body));
+  return art;
+}
+</script>
+<script>
+"use strict";
+/* ============ the assistant ============
+   The front door. It asks a few tap-to-answer questions, builds the whole system for the person
+   (4 parts, sort time, first system, floor, night-before list, minimum viable day), then helps
+   them set it up and keep going. Every answer is saved in the same places the method pages use,
+   so everything shows up in My system, Today, and the printable plan. */
+const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait = ms => new Promise(r => setTimeout(r, REDUCED ? 0 : ms));
+
+const HABITS = [
+  { name: "Move my body", f: "Shoes on, 5 minutes", r: "20 minutes", b: "45 minutes", just: "put my shoes on and do one loop around the neighborhood", night: ["Set out my clothes", "Fill my water bottle", "Plan my meal"] },
+  { name: "Tidy up", f: "Wipe one counter", r: "One zone, 10 minutes", b: "The whole room", just: "wipe one counter", night: ["Clear the sink", "Plan my meal", "Write tomorrow’s top 3"] },
+  { name: "Post content", f: "Post one thing, anything", r: "Film one short video", b: "Batch a week of content", just: "post one thing, anything", night: ["Pick tomorrow’s idea", "Charge my camera", "Write tomorrow’s top 3"] },
+  { name: "Plan my day", f: "Pick one task", r: "Write my top 3", b: "Time-block the whole day", just: "pick one task", night: ["Write tomorrow’s top 3", "Check tomorrow’s calendar", "Set out what I need"] },
+  { name: "Laundry", f: "Wash and dry, fold tomorrow", r: "One load a day", b: "All the laundry, start to finish", just: "start one load", night: ["Plan my meal", "Charge my phone", "Write tomorrow’s top 3"] },
+  { name: "Read", f: "One page", r: "20 minutes", b: "An hour with tea", just: "read one page", night: ["Put my book by my bed", "Charge my phone", "Write tomorrow’s top 3"] }
+];
+const MVD_STARTER = ["Drink water", "Write my top 3 in my planner", "Do one deep work task", "Move my body for 20 minutes", "Quick tidy before bed"];
+
+/* where each part lives, chosen from the tools the person uses */
+function homesFor(med) {
+  const P = med.includes("planner"), ph = med.includes("phone"), co = med.includes("computer"), dig = ph || co;
+  return {
+    inbox: P ? "A brain dump page in my planner" : (ph && co) ? "A note called Inbox that syncs to my phone and computer" : ph ? "A note called Inbox in my notes app" : "A note called Inbox on my computer",
+    cal: dig ? ((ph && co) ? "A calendar app that syncs to my phone and computer" : ph ? "A calendar app on my phone" : "A calendar on my computer") : "The weekly pages in my planner",
+    tasks: (P && dig) ? "A task app, with my top 3 copied into my planner" : P ? "A task list page in my planner" : "A task app",
+    notes: dig ? "A notes app with folders" : "A notes section at the back of my planner"
+  };
+}
+function ideasFor(area) {
+  const a = IDEAS_A.filter(x => x[0] === area).map(x => idea(x[1], x[0], x[2], ""));
+  const b = IDEAS_B.filter(x => x[1] === area).map(x => idea(x[2], x[1], x[3], x[4]));
+  const out = a.concat(b);
+  return out.length ? out : IDEAS_A.map(x => idea(x[1], x[0], x[2], ""));
+}
+function applySystem(n, d) {
+  const k = "sb." + n + ".";
+  clearPrefix(k);
+  set(k + "name", d.name); set(k + "area", d.area); set(k + "decision", "Deciding what to do each time");
+  d.steps.slice(0, 5).forEach((s, i) => set(k + "step." + i, s));
+  set(k + "low", d.low || "Just step 1: " + d.steps[0]);
+}
+function ideaCard(d) {
+  return card({ cls: "out", eyebrow: d.area, title: d.name, h: "h3", kids: [h("ol", { class: "stack tight" }, d.steps.slice(0, 5).map((s, i) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(i + 1)), h("span", null, s)))),
+    p("**On a tired day:** " + (d.low || "just step 1."), "muted small")] });
+}
+function addToDay(t) { const k = "myday." + today(); const v = Array.isArray(get(k, [])) ? get(k, []).slice() : []; if (!v.some(x => x.t === t)) v.push({ t, c: false }); set(k, v); }
+const asstAnswered = id => !!get("asst.done." + id);
+
+/* ============ chat engine ============ */
+function createChat(root) {
+  const log = h("div", { class: "chat-log", "aria-live": "polite" }), dock = h("div", { class: "chat-dock" });
+  root.append(log, dock);
+  const c = { fast: false };
+  const alive = () => root.isConnected;
+  const toEnd = el => {
+    if (el && el.offsetHeight > elMain.clientHeight * 0.55) elMain.scrollTop += el.getBoundingClientRect().top - elMain.getBoundingClientRect().top - 12;
+    else elMain.scrollTop = elMain.scrollHeight;
+  };
+  const av = () => h("div", { class: "coach-av sm", "aria-hidden": "true" }, "W");
+  c.alive = alive;
+  c.say = async (...items) => {
+    for (const it of items) {
+      if (!alive() || c.fast || it == null) continue;
+      const typing = h("div", { class: "cm a" }, av(), h("div", { class: "bubble typing", "aria-hidden": "true" }, h("i"), h("i"), h("i")));
+      log.append(typing); toEnd();
+      await wait(Math.min(850, 300 + (typeof it === "string" ? it.length * 7 : 200)));
+      typing.remove();
+      if (!alive()) return;
+      const msg = typeof it === "string" ? h("div", { class: "cm a" }, av(), h("div", { class: "bubble" }, rt(it))) : h("div", { class: "cm block" }, it);
+      log.append(msg);
+      toEnd(msg);
+    }
+  };
+  c.you = text => { if (!c.fast && alive()) { log.append(h("div", { class: "cm u" }, h("div", { class: "bubble" }, text))); toEnd(); } };
+  c.ask = cfg => new Promise(resolve => {
+    if (c.fast) { resolve(cfg.def !== undefined ? cfg.def : null); return; }
+    if (!alive()) return;
+    dock.replaceChildren();
+    const finish = (val, label) => { dock.replaceChildren(); if (label) c.you(label); resolve(val); };
+    const opts = (cfg.options || []).map(o => Array.isArray(o) ? o : [o, o]);
+    let body;
+    if (cfg.type === "text") {
+      const inp = h("input", { class: "ln", type: "text", placeholder: cfg.placeholder || "", "aria-label": cfg.aria || "Your answer", autocomplete: "off" });
+      const send = () => { const v = inp.value.trim(); if (v) finish(v, v); };
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+      body = h("div", { class: "row dockrow" }, inp, btn("Send", send, "sm"), cfg.skip ? btn(cfg.skip, () => finish(null, cfg.skip), "ghost sm") : null);
+    } else if (cfg.multi) {
+      const picked = new Set(cfg.def || []);
+      const btns = opts.map(o => h("button", { type: "button", class: "chip", "aria-pressed": picked.has(o[1]) ? "true" : "false",
+        onclick: e => { picked.has(o[1]) ? picked.delete(o[1]) : picked.add(o[1]); e.currentTarget.setAttribute("aria-pressed", picked.has(o[1]) ? "true" : "false"); } }, o[0]));
+      body = h("div", { class: "stack tight" }, h("div", { class: "chips" }, ...btns),
+        h("div", { class: "row" }, btn("Continue", () => finish([...picked], opts.filter(o => picked.has(o[1])).map(o => o[0]).join(", ") || "Not sure"), "sm")));
+    } else {
+      body = h("div", { class: "chips" }, ...opts.map(o => h("button", { type: "button", class: "chip" + (o[2] ? " rec" : ""), onclick: () => finish(o[1], o[0]) }, o[0])));
+    }
+    const foot = cfg.guess === false ? null : h("div", { class: "row" }, link("Use my best guess for the rest", () => { c.fast = true; finish(cfg.def, "Use my best guess"); }));
+    dock.append(...[cfg.prompt ? eyebrow(cfg.prompt) : null, body, foot].filter(Boolean));
+    toEnd();
+    const first = dock.querySelector("input.ln"); if (first) setTimeout(() => first.focus({ preventScroll: true }), 0);
+  });
+  return c;
+}
+
+/* ============ the build conversation ============ */
+async function systemFlow(c, slot) {
+  const first = slot === 1;
+  if (!first) {
+    await c.say("Which part of life should this one help with?");
+    const a = await c.ask({ options: AREAS.map(x => x[0]), def: "Home", guess: false });
+    set("sb." + slot + ".area", a);
+  }
+  const area = first ? (get("focus.1.name") || "Home") : get("sb." + slot + ".area");
+  const list = ideasFor(area); let i = 0, chosen = null;
+  await c.say(first ? "Let’s build one small system for **" + area + "**. Here’s the one I’d start with." : "Here’s one I’d start with for **" + area + "**.");
+  for (;;) {
+    const d = list[i % list.length];
+    await c.say(ideaCard(d));
+    const v = await c.ask({ options: list.length > 1 ? ["Use this one", "Show me another", "Skip"] : ["Use this one", "Skip"], def: "Use this one", guess: first });
+    if (v === "Show me another") { i++; continue; }
+    if (v === "Use this one") chosen = d;
+    break;
+  }
+  if (!chosen) return;
+  applySystem(slot, chosen);
+  await c.say("Done. I built **" + chosen.name + "**. It has steps and a low-energy version for tired days.", "When should it start? Tie it to something you already do.");
+  const t = await c.ask({ options: ["After dinner", "When I wake up", "When I get home", "After school drop-off", "At my weekly reset"], def: "After dinner", guess: first });
+  set("sb." + slot + ".trigger", t || "After dinner");
+  set("sb." + slot + ".freq", /weekly reset/i.test(t || "") ? "Weekly" : "Daily");
+  await c.say("Good. " + (t ? "Whenever it’s " + t.charAt(0).toLowerCase() + t.slice(1) + ", you start." : "You’ll start it at the same time each day.") + " That’s how a system runs without you having to remember.");
+}
+
+const STEPS = [
+  { id: "name", run: async c => {
+    await c.say("Hi, I’m your Wendaful system assistant, built on Wenda’s method. I do most of the work. You tap, I set it up.",
+      card({ title: "Here’s what I’ll help you do", h: "h3", kids: [h("ol", { class: "stack tight" }, [
+        "Give everything one home, in your planner, your phone, your computer, or a mix.",
+        "Build one small system and one habit that fit your real life.",
+        "Make a floor for tired days, so it’s never all or nothing.",
+        "Get you going again when you skip days. No guilt, no starting over."].map((t, i) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(i + 1)), h("span", null, t))))] }),
+      "It takes about 5 minutes. Tap **Use my best guess** any time and I’ll fill in the rest. You can change anything later.", "What should I call you?");
+    const v = await c.ask({ type: "text", placeholder: "Your name", aria: "Your name", skip: "Skip", def: "" });
+    if (v) { set("name", v); await c.say("Nice to meet you, " + v + "."); }
+  } },
+  { id: "struggle", run: async c => {
+    await c.say("What’s getting in your way right now? Pick the closest one.");
+    const v = await c.ask({ options: STRUGGLES.map(s => s[0]).concat(["All of it"]), def: "I don’t know where to start." });
+    const s = STRUGGLES.find(x => x[0] === v);
+    if (s) { set("struggle", v); await c.say(s[1]); if (s[3]) await c.say("*" + s[3] + "*"); }
+    else await c.say("Then we’ll start with the basics: one home for everything.");
+    await c.say("I’ll build your system around that.");
+  } },
+  { id: "tools", run: async c => {
+    await c.say("Where do you plan? Pick everything you use. A mix is great.");
+    const v = await c.ask({ multi: true, options: [["Paper planner", "planner"], ["My phone", "phone"], ["My computer", "computer"]], def: ["planner", "phone"] });
+    const med = v && v.length ? v : ["planner", "phone"];
+    clearPrefix("setup.med."); med.forEach(m => set("setup.med." + m, 1));
+    set("tool.mode", med.includes("planner") ? (med.length > 1 ? "Hybrid" : "Paper") : "Digital");
+    Object.keys(TABMEM).forEach(k => { if (k.startsWith("tg-")) delete TABMEM[k]; });
+    const H = homesFor(med), dig = med.includes("phone") || med.includes("computer"), P = med.includes("planner");
+    set("part.inbox.home", H.inbox); set("part.cal.home", H.cal); set("part.tasks.home", H.tasks); set("part.notes.home", H.notes);
+    set("part.inbox.backup", med.includes("phone") ? "A note on my phone" : "A sticky note");
+    set("part.tasks.mark", P ? "I star it" : "I flag it"); set("part.notes.find", dig ? "I search for it" : "Tabs and dividers");
+    await c.say("Here’s the setup I chose for you. Each part has one home, so you always know where things go.");
+    await c.say(card({ title: "Your 4 parts", h: "h3", kids: [h("dl", { class: "dl" },
+      ...[["Inbox", H.inbox], ["Calendar", H.cal], ["Tasks", H.tasks], ["Notes", H.notes]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }));
+  } },
+  { id: "who", run: async c => {
+    await c.say("Who else needs to see your calendar?");
+    const v = await c.ask({ options: ["Just me", "My partner", "My whole family", "My team at work"], def: "My whole family" });
+    set("part.cal.who", v || "My whole family");
+    await c.say(v === "Just me" ? "Got it. Your calendar is just yours." : "Got it. I’ll note that you share your calendar with " + (v || "My whole family").replace(/^My /, "your ").toLowerCase() + ".");
+  } },
+  { id: "sort", run: async c => {
+    await c.say("Once a week you’ll spend 10 minutes sorting your inbox into your calendar, tasks, and notes. That one habit keeps everything from piling up. When works best?");
+    const v = await c.ask({ options: [["Sunday, 7:30 pm", "Sunday|7:30 pm"], ["Saturday, 9:00 am", "Saturday|9:00 am"], ["Monday, 8:00 am", "Monday|8:00 am"], ["Friday, 3:00 pm", "Friday|3:00 pm"]], def: "Sunday|7:30 pm" });
+    const [day, time] = String(v || "Sunday|7:30 pm").split("|");
+    set("sort.day", day); set("sort.time", time);
+    await c.say("Done. Put this on your calendar so it happens.");
+    await c.say(genBlock("Repeating event in my calendar", "Make a new event, paste this in, and set it to repeat.", "Title: Weekly sort (10 minutes)\nRepeat: Weekly on " + day + " at " + time + "\nAlert: 10 minutes before\nNote: Empty my inbox into my calendar, tasks, and notes."));
+    await c.ask({ options: ["Added it", "I’ll do it later"], def: "I’ll do it later", guess: false });
+  } },
+  { id: "area", run: async c => {
+    await c.say("Which part of life would feel better if it ran on its own?");
+    const v = await c.ask({ options: AREAS.map(a => a[0]), def: "Home" });
+    set("focus.1.name", v || "Home"); set("focus.1.why", "It drains me right now");
+    await c.say("Good pick. We’ll start small.");
+  } },
+  { id: "system", run: async c => { await systemFlow(c, 1); } },
+  { id: "habit", run: async c => {
+    await c.say("Now one habit you want to keep up, even on tired days. Pick one. I’ll make it tiny so it’s easy to start.");
+    const v = await c.ask({ options: HABITS.map(x => x.name).concat(["Something else"]), def: "Move my body" });
+    let hb = HABITS.find(x => x.name === v);
+    if (!hb) {
+      await c.say("What’s the habit?");
+      const nm = await c.ask({ type: "text", placeholder: "For example: Stretch", aria: "Habit name", skip: "Skip", def: "Move my body" });
+      hb = nm ? { name: nm, f: "Just start for 5 minutes", r: "20 minutes", b: "An hour", just: "start for 5 minutes", night: ["Set out what I need", "Plan my meal", "Write tomorrow’s top 3"] } : HABITS[0];
+    }
+    set("fam.0.h", hb.name); set("fam.0.f", hb.f); set("fam.0.r", hb.r); set("fam.0.b", hb.b); set("night.just", hb.just);
+    await c.say("Here’s the trick. You only have to do the **floor**. On a hard day, that’s all. Most days you’ll do more once you start.");
+    await c.say(card({ title: hb.name, h: "h3", kids: [h("dl", { class: "dl" }, ...[["Floor", hb.f], ["Regular", hb.r], ["Bonus", hb.b]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }), "When will you do it?");
+    const w = await c.ask({ options: ["In the morning", "In the afternoon", "In the evening", "After work"], def: "In the morning" });
+    set("fam.0.when", (w || "In the morning").toLowerCase()); set("fam.0.freq", "Every day");
+    c.habit = hb;
+  } },
+  { id: "night", run: async c => {
+    const hb = c.habit || HABITS.find(x => x.name === get("fam.0.h")) || HABITS[0];
+    await c.say("Here’s how I make mornings easy: the choices get made the night before, so there’s nothing to talk yourself out of. Want me to set up your night-before list?");
+    const v = await c.ask({ options: ["Yes, set it up for me", "Skip this"], def: "Yes, set it up for me" });
+    if (v === "Skip this") return;
+    hb.night.forEach((t, i) => set("night." + i, t));
+    await c.say("Done. Each night: **" + hb.night.join(", ") + ".**", "Then on a day you don’t feel like it, you’re just going to **" + (get("night.just") || hb.just) + "**. No debate. Starting is the win.");
+  } },
+  { id: "mvd", run: async c => {
+    await c.say("Last one. On a day that goes sideways, five small things keep life moving. Want my starter list?");
+    const v = await c.ask({ options: ["Use Wenda’s starter list", "I’ll write my own later"], def: "Use Wenda’s starter list" });
+    if (v === "Use Wenda’s starter list") { MVD_STARTER.forEach((t, i) => set("mvd." + i, t)); await c.say("Done. If you hit these five, the day counts."); }
+  } },
+  { id: "finish", run: async c => {
+    c.fast = false;
+    set("asst.done.finish", 1); refreshChrome();
+    await c.say("That’s it. **Your system is built.** Here’s what I set up for you:", systemGlance());
+    await c.say("Next, let’s put it where you’ll see it. That’s what makes it stick.");
+    const v = await c.ask({ options: ["Set it up in my tools", "Open Today", "Save my printable plan"], def: "Open Today", guess: false });
+    if (v === "Set it up in my tools") await setupWalk(c);
+    else if (v === "Save my printable plan") await c.say(printCard());
+    else if (v === "Open Today") { nav("today"); }
+  } }
+];
+const asstDone = () => STEPS.filter(s => asstAnswered(s.id)).length;
+const ASST_TOTAL = () => STEPS.length;
+const asstComplete = () => asstAnswered("finish");
+
+function systemGlance() {
+  const rows = [["My 4 parts", ["inbox", "cal", "tasks", "notes"].filter(k => get("part." + k + ".home")).length + " homes set"],
+    ["Weekly sort time", [get("sort.day"), get("sort.time")].filter(Boolean).join(" at ")], ["Focus area", get("focus.1.name")],
+    ["My system", [1, 2, 3].map(n => get("sb." + n + ".name")).filter(Boolean).join(", ")],
+    ["My habit and floor", get("fam.0.h") ? get("fam.0.h") + ": " + get("fam.0.f") : ""], ["Night before", [0, 1, 2, 3].map(i => get("night." + i)).filter(Boolean).join(", ")],
+    ["Minimum viable day", [0, 1, 2, 3, 4].filter(i => get("mvd." + i)).length ? "5 small things" : ""]].filter(r => r[1]);
+  return card({ title: "Your system", h: "h3", kids: [h("dl", { class: "dl" }, ...rows.map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] });
+}
+function printCard() {
+  return card({ cls: "out", title: "Your printable plan", h: "h3", sub: "A 3-page PDF with everything I just set up. Print it, or keep it on your phone.",
+    kids: [h("div", { class: "row" }, btn("Save my plan as a PDF", e => savePlan(e.currentTarget)), btn("Copy as text", () => copyText(summaryText()), "ghost"))] });
+}
+async function setupWalk(c) {
+  const med = MEDIA.find(m => m[0] === firstMed());
+  await c.say("I’ll walk you through it one part at a time. Open your " + (med ? med[1].toLowerCase() : "planner") + " and follow along. Each part takes about 3 minutes.");
+  const parts = [["Inbox", "inbox"], ["Calendar", "cal"], ["Tasks", "tasks"], ["Notes", "notes"]];
+  for (const [name, key] of parts) {
+    await c.say("**" + name + ".** " + (get("part." + key + ".home") ? "Your home: " + get("part." + key + ".home") + "." : ""));
+    await c.say(card({ cls: "out", title: name, h: "h3", kids: [toolGuide("setup-" + key, SETUP[key])] }));
+    const v = await c.ask({ options: ["Done, next", "I’ll do this later"], def: "I’ll do this later", guess: false });
+    if (v === "Done, next") set("asst.setup." + key, 1);
+  }
+  await c.say("That’s your four parts. **The hard part is done.** Come back to Today each morning, and I’ll keep you on track.");
+}
+
+/* ============ what do you need? ============ */
+const ACTIONS = [
+  ["Plan my day", "plan"], ["I don’t feel like it", "nofeel"], ["I’m overwhelmed", "overwhelmed"], ["I skipped a few days", "restart"],
+  ["Do my weekly reset", "weekly"], ["Set up my tools", "setup"], ["Add another system", "addsystem"], ["Print my plan", "print"], ["Change something", "change"], ["Teach me the method", "learn"]
+];
+function timerCard(min, label, doneMsg, onDone) {
+  return card({ cls: "out", kids: [timer({ minutes: min, label, doneMsg, onDone })] });
+}
+function markFloorToday() { if (get("fam.0.h")) set("fl." + today() + ".0", "F"); }
+const justText = () => get("night.just") || (get("fam.0.f") ? "do your floor: " + get("fam.0.f") : "start for 5 minutes");
+
+async function runAction(c, key) {
+  if (key === "plan") {
+    const T = today(), rows = h("div", { class: "stack tight" });
+    for (let i = 0; i < 3; i++) rows.append(chkEl("top." + T + "." + i + ".c", cellInput("top." + T + "." + i + ".t", { aria: "Top " + (i + 1), ph: i === 0 ? "The one thing I’ll do first" : "" }), { cls: "line" }));
+    await c.say("Let’s keep it small. Pick your top 3 for today. Just three.", card({ cls: "out", title: "My top 3 today", h: "h3", kids: [rows] }),
+      "Start with number 1 and don’t add anything. Everything after your top 3 is a bonus.");
+  } else if (key === "nofeel") {
+    await c.say("I hear you. Here’s the deal: no talking yourself out of it. You’re just going to **" + justText() + "**.", "That’s all. Starting is the win, and you’ll probably do more once you’re moving.",
+      timerCard(5, "Start: just do it", "That counts. You showed up.", markFloorToday));
+  } else if (key === "overwhelmed") {
+    if (!LIBREG.frozen) BYID["lib-hard"].build();
+    await c.say("Okay. Breathe. Too much at once is a lot. We’re going to do **one** thing, and nothing else.");
+    let again = true;
+    while (again && c.alive()) {
+      const items = cardItems(LIBREG.frozen), it = items[Math.floor(Math.random() * items.length)];
+      addToDay(it.t);
+      await c.say("Just this: **" + it.t + ".**");
+      const v = await c.ask({ options: ["I did it", "Pick a different one", "I’ll rest instead"], def: "I did it", guess: false });
+      if (v === "Pick a different one") continue;
+      again = false;
+      await c.say(v === "I did it" ? "Nice. That’s enough for now. You can stop here." : "Rest counts. Nothing else is required today.");
+    }
+  } else if (key === "restart") {
+    await c.say("That’s okay. **Today is day one again.** There’s nothing to catch up on.",
+      "Do your floor, and nothing more: **" + (get("fam.0.f") || "start for 5 minutes") + ".**", timerCard(5, "Do my floor now (5 min)", "You’re back. That counts.", markFloorToday));
+  } else if (key === "weekly") {
+    const med = firstMed();
+    await c.say("Let’s do your weekly reset. It takes about 10 minutes. I’ll go one step at a time.",
+      checklistCard({ id: "wr-run", title: "My weekly reset", tone: "out", items: WEEKLY_STEPS[med], startMode: "one" }));
+  } else if (key === "setup") { await setupWalk(c); }
+  else if (key === "addsystem") {
+    const slot = [2, 3].find(n => !get("sb." + n + ".name"));
+    if (!slot) { await c.say("You have three systems built already. That’s plenty. Run them for two weeks, then we’ll add more."); return; }
+    await systemFlow(c, slot);
+  } else if (key === "print") { await c.say("Here you go. Print it or keep it on your phone.", printCard()); }
+  else if (key === "change") { await c.say("You can change anything on **My system**.", h("div", null, btn("Open My system", () => nav("workbook"), "sm"))); }
+  else if (key === "learn") { await c.say("If you want to understand why this works, the method pages explain each part.", h("div", null, btn("Learn the method", () => nav("learn"), "sm"))); }
+}
+
+async function runAssistant(c) {
+  if (!asstComplete()) {
+    const resumed = asstDone() > 0;
+    if (resumed) await c.say("Welcome back. Let’s pick up where we left off.");
+    for (const s of STEPS) {
+      if (asstAnswered(s.id)) continue;
+      await s.run(c);
+      if (!c.alive()) return;
+      set("asst.done." + s.id, 1); refreshChrome();
+    }
+  } else {
+    const nm = get("name");
+    await c.say((nm ? "Welcome back, " + nm + "." : "Welcome back.") + " What do you need?");
+  }
+  while (c.alive()) {
+    const v = await c.ask({ prompt: "What do you need?", options: ACTIONS.map(a => [a[0], a[1]]), guess: false });
+    if (!c.alive()) return;
+    await runAction(c, v);
+  }
+}
+
+function renderAssistant() {
+  const done = asstComplete(), name = get("name"), hour = new Date().getHours();
+  const hi = (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening") + (name ? ", " + name : "") + ".";
+  const root = h("div", { class: "chat" });
+  const art = h("article", { class: "lesson" },
+    h("div", { class: "wrap" }, strip(APP_NAME, "Your helper"),
+      h("div", { class: "head" }, h("h1", { class: "h1" }, done ? hi : "Let’s set up your system."),
+        p(done ? "Tell me what you need. I’ll do the work." : "I help you get organized, build routines that stick, and keep going when it gets hard. You tap, I set it up. About 5 minutes.", "lede"),
+        done && isSortDay() ? p("**Today is your sort day.** Ten minutes: empty your inbox into your calendar, tasks, and notes.", "bar") : null)),
+    h("div", { class: "wrap" }, root));
+  const c = createChat(root);
+  setTimeout(() => { runAssistant(c).catch(e => console.error(e)); }, 0);
+  return art;
+}
+</script>
+<script>
+"use strict";
 (function boot() {
   wireChrome();
+  runMerges();
   setupPath();
   const last = BYID[get("last")];
   OPENMOD[last ? groupOf(last) : "start"] = true;
   buildSide();
   const hash = (location.hash || "").replace(/^#/, "");
-  if (hash === "workbook") nav("workbook");
-  else if (BYID[hash]) nav(hash);
+  if (hash === "workbook" || hash === "today" || hash === "learn") nav(hash);
+  else if (BYID[hash] || ALIAS[hash]) nav(hash);
   else nav("home");
 })();
 </script>
