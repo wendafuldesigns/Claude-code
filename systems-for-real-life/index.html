@@ -1,0 +1,2277 @@
+<title>Systems for Real Life</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&family=Playfair+Display:wght@500&display=swap">
+<style>
+/* Layout concept: a paper workbook turned into an app. Ruled lines you type on,
+   hairline strips for page headers, evergreen cover bands for each level,
+   a course outline on the left and one workbook page at a time on the right. */
+:root{
+  --bg:#faf5f0; --surface:#ffffff; --panel:#f4f1ed; --callout:#dadfdc; --warm:#ece4d8;
+  --rule:#d6d1c9; --edge:#373a40; --ink:#373a40; --muted:#545454;
+  --accent:#54645b; --sage:#94a69c; --btn:#54645b; --btn-ink:#ffffff;
+  --hero:#54645b; --hero-ink:#ffffff; --hero-sub:#e4eae6; --hero-rule:rgba(255,255,255,.35);
+  --example:#4a5b52;
+  --serif:'Instrument Serif','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --brand:'Playfair Display',Georgia,serif;
+  --lh:36px; --hdr:56px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161c19; --surface:#1e2622; --panel:#252e29; --callout:#2e3933; --warm:#38342b;
+    --rule:#3a4640; --edge:#6d7a73; --ink:#ebe8e2; --muted:#aab2ad;
+    --accent:#a9bbb1; --sage:#94a69c; --btn:#94a69c; --btn-ink:#14201a;
+    --hero:#33403a; --hero-ink:#f4f1ed; --hero-sub:#cdd6d0; --hero-rule:rgba(255,255,255,.25);
+    --example:#b9c9bf;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161c19; --surface:#1e2622; --panel:#252e29; --callout:#2e3933; --warm:#38342b;
+  --rule:#3a4640; --edge:#6d7a73; --ink:#ebe8e2; --muted:#aab2ad;
+  --accent:#a9bbb1; --sage:#94a69c; --btn:#94a69c; --btn-ink:#14201a;
+  --hero:#33403a; --hero-ink:#f4f1ed; --hero-sub:#cdd6d0; --hero-rule:rgba(255,255,255,.25);
+  --example:#b9c9bf;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased;text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent);text-underline-offset:3px}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{font-family:var(--serif);font-weight:400;color:var(--accent);margin:0;text-wrap:balance;letter-spacing:-.005em}
+.h1{font-size:clamp(2.6rem,6.2vw,3.9rem);line-height:.98}
+h2{font-size:clamp(1.65rem,3.4vw,2.05rem);line-height:1.1}
+h3{font-size:1.5rem;line-height:1.12}
+h4{font-size:1.25rem;line-height:1.15}
+.eyebrow{font:600 11px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.1rem;line-height:1.5;max-width:56ch}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.ex{font-family:var(--serif);font-style:italic;color:var(--example);font-size:1.15em}
+
+/* ---------- app shell ---------- */
+.app{height:100%;display:flex;flex-direction:column}
+.top{flex:none;background:var(--bg);border-bottom:1px solid var(--rule);z-index:5}
+.top-in{height:var(--hdr);display:flex;align-items:center;gap:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.menu{display:none;flex:none;width:40px;height:40px;border:1px solid var(--rule);background:var(--surface);border-radius:2px;align-items:center;justify-content:center}
+.menu svg{width:18px;height:18px;stroke:var(--ink)}
+.brand{display:flex;align-items:baseline;gap:12px;background:none;border:0;padding:0;text-align:left;min-width:0}
+.brand .wm{font:500 1.35rem/1 var(--brand);color:var(--accent);letter-spacing:.01em}
+.brand .ttl{font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topstat{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:.8125rem;color:var(--muted);white-space:nowrap}
+.mini{width:110px;height:6px;background:var(--callout);border-radius:3px;overflow:hidden}
+.mini i{display:block;height:100%;width:0;background:var(--btn);transition:width .4s ease}
+.shell{flex:1;min-height:0;display:grid;grid-template-columns:304px minmax(0,1fr)}
+.side{overflow:auto;border-right:1px solid var(--rule);background:var(--bg);overscroll-behavior:contain}
+.side-in{padding:18px max(16px,env(safe-area-inset-left,0px)) 40px 16px;display:flex;flex-direction:column;gap:6px}
+.main{overflow:auto;min-width:0;scroll-behavior:auto;outline:0}
+.scrim{position:fixed;inset:0;background:rgba(20,28,24,.5);z-index:19}
+
+/* sidebar */
+.nv-top{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.nv{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-left:2px solid transparent;padding:8px 8px 8px 10px;color:var(--ink);font-size:.9375rem;line-height:1.3;min-height:38px}
+.nv:hover{background:var(--panel)}
+.nv.on{background:var(--panel);border-left-color:var(--accent);font-weight:600}
+.nv .mk{flex:none}
+.nh{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--rule);padding:14px 4px 8px;color:var(--ink)}
+.nh .t{flex:1;min-width:0}
+.nh .t b{display:block;font:400 1.2rem/1.1 var(--serif);color:var(--accent)}
+.nh .cnt{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.nh .chev{width:10px;height:10px;border:solid var(--muted);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);transition:transform .15s;margin:0 4px 3px 0;flex:none}
+.nh[aria-expanded="true"] .chev{transform:rotate(-135deg);margin:4px 4px 0 0}
+.nl{display:none;flex-direction:column;padding-bottom:6px}
+.nl.open{display:flex}
+.mk{width:16px;height:16px;border:1.5px solid var(--sage);border-radius:50%;position:relative;flex:none;background:transparent}
+.mk.on{background:var(--btn);border-color:var(--btn)}
+.mk.on::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:7px;border:solid var(--btn-ink);border-width:0 1.8px 1.8px 0;transform:rotate(45deg)}
+.savenote{margin-top:14px;padding:12px;background:var(--panel);font-size:.8125rem;color:var(--muted);line-height:1.45}
+
+/* ---------- page frame ---------- */
+.wrap{width:100%;max-width:840px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap.wide{max-width:1040px}
+.lesson{padding-bottom:64px;animation:rise .28s ease both}
+@keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.strip{display:flex;justify-content:space-between;gap:16px;padding:22px 0 10px;border-bottom:1px solid var(--rule);font:600 11px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.head{padding:30px 0 6px;display:flex;flex-direction:column;gap:14px}
+.body{padding-top:26px;display:flex;flex-direction:column;gap:30px}
+.cover{background:var(--hero);color:var(--hero-ink)}
+.cover .strip{color:var(--hero-sub);border-bottom-color:var(--hero-rule)}
+.cover .cv{padding:56px 0 46px;display:flex;flex-direction:column;gap:14px;min-height:300px;justify-content:flex-end}
+.cover .eyebrow{color:var(--hero-sub);letter-spacing:.2em}
+.cover .h1{color:var(--hero-ink)}
+.cover .sub{font-size:1.2rem;color:var(--hero-ink);max-width:40ch}
+.stack{display:flex;flex-direction:column;gap:18px}
+.stack.tight{gap:10px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec>.eyebrow{margin-bottom:-2px}
+
+/* ---------- cards, callouts ---------- */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--min,250px)),1fr));gap:16px;align-items:stretch}
+.card{background:var(--panel);padding:20px;border-radius:2px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.out{background:var(--surface);border:1px solid var(--edge)}
+.card.dark{background:var(--hero);color:var(--hero-ink)}
+.card.dark h3,.card.dark h4,.card.dark .eyebrow,.card.dark .muted{color:var(--hero-ink)}
+.card.dark .eyebrow{opacity:.85}
+.card h3,.card h4{margin-top:-2px}
+.card .sub{color:var(--muted);font-size:.9375rem;margin-top:-4px}
+.card.sel{outline:2px solid var(--accent);outline-offset:-2px}
+button.card{text-align:left;border:0;color:inherit;font:inherit;width:100%}
+button.card:hover{background:var(--callout)}
+.bar{background:var(--callout);padding:14px 18px;border-radius:2px;line-height:1.5;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.bar strong{font-weight:650}
+.dark-bar{background:var(--hero);color:var(--hero-ink);padding:22px;border-radius:2px;display:flex;flex-direction:column;gap:10px}
+.dark-bar h3{color:var(--hero-ink)}
+.dark-bar a{color:var(--hero-ink);font-weight:650}
+.badge{display:inline-block;align-self:flex-start;font:600 10.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;background:var(--callout);color:var(--ink);border-radius:2px}
+.badge.you{background:var(--btn);color:var(--btn-ink)}
+.badge.on{background:var(--btn);color:var(--btn-ink)}
+.badge.warm{background:var(--warm)}
+.bar.good{background:var(--callout)}
+.bar.soft{background:var(--warm)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 20px;border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);font:600 .9375rem/1.2 var(--sans);border-radius:2px;text-decoration:none}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--edge)}
+.btn.ghost:hover{background:var(--panel);filter:none}
+.btn.sm{min-height:36px;padding:7px 14px;font-size:.875rem}
+.btn[disabled]{opacity:.45;cursor:default}
+.link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font:inherit;font-weight:550;cursor:pointer;text-align:left}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* ---------- fields ---------- */
+.fld{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lbl{font:600 .9375rem/1.35 var(--sans);color:var(--ink)}
+.hint{font-weight:400;color:var(--muted)}
+.ln{width:100%;display:block;border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--ink);font:400 1rem/1.4 var(--sans);padding:9px 2px 7px;border-radius:0;outline:0;min-height:42px}
+.ln::placeholder{color:var(--muted);opacity:.55}
+.ln:focus{border-bottom-color:var(--accent);box-shadow:0 1px 0 var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.ta{resize:none;overflow:hidden;line-height:var(--lh);padding:0 2px;min-height:calc(var(--rows,2) * var(--lh));border-bottom:0;
+  background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1px),var(--rule) calc(var(--lh) - 1px));
+  background-size:100% var(--lh);background-attachment:local;background-color:transparent}
+.ta:focus{box-shadow:none;background-color:color-mix(in srgb,var(--accent) 6%,transparent)}
+.inl{display:flex;align-items:baseline;gap:10px;min-width:0}
+.inl .lbl{flex:none}
+.inl .ln{flex:1;min-width:0}
+.fld.inl{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 12px}
+.fld.inl .ln{flex:1 1 180px}
+.num{display:flex;align-items:center;gap:12px}
+.num .n{flex:none;width:28px;height:28px;border:1.5px solid var(--edge);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 .8125rem/1 var(--sans);color:var(--ink)}
+.num.solid .n{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+.num .ln{flex:1}
+select.ln{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+
+/* checkboxes and radios */
+.chkgrid{display:grid;grid-template-columns:repeat(var(--c,1),minmax(0,1fr));gap:0 28px}
+.chk{display:flex;gap:12px;align-items:flex-start;cursor:pointer;line-height:1.4;padding:7px 0;position:relative;min-width:0}
+.chk input{position:absolute;opacity:0;width:24px;height:24px;margin:0;left:0;top:5px;cursor:pointer}
+.chk .box{flex:none;width:20px;height:20px;border:1.5px solid var(--edge);background:var(--surface);margin-top:1px;border-radius:2px;position:relative;transition:background .15s,border-color .15s}
+.chk .box::after{content:"";position:absolute;left:5.5px;top:1.5px;width:6px;height:11px;border:solid var(--btn-ink);border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .15s}
+.chk input:checked+.box{background:var(--btn);border-color:var(--btn)}
+.chk input:checked+.box::after{transform:rotate(45deg) scale(1)}
+.chk input:focus-visible+.box{outline:2px solid var(--accent);outline-offset:2px}
+.chk .lbl{font-weight:400;flex:1;min-width:0}
+.chk.line .lbl{display:flex;align-items:center}
+.chk.line .ln{padding-top:4px;padding-bottom:4px;min-height:34px}
+.strike input:checked~.lbl{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--sage)}
+.rad{display:inline-flex;gap:8px;align-items:center;cursor:pointer;position:relative;padding:8px 4px;min-height:40px}
+.rad input{position:absolute;opacity:0;width:22px;height:22px;margin:0;left:2px}
+.rad .dot{flex:none;width:20px;height:20px;border:1.5px solid var(--edge);border-radius:50%;background:var(--surface);position:relative}
+.rad .dot::after{content:"";position:absolute;inset:3.5px;border-radius:50%;background:var(--btn);transform:scale(0);transition:transform .15s}
+.rad input:checked+.dot::after{transform:scale(1)}
+.rad input:checked+.dot{border-color:var(--btn)}
+.rad input:focus-visible+.dot{outline:2px solid var(--accent);outline-offset:2px}
+.radrow{display:flex;flex-wrap:wrap;gap:4px 22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 .875rem/1.15 var(--sans);padding:9px 14px;border:1px solid var(--edge);background:var(--surface);color:var(--ink);border-radius:2px;min-height:40px;text-align:center}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.chip.right{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.chip.wrong{background:var(--warm);border-style:dashed}
+.tg{width:34px;height:34px;border:1.5px solid var(--edge);background:var(--surface);border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font:600 .8125rem/1 var(--sans);color:var(--ink);padding:0}
+.tg.r{border-radius:50%}
+.tg[aria-pressed="true"]{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+.tg:hover{border-color:var(--accent)}
+.star{font-size:1.25rem;line-height:1;background:none;border:0;padding:6px;color:var(--accent);min-width:40px;min-height:40px}
+
+/* ---------- row grids (tables that stack on phones) ---------- */
+.rows{display:flex;flex-direction:column;border-top:1px solid var(--edge)}
+.rw{display:grid;grid-template-columns:var(--cols,1fr);gap:4px 18px;align-items:start;padding:10px 0;border-bottom:1px solid var(--rule)}
+.rw.hd{padding:10px 0 8px;font:600 11px/1.3 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rw.exr{background:var(--panel);padding-left:10px;padding-right:10px;margin-left:-10px;margin-right:-10px}
+.rw .cell{min-width:0;display:flex;flex-direction:column;gap:2px}
+.rw .cell[data-label]::before{content:attr(data-label);display:none;font:600 10.5px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rw .ro{font-weight:600}
+.rw .ro small{display:block;font-weight:400;color:var(--muted);font-size:.8125rem}
+.rw .exv{font-family:var(--serif);font-style:italic;color:var(--example);font-size:1.15rem;line-height:1.3;padding:6px 2px}
+.rw .mid{align-self:center}
+.rw .cell.mid{align-items:flex-start}
+.rw .ln{min-height:40px}
+.rw .ta{--lh:30px}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--edge)}
+.tab{background:none;border:1px solid transparent;border-bottom:0;padding:11px 16px;font:600 .875rem/1 var(--sans);color:var(--muted);border-radius:2px 2px 0 0;margin-bottom:-1px;min-height:44px}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);border-color:var(--edge);border-bottom:1px solid var(--surface)}
+.panel{padding-top:22px}
+
+/* toc / lesson lists */
+.toc{border-top:1px solid var(--edge)}
+.toc-row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:14px 4px;min-height:60px}
+.toc-row:hover{background:var(--panel)}
+.toc-row .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.toc-row strong{font-weight:650}
+.toc-row small{color:var(--muted);font-size:.875rem}
+.toc-row .go{color:var(--accent);font-size:1.1rem}
+
+/* progress */
+.track{height:8px;background:var(--callout);border-radius:4px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--btn);width:0;transition:width .4s ease}
+
+/* timers */
+.timer{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 18px;background:var(--panel);border-radius:2px}
+.timer .t{font:400 2.6rem/1 var(--serif);font-variant-numeric:tabular-nums;color:var(--accent);min-width:4.4ch}
+.timer .msg{flex-basis:100%;font-weight:600;color:var(--accent)}
+
+/* pager */
+.pager{margin-top:44px;padding-top:20px;border-top:1px solid var(--edge);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.pager .where{flex-basis:100%;display:flex;justify-content:space-between;font-size:.8125rem;color:var(--muted);order:3;padding-top:10px}
+.legal{font-size:.8125rem;color:var(--muted);line-height:1.5;max-width:70ch;padding-top:26px}
+
+/* home */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+.tile{display:flex;flex-direction:column;gap:8px;text-align:left;border:0;padding:20px;min-height:210px;border-radius:2px;background:var(--callout);color:var(--ink);justify-content:space-between}
+.tile.d{background:var(--hero);color:var(--hero-ink)}
+.tile .eyebrow{color:inherit;opacity:.8}
+.tile h3{color:inherit;font-size:1.6rem}
+.tile p{font-size:.9375rem;max-width:none}
+.tile .fin{font-size:.875rem}
+.tile .pg{display:flex;align-items:center;gap:10px;font-size:.8125rem}
+.tile .pg .track{flex:1;background:rgba(0,0,0,.12)}
+.tile.d .pg .track{background:rgba(255,255,255,.25)}
+.tile .pg .track i{background:currentColor}
+.tile:hover{filter:brightness(.97)}
+.bonus{display:flex;flex-direction:column;gap:6px;border:1px solid var(--edge);background:var(--surface);padding:18px;text-align:left;border-radius:2px}
+.bonus h4{font-size:1.4rem}
+.bonus:hover{background:var(--panel)}
+
+/* misc */
+.pill{font-size:.75rem;font-weight:600;padding:3px 9px;background:var(--callout);border-radius:99px;white-space:nowrap}
+.tip{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.tip:last-child{border-bottom:0}
+.tip b{flex:none;min-width:8.5rem;font-weight:650}
+.dl{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:6px 18px}
+.dl dt{font-weight:650}
+.dl dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,60%{box-shadow:0 0 0 3px var(--sage)}100%{box-shadow:0 0 0 0 transparent}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:2px;font-size:.875rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.libcols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.libcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.grp{font:600 11px/1.3 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:10px}
+.cl-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.8125rem;color:var(--muted);padding-top:4px}
+.cl .chk{padding:6px 0}
+.sticky-note{font-size:.8125rem;color:var(--muted)}
+.hr{height:1px;background:var(--rule);border:0;margin:0}
+.res{padding:16px 18px;background:var(--callout);border-radius:2px;display:flex;flex-direction:column;gap:8px}
+.week td{padding:0}
+.wgrid{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:6px;align-items:center}
+.wgrid .hd{font-size:.75rem;color:var(--muted);text-align:center}
+.wgrid .day{font-weight:650;padding-right:8px}
+.wgrid .tg{width:100%;height:40px;border-radius:2px}
+.trk{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr));gap:6px;align-items:center}
+.trk .tg{width:100%;max-width:44px;height:36px;justify-self:center}
+.trk .hd{font-size:.75rem;font-weight:600;color:var(--muted);text-align:center}
+.trk .wk{font-size:.8125rem;color:var(--muted);padding-right:6px}
+.fbr{display:flex;gap:3px;justify-content:center}
+.fbr .tg{width:28px;height:28px;font-size:.6875rem;border-radius:50%}
+.days14{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px}
+.days14 .tg{width:100%;height:34px}
+.days14 .nn{font-size:.6875rem;text-align:center;color:var(--muted)}
+.circles{display:flex;gap:6px;flex-wrap:wrap}
+.circles .tg{width:28px;height:28px}
+.ring{width:84px;height:84px;flex:none}
+
+.sig{font:italic 400 2.2rem/1.1 var(--serif);color:var(--accent)}
+.quote{font:italic 400 clamp(1.6rem,4vw,2.2rem)/1.15 var(--serif);color:var(--accent);text-align:center;padding:8px 0 0}
+.num.top{align-items:flex-start}
+.num.top .n{margin-top:2px}
+.s5{display:grid;grid-template-columns:200px minmax(0,1fr);gap:8px 22px;align-items:start}
+.btn.light{background:var(--hero-ink);color:var(--hero);border-color:var(--hero-ink)}
+.cover .lbl{color:var(--hero-ink)}
+.cover .ln{color:var(--hero-ink);border-bottom-color:var(--hero-rule);max-width:420px}
+.cover .ln::placeholder{color:var(--hero-sub)}
+.cover .ln:focus{border-bottom-color:var(--hero-ink);box-shadow:0 1px 0 var(--hero-ink);background:rgba(255,255,255,.08)}
+.cover p.small{color:var(--hero-sub)}
+.tg.txt{width:auto;min-width:0;padding:0 11px;height:36px;font-weight:500;font-size:.8125rem}
+.mvgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.mvday{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mvday .hd{font:600 .75rem/1 var(--sans);color:var(--muted)}
+.mvday .fbr{flex-direction:column;gap:5px}
+.mvday .tg{width:32px;height:32px;font-size:.75rem}
+.card .stack.tight .fld{min-width:0}
+.tired .opt{display:none}
+@media (max-width:900px){
+  .menu{display:inline-flex}
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;bottom:0;top:calc(var(--hdr) + env(safe-area-inset-top,0px));width:min(88vw,340px);z-index:20;transform:translateX(-102%);transition:transform .22s ease;border-right:1px solid var(--edge);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .side.open{transform:none}
+  .brand .ttl{display:none}
+  .mini{width:70px}
+}
+@media (max-width:720px){
+  .rw{grid-template-columns:1fr!important}
+  .rw.hd{display:none}
+  .rw .cell[data-label]::before{display:block}
+  .rw.exr{margin-left:0;margin-right:0}
+  .s5{grid-template-columns:minmax(0,1fr)}
+  .strip span:first-child{display:none}
+  .strip{justify-content:flex-start}
+  .libcols{grid-template-columns:minmax(0,1fr)}
+  .chkgrid{grid-template-columns:minmax(0,1fr)}
+  .dl{grid-template-columns:1fr}
+  .tip{flex-direction:column;gap:2px}
+  .days14{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .cover .cv{padding:40px 0 34px;min-height:240px}
+  .tab{padding:11px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+
+<div class="app">
+  <header class="top"><div class="top-in">
+    <button class="menu" id="menuBtn" type="button" aria-label="Open the page list" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <button class="brand" id="brandBtn" type="button" aria-label="Course home"><span class="wm">wendaful</span><span class="ttl">Systems for Real Life</span></button>
+    <div class="topstat"><span id="topCount">0 of 0 done</span><div class="mini" aria-hidden="true"><i id="topFill"></i></div></div>
+  </div></header>
+  <div class="shell">
+    <nav class="side" id="side" aria-label="Course pages"></nav>
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+  <div class="scrim" id="scrim" hidden></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+/* ============ small DOM helpers ============ */
+let UID = 0;
+const uid = p => (p || "u") + (++UID);
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "value" || k === "checked" || k === "disabled" || k === "selected") el[k] = v;
+    else if (k === "style" && typeof v === "object") {
+      for (const sk in v) { if (sk.startsWith("--")) el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk]; }
+    }
+    else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+
+/* **bold** and *italic* inside strings */
+function rt(s) {
+  const f = document.createDocumentFragment();
+  String(s).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).forEach(p => {
+    if (!p) return;
+    if (p.startsWith("**")) f.append(h("strong", null, p.slice(2, -2)));
+    else if (p[0] === "*" && p.length > 2) f.append(h("em", null, p.slice(1, -1)));
+    else f.append(p);
+  });
+  return f;
+}
+
+/* ============ saved answers ============ */
+const KEY = "wendaful-sfrl-v1";
+let S = {};
+let storageOK = true;
+try { S = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { storageOK = false; S = {}; }
+
+let saveT = null;
+function paintSave(pending) {
+  const n = document.getElementById("saveNote");
+  if (!n) return;
+  n.textContent = !storageOK ? "This browser will not keep your answers. Use Backup in My workbook before you leave."
+    : pending ? "Saving…" : "Your answers are saved on this device.";
+}
+function flush() {
+  clearTimeout(saveT); saveT = null;
+  try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
+  paintSave(false);
+}
+function queueSave() { clearTimeout(saveT); saveT = setTimeout(flush, 300); paintSave(true); }
+const get = (k, d) => (k in S) ? S[k] : (d === undefined ? "" : d);
+function set(k, v, keep) {
+  if (!keep && (v === "" || v === false || v == null)) delete S[k]; else S[k] = v;
+  queueSave();
+  if (k.startsWith("done.")) refreshChrome();
+}
+function clearPrefix(p) { Object.keys(S).forEach(k => { if (k.startsWith(p)) delete S[k]; }); queueSave(); }
+const hasAny = p => Object.keys(S).some(k => k.startsWith(p));
+addEventListener("pagehide", flush);
+document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+
+/* ============ toast, copy, save a file ============ */
+let toastT = null;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2200);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast("Copied"); return true; }
+  catch (e) {
+    const ta = h("textarea", { style: { position: "fixed", opacity: "0", left: "0", top: "0" } });
+    ta.value = text; document.body.append(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (_) { }
+    ta.remove(); toast(ok ? "Copied" : "Copy did not work here. Select the text and copy it."); return ok;
+  }
+}
+let DL = null;
+(async () => { try { if (window.claude && claude.use) DL = await claude.use("downloads"); } catch (e) { DL = null; } })();
+async function saveFile(name, data) {
+  if (!DL) { toast("Saving a file is not available here. Use Copy instead."); return false; }
+  try { await DL.save({ filename: name, data }); toast("Saved"); return true; }
+  catch (e) { if (!e || e.code !== "declined") toast("Could not save a file here. Use Copy instead."); return false; }
+}
+
+/* ============ form pieces ============ */
+function grow(t) { if (!t.offsetParent) return; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
+function growAll(root) { (root || document).querySelectorAll("textarea.ta").forEach(grow); }
+
+function wrapField(o, child) {
+  return h("div", { class: "fld " + ((o && o.cls) || "") },
+    o && o.label ? h("div", { class: "lbl" }, rt(o.label), o.hint ? h("span", { class: "hint" }, " " + o.hint) : null) : null,
+    child);
+}
+
+/* lined single line or ruled paper (rows > 1) */
+function field(k, o = {}) {
+  const rows = o.rows || 1, id = uid("f");
+  const inp = rows > 1
+    ? h("textarea", { id, class: "ln ta", rows, placeholder: o.ph || "", style: { "--rows": rows } })
+    : h("input", { id, class: "ln", type: "text", placeholder: o.ph || "", autocomplete: "off", list: o.list || null });
+  inp.value = get(k, o.def || "");
+  inp.addEventListener("input", () => {
+    set(k, inp.value, !!o.def);
+    if (rows > 1) grow(inp);
+    if (o.onInput) o.onInput(inp.value);
+  });
+  const lab = o.label ? h("label", { class: "lbl", for: id }, rt(o.label), o.hint ? h("span", { class: "hint" }, " " + o.hint) : null) : null;
+  const f = h("div", { class: "fld " + (o.cls || "") }, lab, inp);
+  f.input = inp;
+  return f;
+}
+/* bare input for grids (no label) */
+function cellInput(k, o = {}) {
+  const inp = o.rows > 1
+    ? h("textarea", { class: "ln ta", rows: o.rows, placeholder: o.ph || "", style: { "--rows": o.rows }, "aria-label": o.aria || null })
+    : h("input", { class: "ln", type: "text", placeholder: o.ph || "", autocomplete: "off", list: o.list || null, "aria-label": o.aria || null });
+  inp.value = get(k, o.def || "");
+  inp.addEventListener("input", () => { set(k, inp.value, !!o.def); if (o.rows > 1) grow(inp); if (o.onInput) o.onInput(inp.value); });
+  return inp;
+}
+function numbered(k, n, o = {}) {
+  const list = h("div", { class: "stack tight" });
+  for (let i = 0; i < n; i++) {
+    const inp = h("input", { class: "ln", type: "text", autocomplete: "off", placeholder: (o.ph && o.ph[i]) || "", "aria-label": (o.name || "Item") + " " + (i + 1) });
+    inp.value = get(k + "." + i);
+    inp.addEventListener("input", () => { set(k + "." + i, inp.value); if (o.onInput) o.onInput(); });
+    list.append(h("div", { class: "num" }, h("span", { class: "n" }, String(i + 1)), inp));
+  }
+  return wrapField(o, list);
+}
+function chkEl(k, label, o = {}) {
+  const inp = h("input", { type: "checkbox" });
+  inp.checked = !!get(k);
+  inp.addEventListener("change", () => { set(k, inp.checked ? 1 : false); if (o.onChange) o.onChange(inp.checked); });
+  const lab = h("label", { class: "chk " + (o.cls || "") }, inp, h("span", { class: "box", "aria-hidden": "true" }),
+    h("span", { class: "lbl" }, typeof label === "string" ? rt(label) : label));
+  lab.input = inp; return lab;
+}
+function checks(k, items, o = {}) {
+  const grid = h("div", { class: "chkgrid" + (o.strike ? " strike" : ""), style: { "--c": o.cols || 1 } });
+  items.forEach((it, i) => {
+    if (it && it.other) {
+      const t = h("input", { class: "ln", type: "text", autocomplete: "off", "aria-label": "Something else" });
+      t.value = get(k + ".otherText"); t.addEventListener("input", () => set(k + ".otherText", t.value));
+      grid.append(chkEl(k + ".other", h("span", { class: "inl" }, it.label || "Something else:", t), { cls: "line" }));
+    } else grid.append(chkEl(k + "." + i, it, { onChange: o.onChange }));
+  });
+  return wrapField(o, grid);
+}
+function radios(k, opts, o = {}) {
+  const name = uid("r"), row = h("div", { class: "radrow" });
+  opts.forEach(v => {
+    const inp = h("input", { type: "radio", name, value: v });
+    inp.checked = get(k) === v;
+    inp.addEventListener("change", () => { set(k, v); if (o.onChange) o.onChange(v); });
+    row.append(h("label", { class: "rad" }, inp, h("span", { class: "dot", "aria-hidden": "true" }), v));
+  });
+  return wrapField(o, row);
+}
+/* a circle you pick, no text. name groups a row */
+function dotRadio(k, v, name, aria) {
+  const inp = h("input", { type: "radio", name, value: v, "aria-label": aria });
+  inp.checked = get(k) === v;
+  inp.addEventListener("change", () => set(k, v));
+  return h("label", { class: "rad" }, inp, h("span", { class: "dot", "aria-hidden": "true" }));
+}
+function chips(k, opts, o = {}) {
+  const wrap = h("div", { class: "chips", role: "group" });
+  const sync = () => btns.forEach((b, i) => b.setAttribute("aria-pressed", get(k) === opts[i] ? "true" : "false"));
+  const btns = opts.map(v => h("button", {
+    type: "button", class: "chip", "aria-pressed": get(k) === v ? "true" : "false",
+    onclick: () => { const was = get(k) === v; set(k, was ? "" : v); sync(); if (o.onChange) o.onChange(was ? "" : v); }
+  }, v));
+  wrap.append(...btns);
+  return wrapField(o, wrap);
+}
+/* a square or round button that fills in when you tap it */
+function tg(k, o = {}) {
+  const b = h("button", { type: "button", class: "tg" + (o.round ? " r" : "") + (o.txt ? " txt" : ""), "aria-pressed": get(k) ? "true" : "false", "aria-label": o.aria || null }, o.text || "");
+  b.addEventListener("click", () => {
+    const nv = !get(k); set(k, nv ? 1 : false);
+    b.setAttribute("aria-pressed", nv ? "true" : "false");
+    if (o.onChange) o.onChange(nv);
+  });
+  return b;
+}
+const p = (t, cls) => h("p", { class: cls || null }, rt(t));
+const eyebrow = t => h("div", { class: "eyebrow" }, t);
+const sec = (title, ...kids) => h("section", { class: "sec" }, title ? (typeof title === "string" ? h("h2", null, title) : title) : null, ...kids);
+const stack = (...kids) => h("div", { class: "stack" }, ...kids);
+const cols = (min, ...kids) => h("div", { class: "cols", style: { "--min": min + "px" } }, ...kids);
+function bar(text, o = {}) { return h("div", { class: "bar " + (o.cls || "") }, h("p", null, rt(text)), o.extra || null); }
+function card(o) {
+  const c = h("div", { class: "card " + (o.cls || "") },
+    o.badge ? h("span", { class: "badge " + (o.badgeCls || "") }, o.badge) : null,
+    o.eyebrow ? eyebrow(o.eyebrow) : null,
+    o.title ? h(o.h || "h3", null, o.title) : null,
+    o.sub ? h("p", { class: "sub" }, rt(o.sub)) : null,
+    o.text ? h("p", null, rt(o.text)) : null,
+    ...(o.kids || []));
+  if (o.id) c.dataset.card = o.id;
+  return c;
+}
+function datalist(id, opts) { return h("datalist", { id }, opts.map(v => h("option", { value: v }))); }
+function btn(label, fn, cls) { return h("button", { type: "button", class: "btn " + (cls || ""), onclick: fn }, label); }
+function link(label, fn) { return h("button", { type: "button", class: "link", onclick: fn }, label); }
+
+/* two-step confirm button that never uses a browser dialog */
+function confirmBtn(label, confirmLabel, fn, cls) {
+  let armed = false, t = null;
+  const b = h("button", { type: "button", class: "btn " + (cls || "ghost sm") }, label);
+  b.addEventListener("click", () => {
+    if (!armed) { armed = true; b.textContent = confirmLabel; t = setTimeout(() => { armed = false; b.textContent = label; }, 4000); return; }
+    clearTimeout(t); armed = false; b.textContent = label; fn();
+  });
+  return b;
+}
+
+/* tabs keep every panel built, so typed answers stay put */
+const TABMEM = {};
+function tabs(key, labels, panels) {
+  const root = h("div", { class: "tabsroot" });
+  const list = h("div", { class: "tabs", role: "tablist" });
+  const ps = panels.map(x => h("div", { class: "panel", role: "tabpanel" }, x));
+  const bts = labels.map((l, i) => h("button", { type: "button", class: "tab", role: "tab", onclick: () => show(i) }, l));
+  function show(i) {
+    TABMEM[key] = i;
+    bts.forEach((b, j) => b.setAttribute("aria-selected", j === i ? "true" : "false"));
+    ps.forEach((x, j) => { x.hidden = j !== i; });
+    growAll(root);
+  }
+  list.append(...bts); root.append(list, ...ps);
+  root.show = show; show(TABMEM[key] || 0);
+  return root;
+}
+
+/* ============ timer ============ */
+let AC = null;
+function unlockAudio() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) { } }
+function beep() {
+  try {
+    if (!AC) return;
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = "sine"; o.frequency.value = 587; g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(.18, t + .06); g.gain.exponentialRampToValueAtTime(.0001, t + 1.3);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 1.4);
+  } catch (e) { }
+}
+function timer(o = {}) {
+  const mins = () => Math.max(1, Math.min(180, Math.round(Number(o.getMinutes ? o.getMinutes() : o.minutes) || 10)));
+  const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  let left = mins() * 60000, end = 0, iv = null, running = false;
+  const t = h("span", { class: "t" }, fmt(left));
+  const msg = h("div", { class: "msg", hidden: true }, o.doneMsg || "Time’s up. That counts.");
+  const go = h("button", { type: "button", class: "btn" }, o.label || "Start timer");
+  const rs = h("button", { type: "button", class: "btn ghost sm" }, "Reset");
+  const stop = () => { clearInterval(iv); iv = null; running = false; go.textContent = left < mins() * 60000 && left > 0 ? "Keep going" : (o.label || "Start timer"); };
+  const tick = () => {
+    if (!t.isConnected) { clearInterval(iv); return; }
+    left = end - Date.now(); t.textContent = fmt(left);
+    if (left <= 0) { left = 0; t.textContent = fmt(0); stop(); go.textContent = "Again"; msg.hidden = false; beep(); if (o.onDone) o.onDone(); }
+  };
+  go.addEventListener("click", () => {
+    unlockAudio();
+    if (running) { stop(); return; }
+    if (left <= 0 || go.textContent === "Again") left = mins() * 60000;
+    msg.hidden = true; running = true; end = Date.now() + left; go.textContent = "Pause";
+    iv = setInterval(tick, 250);
+  });
+  rs.addEventListener("click", () => { stop(); left = mins() * 60000; t.textContent = fmt(left); msg.hidden = true; go.textContent = o.label || "Start timer"; });
+  const root = h("div", { class: "timer" }, t, go, rs, msg);
+  root.refresh = () => { if (!running) { left = mins() * 60000; t.textContent = fmt(left); } };
+  return root;
+}
+
+/* ============ course registry ============ */
+const MODS = [], LESSONS = [], BYID = {};
+function mod(def) { def.lessons = []; MODS.push(def); return def; }
+function lesson(mid, def) {
+  const m = MODS.find(x => x.id === mid);
+  def.mod = m; m.lessons.push(def); def.idx = LESSONS.length; LESSONS.push(def); BYID[def.id] = def;
+  return def;
+}
+const isDone = id => !!S["done." + id];
+const modDone = m => m.lessons.filter(l => isDone(l.id)).length;
+const totalDone = () => LESSONS.filter(l => isDone(l.id)).length;
+
+/* ============ chrome: header, side list ============ */
+const elMain = document.getElementById("main");
+const elSide = document.getElementById("side");
+const navRefs = { items: {}, mods: {} };
+const OPENMOD = {};
+
+function buildSide() {
+  navRefs.items = {}; navRefs.mods = {};
+  const inner = h("div", { class: "side-in" });
+  const top = h("div", { class: "nv-top" });
+  const mk = (id, label, target) => { const b = h("button", { type: "button", class: "nv", onclick: () => nav(target) }, h("span", { class: "serif" }, label)); navRefs.items[id] = b; return b; };
+  top.append(mk("home", "Course home", "home"), mk("workbook", "My workbook", "workbook"));
+  inner.append(top);
+  MODS.forEach(m => {
+    const head = h("button", { type: "button", class: "nh", "aria-expanded": "false" },
+      h("span", { class: "t" }, h("span", { class: "eyebrow" }, m.label), h("b", null, m.title)),
+      h("span", { class: "cnt" }), h("span", { class: "chev", "aria-hidden": "true" }));
+    const list = h("div", { class: "nl" });
+    m.lessons.forEach(l => {
+      const b = h("button", { type: "button", class: "nv", onclick: () => nav(l.id) }, h("span", { class: "mk" }), h("span", null, l.title));
+      navRefs.items[l.id] = b; list.append(b);
+    });
+    head.addEventListener("click", () => { OPENMOD[m.id] = !OPENMOD[m.id]; paintMods(); });
+    navRefs.mods[m.id] = { head, list };
+    inner.append(head, list);
+  });
+  inner.append(h("div", { class: "savenote", id: "saveNote" }, "Your answers are saved on this device."));
+  elSide.replaceChildren(inner);
+  paintMods(); refreshChrome(); paintSave(false);
+}
+function paintMods() {
+  MODS.forEach(m => {
+    const r = navRefs.mods[m.id]; const open = !!OPENMOD[m.id];
+    r.head.setAttribute("aria-expanded", open ? "true" : "false");
+    r.list.classList.toggle("open", open);
+  });
+}
+function refreshChrome() {
+  const total = LESSONS.length, done = totalDone();
+  const tc = document.getElementById("topCount"), tf = document.getElementById("topFill");
+  if (tc) tc.textContent = done + " of " + total + " done";
+  if (tf) tf.style.width = (total ? Math.round(done / total * 100) : 0) + "%";
+  LESSONS.forEach(l => { const b = navRefs.items[l.id]; if (b) b.querySelector(".mk").classList.toggle("on", isDone(l.id)); });
+  MODS.forEach(m => { const r = navRefs.mods[m.id]; if (r) r.head.querySelector(".cnt").textContent = modDone(m) + "/" + m.lessons.length; });
+}
+function setActive() {
+  Object.keys(navRefs.items).forEach(id => navRefs.items[id].classList.remove("on"));
+  const key = CUR.view === "lesson" ? CUR.id : CUR.view === "modend" ? null : CUR.view;
+  if (key && navRefs.items[key]) navRefs.items[key].classList.add("on");
+  if (CUR.view === "lesson") { Object.keys(OPENMOD).forEach(k => delete OPENMOD[k]); OPENMOD[BYID[CUR.id].mod.id] = true; paintMods(); }
+  const b = key && navRefs.items[key];
+  if (b && elSide.scrollHeight > elSide.clientHeight) {
+    const r = b.getBoundingClientRect(), s = elSide.getBoundingClientRect();
+    if (r.top < s.top + 40 || r.bottom > s.bottom - 40) elSide.scrollTop += r.top - s.top - s.height / 3;
+  }
+}
+function openDrawer(on) {
+  elSide.classList.toggle("open", on);
+  document.getElementById("scrim").hidden = !on;
+  document.getElementById("menuBtn").setAttribute("aria-expanded", on ? "true" : "false");
+}
+
+/* ============ routing ============ */
+let CUR = { view: "home" };
+function mount(node, o = {}) {
+  elMain.replaceChildren(node);
+  growAll(elMain);
+  requestAnimationFrame(() => growAll(elMain));
+  elMain.scrollTop = 0;
+  if (o.focus) {
+    const t = elMain.querySelector('[data-card="' + o.focus + '"]');
+    if (t) { t.scrollIntoView({ block: "center" }); t.classList.add("flash"); }
+  }
+}
+function nav(target, o = {}) {
+  if (target === "home") { CUR = { view: "home" }; mount(renderHome(), o); }
+  else if (target === "workbook") { CUR = { view: "workbook" }; mount(renderWorkbook(), o); }
+  else if (target.startsWith("modend:")) { CUR = { view: "modend", id: target.slice(7) }; mount(renderModEnd(MODS.find(m => m.id === target.slice(7))), o); }
+  else {
+    const l = BYID[target]; if (!l) return nav("home");
+    CUR = { view: "lesson", id: l.id }; set("last", l.id);
+    mount(renderLesson(l), o);
+  }
+  setActive(); openDrawer(false);
+}
+function finishLesson(l) {
+  set("done." + l.id, true);
+  const m = l.mod, last = m.lessons[m.lessons.length - 1] === l;
+  if (last) nav("modend:" + m.id); else nav(LESSONS[l.idx + 1].id);
+}
+function continueTarget() {
+  const last = BYID[get("last")];
+  const start = last ? last.idx : 0;
+  for (let i = start; i < LESSONS.length; i++) if (!isDone(LESSONS[i].id)) return LESSONS[i];
+  for (let i = 0; i < LESSONS.length; i++) if (!isDone(LESSONS[i].id)) return LESSONS[i];
+  return LESSONS[0];
+}
+
+function strip(left, right) { return h("div", { class: "strip" }, h("span", null, left), h("span", null, right)); }
+
+function moduleToc(m) {
+  return h("div", { class: "toc" }, m.lessons.filter(l => !l.cover).map(l =>
+    h("button", { type: "button", class: "toc-row", onclick: () => nav(l.id) },
+      h("span", { class: "mk" + (isDone(l.id) ? " on" : "") }),
+      h("span", { class: "tx" }, h("strong", null, l.title), h("small", null, l.desc || "")),
+      h("span", { class: "go", "aria-hidden": "true" }, "→"))));
+}
+
+function renderLesson(l) {
+  const m = l.mod;
+  const art = h("article", { class: "lesson" });
+  const stripEl = strip("Systems for Real Life", l.tag || m.strip);
+  if (l.cover) {
+    art.append(h("div", { class: "cover" }, h("div", { class: "wrap" }, stripEl,
+      h("div", { class: "cv" }, h("div", { class: "eyebrow" }, l.cover.eyebrow), h("h1", { class: "h1" }, l.cover.title),
+        l.cover.sub ? h("p", { class: "sub" }, l.cover.sub) : null))));
+  } else {
+    art.append(h("div", { class: "wrap" }, stripEl,
+      h("div", { class: "head" }, l.eyebrow ? eyebrow(l.eyebrow) : null, h("h1", { class: "h1" }, l.title),
+        l.lede ? h("p", { class: "lede" }, rt(l.lede)) : null)));
+  }
+  const prev = LESSONS[l.idx - 1], next = LESSONS[l.idx + 1];
+  const last = m.lessons[m.lessons.length - 1] === l;
+  const done = isDone(l.id);
+  const primaryLabel = last ? (l.idx === LESSONS.length - 1 ? "Done. Finish the course" : "Done. Finish this level") : (done ? "Next page →" : "Done, next page →");
+  const pager = h("div", { class: "pager" },
+    prev ? btn("← Back", () => nav(prev.id), "ghost") : h("span"),
+    h("div", { class: "row" },
+      done ? link("Mark as not done", () => { set("done." + l.id, false); nav(l.id); }) : null,
+      btn(primaryLabel, () => finishLesson(l))),
+    h("div", { class: "where" }, h("span", null, "Page " + (l.idx + 1) + " of " + LESSONS.length), h("span", null, "wendaful.com")));
+  const built = [].concat(l.build());
+  art.append(h("div", { class: "wrap" }, h("div", { class: "body" }, ...built), pager));
+  return art;
+}
+
+/* ============ boot helpers ============ */
+function wireChrome() {
+  document.getElementById("menuBtn").addEventListener("click", () => openDrawer(!elSide.classList.contains("open")));
+  document.getElementById("scrim").addEventListener("click", () => openDrawer(false));
+  document.getElementById("brandBtn").addEventListener("click", () => nav("home"));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") openDrawer(false); });
+  let rz = null; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => growAll(elMain), 120); });
+}
+</script>
+<script>
+"use strict";
+/* ============ modules, in course order ============ */
+mod({ id: "start", label: "Start here", title: "Start here", strip: "Start here", finish: "a clear picture of where you are.",
+  end: { head: "You’re ready to build.", text: "You know your starting point and what a system really is. Level 1 is next. It’s a small one: four parts and a place for everything to land.", next: "l1-intro", cta: "Start Level 1" } });
+mod({ id: "l1", label: "Level 1", title: "Build your system", strip: "Level 1 · Build", finish: "a home for everything.",
+  end: { head: "Level 1 is done.", text: "Live with your four parts for a week. Sort your inbox once or twice and see what feels easy. When you’re ready, Level 2 turns these parts into a weekly rhythm.", next: "l2-intro", cta: "Start Level 2" } });
+mod({ id: "l2", label: "Level 2", title: "Live your system", strip: "Level 2 · Live", finish: "a routine that brings you back.",
+  end: { head: "Level 2 is done.", text: "Give this rhythm two or three weeks. When most of the ready check boxes are checked, Levels 3 and 4 will feel easier.", next: "l3-intro", cta: "Start Level 3" } });
+mod({ id: "l3", label: "Level 3", title: "Design better systems", strip: "Level 3 · Design better", finish: "systems that feel easy to keep.",
+  end: { head: "Level 3 is done.", text: "One idea at a time is plenty. Try your floors and your minimum viable day for a week. When they feel easy, start Level 4.", next: "l4-intro", cta: "Start Level 4" } });
+mod({ id: "l4", label: "Level 4", title: "Apply your systems", strip: "Level 4 · Apply", finish: "one small system for each part of your life.",
+  end: { head: "Level 4 is done.", text: "One area at a time. Finish one small system before you start the next. Then come back to the area plan and pick a new one.", next: "cp-intro", cta: "Open the Consistency Pack" } });
+mod({ id: "cp", label: "Bonus", title: "The Consistency Pack", strip: "Bonus · Consistency Pack", finish: "tools for the all-or-nothing brain.",
+  end: { head: "That’s the Consistency Pack.", text: "You don’t need to use every page. Come back to the one that sounds like you on the day you need it.", next: "lib-intro", cta: "Open the Systems Library" } });
+mod({ id: "lib", label: "Bonus", title: "Systems Library", strip: "Bonus · Systems Library", finish: "menus and resets you can copy.",
+  end: { head: "That’s the Systems Library.", text: "Pick one. Follow it. Done. Cross out what doesn’t fit your life and add your own.", next: "next", cta: "See what to do next" } });
+mod({ id: "next", label: "Last page", title: "What to do next", strip: "What comes next", finish: "the next small step.",
+  end: { head: "You finished Systems for Real Life.", text: "Your systems are built. Every row in your workbook is one less thing your brain has to hold. Come back any time you need a reset.", next: "workbook", cta: "See my workbook" } });
+
+/* shared quiz row used in a few pages */
+function quiz(k, text, opts, correct, yes, no, onChange) {
+  const fb = h("p", { class: "small muted" }), row = h("div", { class: "chips" });
+  const paint = () => {
+    const v = get(k);
+    btns.forEach(b => { const on = v === b.textContent; b.className = "chip" + (on ? (v === correct ? " right" : " wrong") : ""); });
+    fb.textContent = !v ? "" : (v === correct ? "Yes. " + (yes || "") : "Not quite. " + (no || "Try another one."));
+  };
+  const btns = opts.map(o => h("button", { type: "button", class: "chip", onclick: () => { set(k, o); paint(); if (onChange) onChange(); } }, o));
+  row.append(...btns); paint();
+  return h("div", { class: "stack tight" }, h("p", null, rt(text)), row, fb);
+}
+function steps(items) {
+  return h("ol", { class: "stack" }, items.map((t, i) => h("li", { class: "num solid top" }, h("span", { class: "n" }, String(i + 1)), h("p", null, rt(t)))));
+}
+function plain(text) { return h("div", { class: "stack" }, ...text.map(t => p(t))); }
+
+/* ============ START HERE ============ */
+lesson("start", { id: "s-story", title: "My story", tag: "Planning is personal", eyebrow: "Planning is personal", desc: "A note from Wenda.",
+  build: () => [
+    h("div", { class: "stack" },
+      p("Hi there,"),
+      p("I’m Wenda, a mom of three, content creator, and lifelong lover of planning."),
+      p("My planning story did not start with perfectly color-coded tabs or a pretty planner spread. It started out of necessity. I was juggling motherhood, running a business, and trying to keep my sanity. Sound familiar?"),
+      p("Over the years, I tried all the planning systems. Paper planners, digital tools, hybrid setups, you name it. Each one taught me something. None felt like “the one” until I saw that a good system fits your life, your brain, and your goals. That’s when everything clicked."),
+      h("p", { class: "sig" }, "Wenda")),
+    card({ cls: "", eyebrow: "This workbook helps you build a system that", kids: [
+      checks("story", ["Lowers overwhelm so you can focus on what matters.", "Helps you feel in control, even on the busiest days.", "Fits your real life and works with your brain."], { }),
+      p("Tap the ones you want most.", "muted small")] }),
+    h("p", { class: "quote" }, "planning is personal.")
+  ] });
+
+lesson("start", { id: "s-how", title: "How to use this course", tag: "Start here", desc: "Three simple rules and what you’ll need.",
+  lede: "A planner works best when it has a system behind it. This course walks you through my four levels, one small page at a time.",
+  build: () => [
+    steps([
+      "**Go in order.** Each level builds on the one before it. Find your level on the next few pages to see where to slow down.",
+      "**Write right on the page.** Messy is fine. This is a working copy, so change anything, any time.",
+      "**Stay as long as you need.** Live with each level for a week or two before you start the next one."]),
+    cols(300,
+      card({ eyebrow: "What you’ll need", kids: [checks("how", ["The planner or calendar you already own", "A pen or pencil, if you like to copy things onto paper", "Ten quiet minutes"], { })] }),
+      card({ eyebrow: "Pages that repeat", text: "The weekly and daily pages come with extra copies for your first month. After that, the same steps move into your own planner." })),
+    bar("**A small promise to yourself.** Some weeks will go sideways, and that is part of the plan. Every step has a small version for tired days."),
+    bar("**Go at your own pace.** One page a day is plenty. Something is always better than nothing."),
+    field("why", { label: "Why I picked up this workbook", rows: 5 })
+  ] });
+
+lesson("start", { id: "s-levels", title: "The four levels", tag: "Start here", desc: "How the levels fit together.",
+  lede: "My method has four levels. The first two set up your planner and your week. The last two make your systems easier to keep, then put them to work everywhere else.",
+  build: () => [
+    levelTiles(),
+    bar("**How to move through them.** Do Level 1 first. Live with it for a week, then start Level 2. Give that rhythm two or three weeks before you move on to Levels 3 and 4."),
+    cols(280,
+      h("button", { type: "button", class: "bonus", onclick: () => nav("cp-intro") }, eyebrow("Bonus"), h("h4", null, "The Consistency Pack"), h("p", { class: "small muted" }, "Trackers and restart pages for the all-or-nothing brain.")),
+      h("button", { type: "button", class: "bonus", onclick: () => nav("lib-intro") }, eyebrow("Bonus"), h("h4", null, "My Done-for-You Systems Library"), h("p", { class: "small muted" }, "My own routines, menus, and resets, ready to copy.")))
+  ] });
+
+lesson("start", { id: "s-find", title: "Find your level", tag: "Start here", desc: "Check what sounds like you today.",
+  lede: "Check every line that sounds like you today. The level with the most checks is a good place to slow down and spend extra time.",
+  build: () => {
+    const LV = [
+      ["Build", ["My to-dos, dates, and notes are mixed together.", "I write things on whatever is closest.", "I’ve switched planners more than once this year."]],
+      ["Live", ["My planner is set up, and I forget to open it.", "I plan my week some weeks and skip others.", "By Wednesday I’ve lost track of the plan."]],
+      ["Design", ["My system works, and it takes a lot of effort.", "One rough week knocks me off for a month.", "I make the same small choices over and over."]],
+      ["Apply", ["I’m organized at work and scattered at home, or the other way around.", "My goals feel far away from my daily list.", "I want one way of doing things for every part of life."]]
+    ];
+    const res = h("div", { class: "res" });
+    const tally = () => LV.map((lv, i) => lv[1].filter((_, j) => get("lvl." + i + "." + j)).length);
+    const paint = () => {
+      const t = tally(), max = Math.max(...t);
+      res.replaceChildren();
+      if (!max) { res.append(p("Check the lines that sound like you. Your result shows up here.", "muted")); return; }
+      const top = t.map((n, i) => n === max ? i : -1).filter(i => i >= 0);
+      const names = top.map(i => "Level " + (i + 1));
+      res.append(
+        h("div", { class: "row" }, ...t.map((n, i) => h("span", { class: "badge " + (top.includes(i) ? "on" : "") }, "Level " + (i + 1) + ": " + n))),
+        p(top.length === 1 ? "**" + names[0] + " has the most checks.** That’s a good place to slow down and spend extra time."
+          : "**" + names.join(" and ") + " are tied.** Start with the lower number and slow down there."),
+        btn("Put it on my line", () => { const v = "Level " + (top[0] + 1) + ": " + LV[top[0]][0]; set("lvl.most", v); const i = lineFld.input; i.value = v; toast("Added"); }, "sm"));
+    };
+    const lineFld = field("lvl.most", { label: "The level I’ll spend the most time on", ph: "Level 2" });
+    const rows = LV.map((lv, i) => h("div", { class: "card" },
+      h("div", { class: "cols", style: { "--min": "220px" } },
+        h("div", null, eyebrow("Level " + (i + 1)), h("h3", null, lv[0])),
+        checks("lvl." + i, lv[1], { onChange: paint }))));
+    paint();
+    return [...rows, res, lineFld,
+      bar("**Still go in order.** Levels 1 and 2 are the base for everything after. If Level 3 or 4 has the most checks, take a quick pass through the first two, then slow down when you get there.")];
+  } });
+
+lesson("start", { id: "s-system", title: "What a system really is", tag: "Start here", desc: "A repeatable way to do something.",
+  lede: "A system is a repeatable way to do something. You decide once, then you follow the steps. Your brain gets a break because the choice is already made.",
+  build: () => {
+    const DATA = [
+      ["Dinner", "“What’s for dinner?” at 4:45 every day.", "Five meals on repeat. Groceries ordered on Sunday."],
+      ["School papers", "Forms pile up on the kitchen counter.", "One tray by the door. I check it every night."],
+      ["Sports gear", "Hunting for cleats ten minutes before practice.", "Bags packed Sunday night and kept by the garage door."]];
+    let which = 0;
+    const vals = [], lbls = [];
+    const paint = () => { vals.forEach((v, i) => { v.textContent = DATA[i][which + 1]; lbls[i].textContent = which ? "The system" : "Before"; }); segs.forEach((b, i) => b.setAttribute("aria-pressed", i === which ? "true" : "false")); };
+    const segs = ["Before", "With a system"].map((t, i) => h("button", { type: "button", class: "chip", "aria-pressed": "false", onclick: () => { which = i; paint(); } }, t));
+    const cs = DATA.map(d => { const v = h("p", { class: "ex" }), l = h("div", { class: "eyebrow" }); vals.push(v); lbls.push(l); return card({ title: d[0], kids: [l, v] }); });
+    paint();
+    return [
+      sec("What it looks like in real life", h("div", { class: "chips" }, ...segs), cols(220, ...cs)),
+      sec("Where this course takes you",
+        cols(170, ...MODS.slice(1, 5).map(m => h("button", { type: "button", class: "card", onclick: () => nav(m.lessons[0].id) }, eyebrow(m.label), h("strong", null, m.title)))),
+        p("Levels 1 and 2 set up your planner and your weekly rhythm. Levels 3 and 4 help you build small systems like the ones above, for any part of your life.")),
+      field("spots", { label: "A few spots in my life that could use a system", hint: "Where do I keep making the same choice or hunting for the same thing?", rows: 6 }),
+      bar("**Keep this list close.** You’ll come back to it in Level 4, when you build your first system.")
+    ];
+  } });
+
+lesson("start", { id: "s-habit", title: "System, routine, or habit?", tag: "Start here", desc: "Three words that get mixed up.",
+  lede: "These three get mixed up a lot. Here’s how I tell them apart, using dinner as the example.",
+  build: () => {
+    const T = [
+      ["Habit", "One action you do without thinking.", "Dinner example: You check the fridge list before you start cooking."],
+      ["Routine", "A few actions in a set order at a set time.", "Dinner example: Your Sunday reset, when you pick the meals and order groceries."],
+      ["System", "The whole setup around a problem. It has a trigger, steps, a home, and a backup plan for hard days.", "Dinner example: Five meals on repeat, groceries ordered Sunday, the plan on the fridge, and “repeat last week” as the backup."]];
+    const score = h("span", { class: "pill" });
+    const pn = () => { const n = [0, 1, 2].filter(i => get("hrs." + i) === T[i][0]).length; score.textContent = n + " of 3"; };
+    const q = i => quiz("hrs." + i, ["You check the fridge list before you start cooking.", "Your Sunday reset, when you pick the meals and order groceries.", "Five meals on repeat, groceries ordered Sunday, the plan on the fridge, and “repeat last week” as the backup."][i],
+      ["Habit", "Routine", "System"], T[i][0], T[i][1], "Think about how many parts it has.", pn);
+    pn();
+    return [
+      h("div", { class: "rows" }, T.map(t => h("div", { class: "rw", style: { "--cols": "120px 1fr" } }, h("h3", null, t[0]), h("div", null, h("p", { class: "lbl" }, t[1]), h("p", { class: "muted small" }, t[2]))))),
+      p("A system can hold routines and habits inside it. Think of it as the frame that keeps them standing."),
+      sec(h("div", { class: "row" }, h("h2", null, "Try it"), score), p("Which one is it?", "muted"), card({ cls: "out", kids: [q(0), h("hr", { class: "hr" }), q(1), h("hr", { class: "hr" }), q(2)] })),
+      sec("Why a system helps", cols(240,
+        card({ title: "It works on day one", text: "Habits take weeks to stick. A system works right away because the steps are written down." }),
+        card({ title: "It bends on hard days", text: "A sick kid or a late practice can knock out a routine. A system has a low-energy version ready." }),
+        card({ title: "It lives outside your head", text: "It sits on paper or in an app, so it still works when you’re tired. Someone else in the house can run it too." }),
+        card({ title: "It saves your energy", text: "The choice is made ahead of time. You keep your energy for the things you can’t plan." }))),
+      bar("**In this course you’ll build systems.** Your routines and habits will have a place to land inside them.")
+    ];
+  } });
+
+/* ============ LEVEL 1 ============ */
+lesson("l1", { id: "l1-intro", title: "Level 1 overview", desc: "", cover: { eyebrow: "Level 1", title: "Build your system", sub: "Give everything a home with four simple parts." },
+  build: () => [
+    sec(eyebrow("In this level"), moduleToc(MODS[1])),
+    field("l1.feel", { label: "What I want my planning to feel like", rows: 4 }),
+    bar("**You finish with: a home for everything.** Take it one page at a time.")
+  ] });
+
+lesson("l1", { id: "l1-needs", title: "Define your planning needs", tag: "Level 1 · Build", desc: "Decide what your planner is for and pick your tools.",
+  lede: "Before you set anything up, get clear on what your planner is for. A few minutes here makes every page after this easier.",
+  build: () => {
+    const T = [["Paper", "An A5 planner, a spiral notebook, or printed pages.", "Good if you love writing things down."],
+      ["Digital", "A task app, a notes app, or a digital calendar.", "Good if you want reminders and syncing."],
+      ["Hybrid", "Paper for tasks. Digital for reference and appointments.", "Good if you want a little of both."]];
+    const note = h("p", { class: "bar soft", hidden: true }, rt("**Give each tool one job.** Don’t plan the same thing in two places."));
+    const cs = T.map((t, i) => {
+      const c = h("button", { type: "button", class: "card", "aria-pressed": "false", onclick: () => { set("tool.mode", get("tool.mode") === t[0] ? "" : t[0]); paint(); } },
+        h("h3", null, t[0]), p(t[1]), p(t[2], "muted small"));
+      return c;
+    });
+    const paint = () => { cs.forEach((c, i) => { c.classList.toggle("sel", get("tool.mode") === T[i][0]); c.setAttribute("aria-pressed", get("tool.mode") === T[i][0] ? "true" : "false"); }); note.hidden = get("tool.mode") !== "Hybrid"; };
+    paint();
+    return [
+      card({ cls: "out", eyebrow: "What should my planner do? Check all that apply", kids: [checks("needs", ["Manage daily tasks", "Track long-term goals", "Plan projects", "Keep appointments in one spot", "Keep family schedules in one place", { other: true }], { cols: 2 })] }),
+      sec(eyebrow("Pick your tools: paper, digital, or a bit of both"), cols(220, ...cs), note),
+      field("needs.help", { label: "My planner should help me", rows: 2 }),
+      field("needs.tools", { label: "My tools", rows: 2 }),
+      field("needs.bugs", { label: "What bugs me most about my setup right now", rows: 3 }),
+      bar("**Tiny first step.** Pick one tool for today. You can switch later, and your system comes with you.")
+    ];
+  } });
+
+lesson("l1", { id: "l1-parts", title: "The 4 parts of my system", tag: "Level 1 · Build", desc: "Pick one home for your inbox, calendar, tasks, and notes.",
+  lede: "Most planners ask one page to hold everything. Give each part one job and your brain always knows where things go. Pick one spot for each part below.",
+  build: () => {
+    const P = [
+      ["Part 1", "Inbox", "Where new stuff lands first. Tasks, ideas, things people ask you to do. Nothing gets sorted here.", "inbox", "My inbox lives in", "Backup spot when I’m out", "backup"],
+      ["Part 2", "Calendar", "Anything with a date or a time. Appointments, deadlines, pickups, games.", "cal", "My calendar lives in", "Who else needs to see it", "who"],
+      ["Part 3", "Tasks", "To-dos with no set time. They can move around your week based on your energy.", "tasks", "My tasks live in", "How I mark what’s next", "mark"],
+      ["Part 4", "Notes", "Info and ideas to keep. Nothing here needs action today. It’s a safe place to put things down.", "notes", "My notes live in", "How I find things later", "find"]];
+    return [
+      cols(300, ...P.map(x => card({ cls: "out", eyebrow: x[0], title: x[1], text: x[2], kids: [
+        field("part." + x[3] + ".home", { label: x[4] }), field("part." + x[3] + "." + x[6], { label: x[5] })] }))),
+      card({ title: "My weekly sort time", h: "h4", kids: [h("div", { class: "cols", style: { "--min": "180px" } },
+        field("sort.day", { label: "Day", ph: "Sunday" }), field("sort.time", { label: "Time", ph: "7:30 pm" }), field("sort.where", { label: "Where", ph: "The couch" }))] }),
+      bar("**Paper, digital, or both all work.** The only rule is one home for each part. Two calendars or three task lists is where things start to slip.")
+    ];
+  } });
+
+lesson("l1", { id: "l1-route", title: "Where does it go?", tag: "Level 1 · Where does it go", desc: "Three quick questions that sort anything.",
+  lede: "Everything starts in your inbox. At your weekly sort time, ask three quick questions and move each thing to its home.",
+  build: () => {
+    const Q = [["Does it have a date?", "It goes on the calendar."], ["Does it need doing, any time?", "It goes on the task list."], ["Is it info or an idea?", "It goes in notes."]];
+    const PR = [["Dentist on the 14th at 3:00", "Calendar"], ["Return the library books", "Tasks"], ["A gift idea for my sister’s birthday", "Notes"],
+      ["Picture day is next Friday", "Calendar"], ["Email the coach about snacks", "Tasks"], ["The paint color we used in the hallway", "Notes"]];
+    const score = h("span", { class: "pill" });
+    const upd = () => { score.textContent = PR.filter((x, i) => get("route.p." + i) === x[1]).length + " of 6 right"; };
+    upd();
+    const own = h("div", { class: "rows" }, h("div", { class: "rw hd", style: { "--cols": "1fr 300px" } }, h("span", null, "Now sort five things from your own inbox"), h("span", null, "Where it goes")));
+    for (let i = 0; i < 5; i++) own.append(h("div", { class: "rw", style: { "--cols": "1fr 300px" } },
+      h("div", { class: "cell", "data-label": "Something from my inbox" }, cellInput("route.o." + i + ".t", { aria: "Something from my inbox " + (i + 1) })),
+      h("div", { class: "cell mid", "data-label": "Where it goes" }, chips("route.o." + i + ".w", ["Calendar", "Tasks", "Notes"]))));
+    return [
+      cols(220, ...Q.map(q => card({ title: q[0], text: q[1] }))),
+      sec(h("div", { class: "row" }, h("h2", null, "Practice round"), score), p("Tap where each one goes.", "muted"),
+        card({ cls: "out", kids: PR.map((x, i) => [i ? h("hr", { class: "hr" }) : null, quiz("route.p." + i, x[0], ["Calendar", "Tasks", "Notes"], x[1], "", "Ask the three questions again.", upd)]) })),
+      sec("Now sort your own", own),
+      card({ title: "Quick setup checklist", h: "h4", kids: [checks("setup", ["I picked one inbox", "I picked one calendar", "I picked one task list", "I picked one spot for notes", "I set a weekly sort time", "I sorted my inbox one time"], { cols: 2 })] })
+    ];
+  } });
+
+lesson("l1", { id: "l1-project", title: "Task or project?", tag: "Level 1 · Task or project", desc: "Break the big ones into small steps.",
+  lede: "Some lines on a to-do list are really a bunch of small steps hiding under one name. Those are the ones that sit there for weeks. Here’s how to spot them.",
+  build: () => {
+    function builder(n) {
+      const box = h("div", { class: "rows" });
+      const draw = () => {
+        const count = Number(get("proj." + n + ".n", 5));
+        box.replaceChildren(h("div", { class: "rw hd", style: { "--cols": "34px 1fr 150px" } }, h("span"), h("span", null, "Small steps"), h("span", null, "By when")));
+        for (let i = 0; i < count; i++) box.append(h("div", { class: "rw", style: { "--cols": "34px 1fr 150px" } },
+          h("div", { class: "cell mid" }, tg("proj." + n + "." + i + ".c", { aria: "Step " + (i + 1) + " done" })),
+          h("div", { class: "cell", "data-label": "Small step" }, cellInput("proj." + n + "." + i + ".s", { aria: "Small step " + (i + 1) })),
+          h("div", { class: "cell", "data-label": "By when" }, cellInput("proj." + n + "." + i + ".d", { aria: "By when" }))));
+      };
+      draw();
+      return card({ cls: "out", kids: [field("proj." + n + ".name", { label: "Project" }), box,
+        h("div", { class: "row" }, btn("Add a step", () => { const c = Number(get("proj." + n + ".n", 5)); if (c < 10) { set("proj." + n + ".n", c + 1); draw(); } }, "ghost sm"))] });
+    }
+    return [
+      cols(260,
+        card({ title: "Task", text: "One step you can finish in one sitting.", kids: [p("Email the contractor.", "ex")] }),
+        card({ title: "Project", text: "A few tasks that add up to something bigger.", kids: [p("Plan a birthday party.", "ex")] })),
+      card({ eyebrow: "How I break one down", title: "Plan a birthday party", kids: [h("div", { class: "stack tight" }, ...[["Choose a theme", "by the 3rd"], ["Make the guest list", "by the 5th"], ["Order decorations", "by the 10th"]].map(r =>
+        h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "ex" }, "☐ " + r[0]), h("span", { class: "ex" }, r[1]))))] }),
+      sec(eyebrow("Your turn: break down two of yours"), cols(340, builder(1), builder(2))),
+      bar("**Give each project its own page in your notes.** Then pull one small step onto your task list each week.")
+    ];
+  } });
+
+lesson("l1", { id: "l1-yours", title: "Make it yours", tag: "Level 1 · Make it yours", desc: "Tabs, colors, and a few extras for later.",
+  lede: "Your four parts are set. Now make them easy to use. Check off what you want to try. You can leave the rest for later.",
+  build: () => {
+    const box = h("div", { class: "rows" });
+    const draw = () => {
+      const n = Number(get("sym.n", 5));
+      box.replaceChildren(h("div", { class: "rw hd", style: { "--cols": "200px 1fr" } }, h("span", null, "My color or symbol"), h("span", null, "What it means")));
+      for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: { "--cols": "200px 1fr" } },
+        h("div", { class: "cell", "data-label": "My color or symbol" }, cellInput("sym." + i + ".a", { aria: "Color or symbol", ph: i === 0 ? "Green" : "" })),
+        h("div", { class: "cell", "data-label": "What it means" }, cellInput("sym." + i + ".b", { aria: "What it means", ph: i === 0 ? "Family stuff" : "" }))));
+    };
+    draw();
+    const X = [["Goals", "Track yearly, quarterly, and monthly goals. Break them into small steps."], ["Routines and habits", "Trackers for daily, weekly, and monthly routines like morning habits, workouts, and cleaning."], ["Projects", "Dedicated pages or folders for big ideas and work projects."]];
+    const first = field("extra.first", { label: "The one extra I’ll add first" });
+    const cs = X.map(x => h("button", { type: "button", class: "card", onclick: () => { if (!first.input.value) { first.input.value = x[0]; set("extra.first", x[0]); toast("Added to your line"); } } }, h("h3", null, x[0]), p(x[1], "muted small")));
+    return [
+      card({ cls: "out", eyebrow: "Make it easy to use", kids: [checks("yours", ["Add dividers or tabs so things are easy to find, on paper or on screen.", "Pick colors or symbols to sort tasks and events.", "Make templates for repeat things, like meeting agendas and shopping lists.", "Sync your digital tools with your calendar app for on-the-go updates."], { })] }),
+      sec(null, box, h("div", null, btn("Add a row", () => { const n = Number(get("sym.n", 5)); if (n < 10) { set("sym.n", n + 1); draw(); } }, "ghost sm"))),
+      sec(eyebrow("Optional extras: add these when you’re ready"), cols(220, ...cs), first),
+      bar("**Tiny first step.** Skip the extras for now. Add one when the basics feel easy.")
+    ];
+  } });
+
+/* ============ LEVEL 2 ============ */
+lesson("l2", { id: "l2-intro", title: "Level 2 overview", desc: "", cover: { eyebrow: "Level 2", title: "Live your system", sub: "Turn your tools into a weekly rhythm." },
+  build: () => [
+    sec(eyebrow("In this level"), moduleToc(MODS[2])),
+    field("l2.offtrack", { label: "Where my week usually gets off track", rows: 5 }),
+    bar("**You finish with: a routine that brings you back.** Live with Level 1 for a week, then start here.")
+  ] });
+
+lesson("l2", { id: "l2-rhythm", title: "My weekly rhythm", tag: "Level 2 · Live", desc: "Six steps, each with a small version for tired days.",
+  lede: "Your system is built. Now give it a rhythm. Write when each step happens, then write a small version you can do on a tired day.",
+  build: () => {
+    const R = [["Weekly reset", "Empty the inbox and look back at last week.", "Empty the inbox only."], ["Weekly plan", "Check the calendar and choose your priorities.", ""],
+      ["Daily plan", "Look at today and pull your top 3.", "Pick one task."], ["Do the work", "One thing at a time. New stuff goes to the inbox.", ""],
+      ["Evening review", "Note your wins and move what’s left.", "Write tomorrow’s top 3 on a sticky note."], ["Repeat", "Keep what worked. Change one thing.", ""]];
+    const rows = h("div", { class: "rows" }, h("div", { class: "rw hd", style: { "--cols": "1.2fr 1fr 1.4fr" } }, h("span", null, "Step"), h("span", null, "When I’ll do it"), h("span", null, "Small version for tired days")));
+    R.forEach((r, i) => {
+      const small = cellInput("rh." + i + ".small", { rows: 2, aria: "Small version for " + r[0] });
+      rows.append(h("div", { class: "rw", style: { "--cols": "1.2fr 1fr 1.4fr" } },
+        h("div", { class: "cell" }, h("div", { class: "num solid top" }, h("span", { class: "n" }, String(i + 1)), h("div", null, h("p", { class: "lbl" }, r[0]), h("p", { class: "muted small" }, r[1])))),
+        h("div", { class: "cell", "data-label": "When I’ll do it" }, cellInput("rh." + i + ".when", { rows: 2, aria: "When I’ll do " + r[0], ph: i === 0 ? "Sunday, 7:30 pm" : "" })),
+        h("div", { class: "cell", "data-label": "Small version for tired days" }, small,
+          r[2] ? link("Try: " + r[2], () => { if (!small.value) { small.value = r[2]; set("rh." + i + ".small", r[2]); growAll(rows); } }) : null)));
+    });
+    return [rows, bar("**Small version ideas.** Weekly reset: empty the inbox only. Daily plan: pick one task. Evening review: write tomorrow’s top 3 on a sticky note. A small version still keeps the rhythm going.")];
+  } });
+
+lesson("l2", { id: "l2-weekly", title: "Weekly reset and plan", tag: "Level 2 · Live", desc: "Four copies, one for each week of your first month.",
+  lede: "Use one page each week. Reset first, then plan. Together they take about as long as a cup of coffee.",
+  build: () => {
+    const week = w => {
+      const k = "wk." + w + ".";
+      const done = h("span", { class: "pill" });
+      const cnt = () => { done.textContent = [0, 1, 2, 3, 4].filter(i => get(k + "c." + i)).length + " of 5 checked"; };
+      cnt();
+      return stack(
+        field(k + "of", { label: "Week of", ph: "Oct 26", cls: "inl" }),
+        cols(310,
+          card({ cls: "out", eyebrow: "Step 1", title: "Reset", sub: "Empty and review.", kids: [
+            done,
+            checks(k + "c", ["Empty my inbox", "Move each item to calendar, tasks, or notes", "Look back at last week", "Cross off or move what’s left over", "Clear my desk or planner pocket"], { onChange: cnt }),
+            field(k + "win", { label: "One win from last week", rows: 2 }),
+            field(k + "move", { label: "What I’m moving to this week", rows: 4 })] }),
+          card({ cls: "out", eyebrow: "Step 2", title: "Plan", sub: "Choose what fits this week.", kids: [
+            numbered(k + "pri", 5, { label: "My priorities", hint: "3 is plenty, 5 at most", name: "Priority" }),
+            field(k + "go", { label: "One thing I can let go of this week", rows: 3 }),
+            radios(k + "energy", ["Low", "Medium", "High"], { label: "My energy and time this week" })] })),
+        card({ kids: [field(k + "cal", { label: "Already on the calendar this week", hint: "Appointments, practices, deadlines", rows: 4 })] }));
+    };
+    return [tabs("wk", ["Week 1 of 4", "Week 2 of 4", "Week 3 of 4", "Week 4 of 4"], [1, 2, 3, 4].map(week)),
+      bar("**After week 4,** the same steps move into your own planner.")];
+  } });
+
+lesson("l2", { id: "l2-daily", title: "Daily plan and evening review", tag: "Level 2 · Live", desc: "Two practice days to learn the check-ins.",
+  lede: "Two short check-ins hold the whole day together. One in the morning to choose, one at night to close out.",
+  build: () => {
+    const day = d => {
+      const k = "day." + d + ".";
+      const top3 = numbered(k + "top", 3, { label: "My top 3 for today", name: "Top" });
+      [...top3.querySelectorAll(".num")].slice(1).forEach(x => x.classList.add("opt"));
+      const root = stack(
+        h("div", { class: "row" }, field(k + "date", { label: "Date", cls: "inl", ph: "Tuesday" }),
+          h("button", { type: "button", class: "chip", "aria-pressed": "false", onclick: e => { const on = !root.classList.contains("tired"); root.classList.toggle("tired", on); e.currentTarget.setAttribute("aria-pressed", on ? "true" : "false"); growAll(root); } }, "Tired day: show the small version")),
+        cols(310,
+          card({ cls: "out", eyebrow: "Morning · 5 minutes", title: "Daily plan", sub: "Focus and prepare.", kids: [
+            checks(k + "cal", ["I checked my calendar"], {}), top3,
+            h("div", { class: "opt" }, field(k + "times", { label: "Set times today", rows: 4 })),
+            h("div", { class: "opt" }, field(k + "good", { label: "One thing that would make today feel good", rows: 2 }))] }),
+          card({ cls: "out", eyebrow: "Evening · 10 minutes", title: "Evening review", sub: "Reflect and close.", kids: [
+            field(k + "wins", { label: "Wins from today", rows: 3 }),
+            h("div", { class: "opt" }, field(k + "let", { label: "Move or let go", rows: 3 })),
+            h("div", { class: "opt" }, field(k + "ideas", { label: "New ideas for the inbox", rows: 3 })),
+            checks(k + "eve", ["I picked tomorrow’s top 3", "I set out what I need for the morning"], {})] })));
+      return root;
+    };
+    return [tabs("day", ["Practice day 1 of 2", "Practice day 2 of 2"], [1, 2].map(day)),
+      bar("**Everything after your top 3 is a bonus.** On a tired day, pick one task in the morning and write one win at night. That still counts as a full day in your system.")];
+  } });
+
+lesson("l2", { id: "l2-ready", title: "You built it. Now keep it going.", tag: "Level 2 · Ready check", desc: "See if you’re set for Level 3.",
+  lede: "Give your new rhythm two or three weeks. When most of these boxes are checked, you’re ready for the next two levels.",
+  build: () => {
+    const res = h("div", { class: "res" });
+    const paint = () => {
+      const n = [0, 1, 2, 3, 4, 5].filter(i => get("ready." + i)).length;
+      res.replaceChildren(
+        h("span", { class: "pill" }, n + " of 6 checked"),
+        n >= 4 ? p("**Most boxes checked?** Turn the page. Level 3 makes all of this easier to keep.") : p("**A few more to go.** Give it another week. Something is always better than nothing."),
+        n >= 4 ? btn("Start Level 3", () => nav("l3-intro"), "sm") : null);
+    };
+    paint();
+    return [
+      card({ title: "Ready check", h: "h3", kids: [checks("ready", ["Each of my 4 parts has one home", "New stuff goes to my inbox first", "I know my small version of each step", "I’ve done a weekly reset twice", "I pick a top 3 most days", "I came back after a missed day"], { cols: 2, onChange: paint })] }),
+      res,
+      field("ready.worked", { label: "What worked best for me in Levels 1 and 2", rows: 5 }),
+      field("ready.easier", { label: "One thing I want to make easier next", rows: 5 }),
+      field("ready.where", { label: "Where the weekly and daily pages will live in my own planner from now on", rows: 3 })
+    ];
+  } });
+</script>
+<script>
+"use strict";
+/* ============ shared pieces for lists and systems ============ */
+const AREAS = [["Home", "Cleaning, laundry, clutter"], ["Meals", "Planning, groceries, cooking"], ["Money", "Bills, budget, paperwork"],
+  ["Kids and family", "School, activities, schedules"], ["Work or business", "Tasks, projects, deadlines"],
+  ["Health and movement", "Sleep, exercise, appointments"], ["Relationships", "Partner, friends, family time"], ["Rest and fun", "Hobbies, downtime, things I enjoy"]];
+const SNAGS = [["No clear time", "It never has a spot in my week.", "give it a calendar block."], ["No reminder", "I only think of it when it’s already late.", "tie it to something you already do."],
+  ["Too many steps", "It feels big, so I put it off.", "cut it down to 3 steps."], ["No home", "The stuff or the info has no set place.", "pick one spot and keep it there."]];
+const builderName = n => get("sb." + n + ".name");
+const builderNames = () => [1, 2, 3].map(builderName).filter(Boolean);
+const focusNames = () => [1, 2, 3].map(n => get("focus." + n + ".name")).filter(Boolean);
+
+/* a card of tick boxes. groups: [{h?, items:[...]}] or items:[...] */
+function checklistCard(o) {
+  const id = o.id, k = i => "cl." + id + "." + i;
+  if (o.daily && get("cl." + id + ".d") !== today()) {
+    Object.keys(S).forEach(x => { if (x.startsWith("cl." + id + ".") && x !== "cl." + id + ".d") delete S[x]; });
+    set("cl." + id + ".d", today());
+  }
+  const body = h("div", { class: "cl strike" }), boxes = [];
+  let idx = 0;
+  (o.groups || [{ items: o.items }]).forEach(g => {
+    if (g.h) body.append(h("div", { class: "grp" }, g.h));
+    g.items.forEach(t => { const i = idx++; const c = chkEl(k(i), t, { onChange: upd }); boxes.push(c.input); body.append(c); });
+  });
+  const cnt = h("span"), clr = link("Clear checks", () => { boxes.forEach((b, i) => { b.checked = false; set(k(i), false); }); upd(); });
+  function upd() { const n = boxes.filter(b => b.checked).length; cnt.textContent = n + " of " + boxes.length + (o.daily ? " · fresh each day" : ""); clr.hidden = !n; }
+  upd();
+  return card({ id, cls: o.tone === "tint" ? "" : "out", badge: o.badge, badgeCls: o.badge === "Yours" ? "you" : "", title: o.title, h: "h3", sub: o.sub,
+    kids: [body, o.after ? p(o.after, "small") : null, h("div", { class: "cl-foot" }, cnt, clr)] });
+}
+/* a card of blank lines with tick boxes, rows can be added */
+function customList(id, o = {}) {
+  const max = o.max || 20, nk = "cx." + id + ".n";
+  const tk = i => o.textKey ? o.textKey(i) : "cx." + id + "." + i + ".t";
+  const box = h("div", { class: "stack tight" });
+  const draw = () => {
+    box.replaceChildren();
+    const n = Number(get(nk, o.n || 6));
+    for (let i = 0; i < n; i++) {
+      const inp = cellInput(tk(i), { aria: "List item " + (i + 1) });
+      box.append(chkEl("cx." + id + "." + i + ".c", inp, { cls: "line" }));
+    }
+  };
+  draw();
+  const add = o.fixed ? null : btn("Add a row", () => { const n = Number(get(nk, o.n || 6)); if (n < max) { set(nk, n + 1); draw(); } }, "ghost sm");
+  return card({ id, cls: o.tone === "tint" ? "" : "out", badge: o.badge, badgeCls: o.badge === "Yours" ? "you" : "", title: o.title, h: "h3", sub: o.sub,
+    kids: [o.titleLabel ? field("cx." + id + ".title", { label: o.titleLabel, cls: "inl" }) : null, o.useLabel ? field("cx." + id + ".use", { label: o.useLabel, cls: "inl" }) : null, box, add ? h("div", null, add) : null] });
+}
+/* a two-column library page */
+function libPage(left, right) { return h("div", { class: "libcols" }, h("div", { class: "libcol" }, ...left), h("div", { class: "libcol" }, ...right)); }
+
+/* ============ LEVEL 3 ============ */
+lesson("l3", { id: "l3-intro", title: "Level 3 overview", desc: "", cover: { eyebrow: "Level 3", title: "Design better systems", sub: "Make your systems easier to live with." },
+  build: () => {
+    const S6 = [["Remove friction", "Find what makes it hard and take it out.", [["Find the snag", "l3-friction"]]],
+      ["Create default decisions", "Decide once so you can stop deciding.", [["Repeat decision finder", "l3-decisions"]]],
+      ["Design around your brain", "Build it the way you think.", [["My brain", "l3-brain"], ["Day menus", "l3-days"]]],
+      ["Adjust for your season", "Let it shrink and grow with your life.", [["Season check", "l3-season"]]],
+      ["Protect white space", "Leave room for rest and surprises.", [["Protect white space", "l3-space"]]],
+      ["Recover after rough weeks", "A small floor and a quick reset get you going again.", [["Floor and More", "l3-floor"], ["Minimum viable day", "l3-mvd"], ["Excuse answers", "l3-excuse"], ["After a rough week", "l3-rough"]]]];
+    return [
+      bar("**Start with two quick pages.** The life check-in and your focus areas. Then work through the six ideas and check them off as you go.",
+        { extra: h("div", { class: "row" }, btn("Life check-in", () => nav("l3-checkin"), "sm"), btn("Pick 1 to 3 areas", () => nav("l3-pick"), "ghost sm")) }),
+      sec(eyebrow("Six ways to make a system easier"), h("div", { class: "rows" },
+        S6.map((s, i) => h("div", { class: "rw", style: { "--cols": "34px 1.2fr 1.2fr 60px" } },
+          h("span", { class: "num solid" }, h("span", { class: "n" }, String(i + 1))),
+          h("div", { class: "cell" }, h("strong", null, s[0]), h("span", { class: "muted small" }, s[1])),
+          h("div", { class: "cell", "data-label": "Where to do it" }, h("div", { class: "row" }, ...s[2].map(x => link(x[0], () => nav(x[1]))))),
+          h("div", { class: "cell", "data-label": "Done" }, tg("six." + i, { aria: s[0] + " done" }))))
+      )),
+      bar("**You finish with: systems that feel easy to keep.** One idea at a time is plenty.")
+    ];
+  } });
+
+lesson("l3", { id: "l3-checkin", title: "Life check-in", tag: "Level 3 · Check in", desc: "Mark how each area feels right now.",
+  lede: "Mark how each area feels right now. Go with your first answer. Nobody is grading this.",
+  build: () => {
+    const sum = h("div", { class: "row" });
+    const OPT = ["Going well", "Getting by", "Draining me"];
+    const paint = () => { sum.replaceChildren(...OPT.map(o => h("span", { class: "pill" }, o + ": " + AREAS.filter((a, i) => get("ci." + i) === o).length))); };
+    paint();
+    return [
+      sum,
+      h("div", { class: "stack" }, AREAS.map((a, i) => card({ cls: "out", kids: [
+        h("div", { class: "cols", style: { "--min": "220px" } }, h("div", null, h("h4", null, a[0]), p(a[1], "muted small")), chips("ci." + i, OPT, { onChange: paint })),
+        cellInput("ci." + i + ".note", { aria: "One thing I notice about " + a[0], ph: "One thing I notice" })] }))),
+      card({ kids: [field("ci.stand", { label: "What stands out when I look at this page?", rows: 3 })] })
+    ];
+  } });
+
+lesson("l3", { id: "l3-pick", title: "Pick 1 to 3 areas", tag: "Level 3 · Pick", desc: "Choose where a smoother system would help most.",
+  lede: "Look at what you marked “draining me.” Which ones would make this season feel easier if they ran a little smoother? Start with those. One area is a great place to begin.",
+  build: () => {
+    const drain = AREAS.filter((a, i) => get("ci." + i) === "Draining me").map(a => a[0]);
+    const flds = [1, 2, 3].map(n => field("focus." + n + ".name", { label: "Focus area " + n, cls: "inl", ph: "Meals" }));
+    const sug = drain.length
+      ? h("div", { class: "stack tight" }, p("You marked these as draining you. Tap one to use it.", "muted"),
+        h("div", { class: "chips" }, ...drain.map(d => h("button", { type: "button", class: "chip", onclick: () => {
+          const f = flds.find(x => !x.input.value); if (!f) { toast("All three are filled. Clear one first."); return; }
+          const n = flds.indexOf(f) + 1; f.input.value = d; set("focus." + n + ".name", d);
+        } }, d))))
+      : p("Mark a few areas “draining me” on the life check-in and they will show up here.", "muted");
+    return [
+      sug,
+      ...[1, 2, 3].map((n, i) => card({ cls: "out", kids: [flds[i], field("focus." + n + ".why", { label: "Why this one, why now" }),
+        field("focus." + n + ".good", { label: "What “good enough” looks like this season", rows: 2 })] })),
+      card({ title: "Waiting for later", h: "h4", sub: "The other areas can have a turn next season. Park them here so your brain can let them go for now.", kids: [field("focus.later", { rows: 2 })] })
+    ];
+  } });
+
+lesson("l3", { id: "l3-friction", title: "Find the snag", tag: "Level 3 · Remove friction", desc: "Spot what makes things hard, then fix it.",
+  lede: "Idea 1 is to take out what makes things hard. Think about your focus areas and pick up to three things that keep falling apart. Most snags are one of these four, and each one has a simple fix.",
+  build: () => {
+    const spot = n => {
+      const fix = h("div", { class: "stack tight" });
+      const paint = () => { fix.replaceChildren(...SNAGS.map((s, i) => get("snag." + n + ".t." + i) ? h("p", { class: "bar soft" }, rt("**" + s[0] + ".** The fix: " + s[2])) : null)); };
+      paint();
+      return card({ cls: "out", kids: [field("snag." + n + ".name", { label: "Sticky spot " + n, cls: "inl" }),
+        checks("snag." + n + ".t", SNAGS.map(s => s[0]), { cols: 2, onChange: paint }), fix,
+        field("snag." + n + ".what", { label: "What usually happens", rows: 2 })] });
+    };
+    return [cols(250, ...SNAGS.map(s => card({ title: s[0], text: s[1], kids: [p("**The fix:** " + s[2])] }))), spot(1), spot(2), spot(3)];
+  } });
+
+lesson("l3", { id: "l3-decisions", title: "The repeat decision finder", tag: "Level 3 · Default decisions", desc: "List what you keep deciding or forgetting.",
+  lede: "Idea 2 is to decide once. Think about your focus areas. What do you keep deciding, forgetting, or scrambling to do at the last minute? Write each one down. These are the best spots for a system.",
+  build: () => {
+    const N = 12, cnt = h("span", { class: "pill" });
+    const stars = () => Array.from({ length: N }, (_, i) => i).filter(i => get("dec." + i + ".s")).length;
+    const upd = () => { cnt.textContent = stars() + " of 3 starred"; };
+    const COLS = { "--cols": "46px 1fr 170px 150px" };
+    const rows = h("div", { class: "rows" },
+      h("div", { class: "rw hd", style: COLS }, h("span", null, "Star"), h("span", null, "The thing I keep deciding or forgetting"), h("span", null, "Area"), h("span", null, "How often")),
+      h("div", { class: "rw exr", style: COLS }, h("span", { class: "exv" }, "☆"), h("span", { class: "exv" }, "Example: What’s for dinner tonight"), h("span", { class: "exv" }, "Meals"), h("span", { class: "exv" }, "Every day")));
+    for (let i = 0; i < N; i++) {
+      const k = "dec." + i + ".s";
+      const sb = h("button", { type: "button", class: "star", "aria-label": "Star item " + (i + 1), "aria-pressed": get(k) ? "true" : "false" }, get(k) ? "★" : "☆");
+      sb.addEventListener("click", () => {
+        if (!get(k) && stars() >= 3) { toast("Three is plenty. Un-star one first."); return; }
+        const nv = !get(k); set(k, nv ? 1 : false); sb.textContent = nv ? "★" : "☆"; sb.setAttribute("aria-pressed", nv ? "true" : "false"); upd();
+      });
+      rows.append(h("div", { class: "rw", style: COLS }, h("div", { class: "cell mid" }, sb),
+        h("div", { class: "cell", "data-label": "The thing I keep deciding or forgetting" }, cellInput("dec." + i + ".t", { aria: "Thing " + (i + 1) })),
+        h("div", { class: "cell", "data-label": "Area" }, cellInput("dec." + i + ".a", { aria: "Area", list: "dl-areas" })),
+        h("div", { class: "cell", "data-label": "How often" }, cellInput("dec." + i + ".f", { aria: "How often", list: "dl-often" }))));
+    }
+    upd();
+    return [datalist("dl-areas", AREAS.map(a => a[0])), datalist("dl-often", ["Every day", "Every week", "Every month", "Every season"]),
+      focusNames().length ? p("My focus areas: " + focusNames().join(", "), "muted") : null,
+      cnt, rows, bar("**Now star up to 3.** Pick the ones that would give you the most relief if they ran on their own.")];
+  } });
+
+const TIPS = {
+  "Pictures and color": "Color code it and keep it where you can see it.",
+  "Lists": "One page, top to bottom, with boxes to check.",
+  "More structure": "Give each step a set day and time. Your weekly sort time does a lot of the work.",
+  "More flex": "Use menus and a top 3 in place of a strict schedule.",
+  "Paper": "Keep your planner open on your desk, and write things down on purpose.",
+  "Digital": "Use reminders, and let your calendar sync to your phone.",
+  "Both": "Give each tool one job, and don’t plan the same thing in two places.",
+  "Morning": "Put your most important task first, and set it up the night before.",
+  "Midday": "Protect a block in the middle of your day for your hardest task.",
+  "Evening": "Do your planning and prep the night before.",
+  "Out in the open": "Keep things in sight, like a tray by the door or a list on the fridge.",
+  "On a reminder": "Tie each system to a reminder or to something you already do."
+};
+lesson("l3", { id: "l3-brain", title: "Design around your brain", tag: "Level 3 · Design around your brain", desc: "Build it the way you think.",
+  lede: "Idea 3 is to build it the way you think. A system is easy to keep when it fits you. Pick what sounds like you, then use it to shape every system you build.",
+  build: () => {
+    const ROWS = [["I like to see things as", ["Pictures and color", "Lists"]], ["I do best with", ["More structure", "More flex"]], ["I reach for", ["Paper", "Digital", "Both"]],
+      ["My best energy is in the", ["Morning", "Midday", "Evening"]], ["I remember things when they are", ["Out in the open", "On a reminder"]]];
+    const out = h("div", { class: "stack tight" });
+    const paint = () => {
+      const picked = ROWS.map((r, i) => get("brain." + i)).filter(Boolean);
+      out.replaceChildren(...(picked.length ? picked.map(v => h("div", { class: "tip" }, h("b", null, v), h("span", null, TIPS[v])))
+        : [p("Pick one in each row and your tips show up here.", "muted")]));
+    };
+    paint();
+    return [
+      card({ cls: "out", eyebrow: "Pick one in each row", kids: ROWS.map((r, i) => h("div", { class: "stack tight" }, h("p", { class: "lbl" }, r[0]), chips("brain." + i, r[1], { onChange: paint }))) }),
+      card({ eyebrow: "What that means for your systems", kids: [out] }),
+      field("brain.live", { label: "Where my systems should live so I’ll see them", rows: 3 }),
+      field("brain.change", { label: "One change that would make my systems feel more like me", rows: 3 }),
+      bar("**Next up:** day menus are a system built around your energy.", { extra: btn("What kind of day is this?", () => nav("l3-days"), "sm") })
+    ];
+  } });
+
+lesson("l3", { id: "l3-days", title: "What kind of day is this?", tag: "Level 3 · Design around your brain", desc: "Energy menus you pick from.",
+  lede: "Some systems work best as a menu. You check your energy, open the list that fits, and pick a few things from it. Here are two of mine.",
+  build: () => [
+    cols(320,
+      checklistCard({ id: "ex-low", tone: "tint", badge: "From Wenda", daily: true, title: "Low-energy day", sub: "I’m running at 20%. I pick 1 to 3.",
+        items: ["Answer emails or DMs from the couch", "Schedule content that’s already made", "Do low-brain tasks like filing", "Brain dump into my task app", "Rest completely. It counts as recovery."] }),
+      checklistCard({ id: "ex-frozen", tone: "tint", badge: "From Wenda", daily: true, title: "Overwhelmed and frozen", sub: "My brain is full. I pick one thing only.",
+        items: ["Brain dump everything onto paper", "Do one task that takes under 10 minutes", "Clean one surface", "Go outside for 10 minutes", "Move 3 tasks out of today"] })),
+    sec(eyebrow("Now write two of yours"), cols(320,
+      customList("mymenu1", { badge: "Yours", titleLabel: "When I feel", n: 6 }), customList("mymenu2", { badge: "Yours", titleLabel: "When I feel", n: 6 }))),
+    bar("**One question every morning:** what kind of day is this? Pick one menu and follow it.")
+  ] });
+
+lesson("l3", { id: "l3-season", title: "Season check", tag: "Level 3 · Adjust for your season", desc: "Keep, change, or pause what you’ve built.",
+  lede: "Idea 4 is to let your systems shrink or grow with your life. A new school year starts, a sports season kicks off, summer break shows up. When your week starts to feel off, come back to this page and adjust.",
+  build: () => {
+    const COLS = { "--cols": "1.3fr 230px 1.5fr" };
+    const rows = h("div", { class: "rows" }, h("div", { class: "rw hd", style: COLS }, h("span", null, "System"), h("span", null, "Keep, change, or pause"), h("span", null, "What I’ll adjust")));
+    for (let i = 0; i < 8; i++) rows.append(h("div", { class: "rw", style: COLS },
+      h("div", { class: "cell", "data-label": "System" }, cellInput("se." + i + ".n", { aria: "System " + (i + 1), list: "dl-sys", ph: builderNames()[i] || "" })),
+      h("div", { class: "cell mid", "data-label": "Keep, change, or pause" }, radios("se." + i + ".v", ["Keep", "Change", "Pause"])),
+      h("div", { class: "cell", "data-label": "What I’ll adjust" }, cellInput("se." + i + ".a", { aria: "What I’ll adjust" }))));
+    return [datalist("dl-sys", builderNames()),
+      field("season.now", { label: "What season am I in right now?", cls: "inl", ph: "School year, soccer season" }),
+      field("season.changed", { label: "What changed since I built my systems?", rows: 3 }),
+      rows,
+      card({ kids: [field("season.new", { label: "One new thing this season needs a system for", rows: 2 })] }),
+      bar("**Pausing is allowed.** A system that fit last spring can rest until you need it again.")];
+  } });
+
+lesson("l3", { id: "l3-space", title: "Protect white space", tag: "Level 3 · Protect white space", desc: "Leave room for rest and surprises.",
+  lede: "Idea 5 is to leave room. White space is open time with nothing planned in it. It gives your systems room to work when a day runs long or a kid gets sick.",
+  build: () => {
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], PARTS = ["Morning", "Afternoon", "Evening"];
+    const cnt = h("span", { class: "pill" });
+    const upd = () => { let n = 0; DAYS.forEach((d, i) => PARTS.forEach((_, j) => { if (get("ws." + i + "." + j)) n++; })); cnt.textContent = n + " open blocks"; };
+    const g = h("div", { class: "wgrid" }, h("span"), ...PARTS.map(x => h("span", { class: "hd" }, x)));
+    DAYS.forEach((d, i) => { g.append(h("span", { class: "day" }, d)); PARTS.forEach((pt, j) => g.append(tg("ws." + i + "." + j, { aria: d + " " + pt + " open", onChange: upd }))); });
+    upd();
+    return [
+      cols(330,
+        card({ cls: "out", eyebrow: "My open space", kids: [field("ws.gap", { label: "Where I’ll leave a gap each day", rows: 3 }), field("ws.no", { label: "One thing I can say no to this month", rows: 3 }), field("ws.rest", { label: "How I like to rest", rows: 3 })] }),
+        card({ cls: "out", eyebrow: "My week", kids: [p("Shade one or two blocks to keep open.", "muted small"), cnt, g] })),
+      card({ title: "My buffer rules", h: "h4", kids: [field("buf.before", { label: "Before a busy day, I will", cls: "inl" }), field("buf.after", { label: "After a busy day, I will", cls: "inl" })] }),
+      bar("**Plan a little less than you think you can do.** Extra room is where slow mornings and good ideas fit.")
+    ];
+  } });
+
+lesson("l3", { id: "l3-floor", title: "Floor and More", tag: "Level 3 · Recover after rough weeks", desc: "Give every habit three sizes.",
+  lede: "Idea 6 starts here. Every habit or system gets three sizes. On a low day, the floor is the win.",
+  build: () => {
+    const COLS = { "--cols": "1fr 1.2fr 1.2fr 1.2fr" };
+    const box = h("div", { class: "rows" });
+    const draw = () => {
+      box.replaceChildren(h("div", { class: "rw hd", style: COLS }, h("span", null, "Habit or system"), h("span", null, "Floor"), h("span", null, "Regular"), h("span", null, "Bonus")),
+        ...[["Workout", "Shoes on, 5 minutes", "20 minutes", "45 minutes"], ["Cleaning", "Wipe one counter", "One zone, 10 minutes", "The whole room"]].map(r =>
+          h("div", { class: "rw exr", style: COLS }, ...r.map((t, i) => h("span", { class: "exv", "data-label": ["Habit or system", "Floor", "Regular", "Bonus"][i] }, t)))));
+      const n = Number(get("fam.n", 8));
+      for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: COLS },
+        ...["h", "f", "r", "b"].map((c, j) => h("div", { class: "cell", "data-label": ["Habit or system", "Floor", "Regular", "Bonus"][j] }, cellInput("fam." + i + "." + c, { aria: ["Habit or system", "Floor", "Regular", "Bonus"][j] })))));
+    };
+    draw();
+    return [
+      cols(230, card({ title: "Floor", text: "2 to 5 minutes. So small it feels a little silly. You can do it tired, busy, or grumpy." }),
+        card({ title: "Regular", text: "Your normal version on an okay day." }), card({ title: "Bonus", text: "The big version, for days with extra time and energy." })),
+      box, h("div", null, btn("Add a row", () => { const n = Number(get("fam.n", 8)); if (n < 14) { set("fam.n", n + 1); draw(); } }, "ghost sm")),
+      bar("**The one rule: the floor always counts.** Do it and you showed up today. You can always do more once you’ve started.")
+    ];
+  } });
+
+lesson("l3", { id: "l3-mvd", title: "My minimum viable day", tag: "Level 3 · Recover after rough weeks", desc: "Five small things that keep life moving.",
+  lede: "Some days go sideways. This list is your floor for the whole day. It holds 5 small things that keep life moving when everything else has to wait.",
+  build: () => {
+    const MINE = ["Drink water", "Write my top 3 in my planner", "Do one deep work task", "Move my body for 20 minutes", "Quick tidy before bed"];
+    const tcount = h("span", { class: "pill" }), res = h("p", { class: "bar good", hidden: true }, rt("**The day counts.** You adapted, and that’s the system working."));
+    const labels = [];
+    const tupd = () => { const n = [0, 1, 2, 3, 4].filter(i => get("mvdt." + today() + "." + i)).length; tcount.textContent = n + " of 5 today"; res.hidden = n < 5; };
+    const labelOf = i => get("mvd." + i) || "Item " + (i + 1);
+    const tchecks = h("div", { class: "chkgrid" });
+    [0, 1, 2, 3, 4].forEach(i => { const sp = h("span", null, labelOf(i)); labels.push(sp); tchecks.append(chkEl("mvdt." + today() + "." + i, sp, { onChange: tupd })); });
+    tupd();
+    return [
+      cols(320,
+        card({ badge: "From Wenda", title: "Mine", kids: [h("ol", { class: "stack tight" }, MINE.map((t, i) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(i + 1)), h("span", { class: "ex" }, t))))] }),
+        card({ cls: "out", badge: "Yours", badgeCls: "you", title: "Yours", kids: [numbered("mvd", 5, { name: "Minimum viable day item", onInput: () => labels.forEach((s, i) => { s.textContent = labelOf(i); }) })] })),
+      field("mvd.wait", { label: "What can wait on a hard day?", hint: "Name it now, so you can skip it later without the guilt.", rows: 5 }),
+      field("mvd.where", { label: "Where I’ll keep this list so I can find it", rows: 2 }),
+      card({ title: "Try it today", h: "h3", sub: "Tick off your five as you go. This resets tomorrow.", kids: [tcount, tchecks, res] }),
+      bar("**Hit these 5 and the day counts.** You adapted, and that’s the system working.")
+    ];
+  } });
+
+lesson("l3", { id: "l3-excuse", title: "My excuse answers", tag: "Level 3 · Recover after rough weeks", desc: "Pick your answers ahead of time.",
+  lede: "Your brain will offer a reason to wait. Pick your answer ahead of time, so you can skip the debate.",
+  build: () => {
+    const COLS = { "--cols": "1fr 1.6fr" };
+    const D = [["“I’ll do it tomorrow.”", "I do the floor version right now. It takes 5 minutes, and tomorrow gets easier."], ["“I already missed a few days.”", "Today is day one again. I do today’s floor and keep going."],
+      ["“I don’t have time for the whole thing.”", "I do the floor. The whole thing can wait for a bigger day."], ["“I need to plan it all out first.”", "I take the next step with what I know. The plan can fill in as I go."],
+      ["“I’m too tired.”", "I do the smallest version, then rest. Both count."]];
+    const box = h("div", { class: "rows" });
+    const draw = () => {
+      box.replaceChildren(h("div", { class: "rw hd", style: COLS }, h("span", null, "When I think…"), h("span", null, "I’ll do this")));
+      D.forEach((d, i) => box.append(h("div", { class: "rw", style: COLS }, h("div", { class: "cell" }, h("span", { class: "lbl" }, d[0])),
+        h("div", { class: "cell", "data-label": "I’ll do this" }, cellInput("exc." + i + ".b", { rows: 2, def: d[1], aria: "My answer to " + d[0] })))));
+      const n = Number(get("exc.n", 6));
+      for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: COLS },
+        h("div", { class: "cell", "data-label": "When I think…" }, cellInput("exc.x" + i + ".a", { rows: 2, aria: "Excuse " + (i + 1) })),
+        h("div", { class: "cell", "data-label": "I’ll do this" }, cellInput("exc.x" + i + ".b", { rows: 2, aria: "My answer " + (i + 1) }))));
+      growAll(box);
+    };
+    draw();
+    return [box, h("div", null, btn("Add a row", () => { const n = Number(get("exc.n", 6)); if (n < 10) { set("exc.n", n + 1, true); draw(); } }, "ghost sm")),
+      bar("**Make them yours.** Change any answer that doesn’t fit and write your own. Add your most common reasons in the blank rows.")];
+  } });
+
+lesson("l3", { id: "l3-rough", title: "After a rough week", tag: "Level 3 · Recover after rough weeks", desc: "Pick your systems back up, smallest piece first.",
+  lede: "Rough weeks happen to everyone, me included. Someone gets sick, the schedule blows up, and the systems go quiet. You can pick them back up right where they are. Start with the smallest piece.",
+  build: () => {
+    const S4 = [["Name what happened.", "Facts only. No blame."], ["Pick one system to restart.", "The one you miss the most."], ["Do the floor version today.", "Write the one step here."], ["Choose when you will do it again.", "A day and a time."]];
+    return [
+      h("div", { class: "stack" }, S4.map((s, i) => h("div", { class: "num solid top" }, h("span", { class: "n" }, String(i + 1)),
+        h("div", { style: { flex: "1", minWidth: "0" } }, field("rough." + (i + 1), { label: s[0], hint: s[1], rows: 2 }))))),
+      builderNames().length ? p("My systems: " + builderNames().join(", "), "muted") : null,
+      customList("restart", { title: "My 10-minute restart", sub: "Fill this in on a good day. Three tiny things that help you feel back on track. Ideas: clean one surface, do a brain dump, or reset your planner for the week.", tone: "tint", n: 3, fixed: true }),
+      bar("**Today is day one again.** There’s nothing to catch up on. Picking one thing back up is the system working.")
+    ];
+  } });
+</script>
+<script>
+"use strict";
+/* ============ system builder helpers ============ */
+const PRESETS = {
+  launch: { name: "Evening launch pad", area: "Home", decision: "“What do we need today?” during the morning rush", trigger: "Right after dinner cleanup",
+    steps: ["Clear the sink", "Prep the coffee and set it to brew on its own", "Fill water bottles and pack bags", "Set out tomorrow’s clothes", "Open my planner, block my time, pick my top 3"],
+    lives: [], where: "A routine card at the back of my planner", low: "Pack the bags and pick my top 3", easier: "The coffee maker runs on a timer" },
+  dinner: { name: "Dinner rotation", area: "Meals", decision: "“What’s for dinner?” every afternoon", trigger: "My Sunday reset",
+    steps: ["Pick 5 meals from our go-to list", "Check the calendar for busy nights", "Order the groceries", "Post the plan on the fridge"],
+    lives: [1, 3], where: "Calendar for the Sunday block. Notes for the go-to meal list.", low: "Repeat last week’s plan", easier: "" },
+  tray: { name: "School paper tray", area: "Kids and family", decision: "“Where did that form go?”", trigger: "The kids walk in the door",
+    steps: ["Papers go in the tray by the door", "I check the tray after dinner", "Dates go on the calendar", "Signed forms go back in the backpack"],
+    lives: [0, 1], where: "Inbox is the tray by the door. Dates go on the calendar.", low: "Dates on the calendar only. The rest waits until tomorrow.", easier: "" }
+};
+const idea = (name, area, text, low) => ({ name, area, steps: text.split(/\.\s+/).map(s => s.replace(/\.$/, "")).filter(Boolean), low: low ? low.replace(/^./, c => c.toUpperCase()) : "", lives: [] });
+const IDEAS_A = [
+  ["Home", "The 10-minute closing shift", "Set a timer after dinner. Clear the counters, start the dishwasher, and stop when it rings."],
+  ["Meals", "Five meals on repeat", "Pick 5 meals on Sunday, order the groceries, and post the plan on the fridge."],
+  ["Money", "Bill day", "Same day every week. Open the mail, pay what’s due, and file the rest in one folder."],
+  ["Kids and family", "The paper tray", "One tray by the door. Check it after dinner and put the dates on the calendar."],
+  ["Work or business", "Top 3 before email", "Pick 3 tasks the night before. Do the first one before you open your inbox."],
+  ["Health and movement", "Clothes out the night before", "Set out workout clothes and fill your water bottle. Put the same days on the calendar each week."],
+  ["Relationships", "The standing date", "One repeating plan on the calendar, like a monthly coffee with a friend."],
+  ["Rest and fun", "The Friday night default", "The same easy plan every week, like pizza and a movie, so nobody has to decide."]];
+const IDEAS_B = [
+  ["Working out", "Health and movement", "Same days, same time", "Put 3 workouts on the calendar. Set out clothes the night before and press play on a saved video.", "a 10-minute walk."],
+  ["YouTube videos", "Work or business", "Batch day in four blocks", "Set up for 10 minutes. Then film, edit, and schedule, with each one in its own block.", "switch to captions or scheduling."],
+  ["Weekly content", "Work or business", "Batch by format", "Film all your short clips in one sitting. Write every caption in one writing block.", "post one thing, anything."],
+  ["Cleaning", "Home", "One room a day", "Monday bathrooms. Tuesday kitchen. Wednesday office. Thursday living room. Friday bedrooms.", "clean one surface."],
+  ["Kitchen", "Home", "Clean while it cooks", "Load the dishwasher and wipe as you go. Run it every night and empty it every morning.", "run the dishwasher."],
+  ["Laundry", "Home", "One load a day", "Start a load in the morning, switch it at lunch, and fold it during a show.", "wash and dry, fold tomorrow."],
+  ["Email", "Work or business", "Two check-ins a day", "Open your inbox at set times. Reply if it takes 2 minutes. The rest goes on your task list.", "flag 3 and close it."],
+  ["Clutter piles", "Home", "One pile, one timer", "Pick one pile and set a timer for 10 minutes. Sort into keep, toss, and move.", "toss 5 things."]];
+
+function fillBuilder(n, d) {
+  clearPrefix("sb." + n + ".");
+  const k = "sb." + n + ".";
+  set(k + "name", d.name); set(k + "area", d.area); if (d.decision) set(k + "decision", d.decision); if (d.trigger) set(k + "trigger", d.trigger);
+  d.steps.slice(0, 5).forEach((s, i) => set(k + "step." + i, s));
+  (d.lives || []).forEach(i => set(k + "lives." + i, 1));
+  if (d.where) set(k + "where", d.where); if (d.low) set(k + "low", d.low); if (d.easier) set(k + "easier", d.easier);
+  TABMEM.sb = n - 1; nav("l4-builder");
+}
+function copyToBuilder(d) {
+  const n = [1, 2, 3].find(i => !hasAny("sb." + i + "."));
+  if (!n) { toast("All three builder pages are in use. Open the builder and clear one first."); return; }
+  fillBuilder(n, d);
+}
+function presetBtn(n, label, d) {
+  let armed = false, t = null;
+  const b = h("button", { type: "button", class: "btn ghost sm" }, label);
+  b.addEventListener("click", () => {
+    if (hasAny("sb." + n + ".") && !armed) { armed = true; b.textContent = "Replace this page?"; t = setTimeout(() => { armed = false; b.textContent = label; }, 4000); return; }
+    clearTimeout(t); fillBuilder(n, d);
+  });
+  return b;
+}
+function exampleCard(d, badge) {
+  const row = (l, v) => v ? h("div", { class: "stack tight" }, h("span", { class: "eyebrow" }, l), h("p", { class: "ex" }, v)) : null;
+  const where = d.where;
+  return card({ cls: "out", badge, kids: [
+    h("div", { class: "row", style: { justifyContent: "space-between" } }, h("h3", null, d.name), h("span", { class: "eyebrow" }, d.area)),
+    cols(240,
+      h("div", { class: "stack" }, row("The decision this replaces", d.decision), row("Trigger", d.trigger), row("Where it lives", where), row("Low-energy version", d.low), row("What makes it easier", d.easier)),
+      h("div", { class: "stack tight" }, h("span", { class: "eyebrow" }, "The steps"), h("ol", { class: "stack tight" }, d.steps.map((s, i) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(i + 1)), h("span", { class: "ex" }, s)))))),
+    h("div", null, btn("Copy into my system builder", () => copyToBuilder(d), "sm"))] });
+}
+
+/* ============ LEVEL 4 ============ */
+lesson("l4", { id: "l4-intro", title: "Level 4 overview", desc: "", cover: { eyebrow: "Level 4", title: "Apply your systems", sub: "Use the same five steps in every part of your life." },
+  build: () => {
+    const F = [["Capture", "Get everything about this area out of your head.", "My area plan", "l4-area"], ["Organize", "Give each thing a home so you can find it.", "Give each system a home", "l4-home"],
+      ["Plan", "Choose what fits and how often it runs.", "How often does it run", "l4-often"], ["Do", "Build one small system and start using it.", "System builder", "l4-builder"], ["Review", "Try it for two weeks. Keep what works.", "Two-week test", "l4-test"]];
+    const first = field("l4.first", { label: "The focus area I’m taking through first", cls: "inl", ph: focusNames()[0] || "Meals" });
+    return [
+      bar("**One system, every area.** The same five steps fit your home, your work, your family, and you. Learn them once and use them anywhere."),
+      sec(eyebrow("The five steps"), h("div", { class: "rows" }, F.map((s, i) => h("div", { class: "rw", style: { "--cols": "34px 1.4fr 1fr" } },
+        h("span", { class: "num solid" }, h("span", { class: "n" }, String(i + 1))), h("div", { class: "cell" }, h("strong", null, s[0]), h("span", { class: "muted small" }, s[1])),
+        h("div", { class: "cell mid" }, link(s[2], () => nav(s[3]))))))),
+      first,
+      card({ title: "These steps work for every area.", h: "h4", sub: "Use your focus areas from Level 3, or borrow one of these. Tap one to use it.", kids: [h("div", { class: "chips" },
+        ...["Home", "Work", "Parenting", "Health", "Money", "Creative work", "Personal growth"].map(a => h("button", { type: "button", class: "chip", onclick: () => { if (!first.input.value) { first.input.value = a; set("l4.first", a); } else toast("Your line is already filled in."); } }, a)))] }),
+      bar("**One area at a time.** Finish one small system before you start the next. Then come back to this page and pick a new area.")
+    ];
+  } });
+
+lesson("l4", { id: "l4-area", title: "My area plan", tag: "Level 4 · Apply", desc: "Walk a focus area through all five steps.",
+  lede: "Walk your focus area through all five steps in one quick pass. Three copies are here, one for each focus area.",
+  build: () => {
+    const STEPS = [["Step 1", "Capture", "Everything on my mind about this area.", 4], ["Step 2", "Organize", "What has a date, what’s a task, what’s a note.", 3],
+      ["Step 3", "Plan", "What fits this week. Two or three things.", 3], ["Step 4", "Do", "My first small step, and when I’ll do it.", 2], ["Step 5", "Review", "What worked, and one thing to change.", 2]];
+    const area = n => stack(
+      field("area." + n + ".name", { label: "My area", cls: "inl", def: focusNames()[n - 1] || "" }),
+      ...STEPS.map((s, i) => card({ cls: "out", kids: [h("div", { class: "s5" }, h("div", { class: "stack tight" }, eyebrow(s[0]), h("h3", null, s[1]), p(s[2], "muted small")),
+        field("area." + n + "." + (i + 1), { rows: s[3] }))] })));
+    return [tabs("area", ["Area 1 of 3", "Area 2 of 3", "Area 3 of 3"], [1, 2, 3].map(area)),
+      bar("**See something that repeats?** Turn it into a system with the system builder.", { extra: btn("Open the system builder", () => nav("l4-builder"), "sm") })];
+  } });
+
+lesson("l4", { id: "l4-builder", title: "System builder", tag: "Level 4 · Do", desc: "Build one small system and start using it.",
+  lede: "Your turn. Use one page for each item you starred in the repeat decision finder. Keep it small enough that you could do it on a tired Tuesday.",
+  build: () => {
+    const starred = [];
+    for (let i = 0; i < 12; i++) if (get("dec." + i + ".s") && get("dec." + i + ".t")) starred.push(get("dec." + i + ".t"));
+    const sys = n => {
+      const k = "sb." + n + ".";
+      const ready = h("p", { class: "small" });
+      const paint = () => { const ok = get(k + "name") && get(k + "trigger") && get(k + "step.0"); ready.textContent = ok ? "This one is ready for the two-week test." : "Add a name, a trigger, and at least one step to get ready for the two-week test."; ready.className = "small " + (ok ? "" : "muted"); };
+      const dec = field(k + "decision", { label: "The decision this replaces", onInput: paint });
+      paint();
+      return stack(
+        h("div", { class: "row" }, h("span", { class: "eyebrow" }, "Start from an example"), presetBtn(n, "Evening launch pad", PRESETS.launch), presetBtn(n, "Dinner rotation", PRESETS.dinner), presetBtn(n, "School paper tray", PRESETS.tray)),
+        cols(240, field(k + "name", { label: "System name", onInput: paint }), field(k + "area", { label: "Area", list: "dl-areas" })),
+        dec,
+        starred.length ? h("div", { class: "stack tight" }, p("Starred on your repeat decision finder. Tap one to use it.", "muted small"),
+          h("div", { class: "chips" }, ...starred.map(s => h("button", { type: "button", class: "chip", onclick: () => { dec.input.value = s; set(k + "decision", s); } }, s)))) : null,
+        checks(k + "snag", SNAGS.map(s => s[0]), { label: "The snag it fixes", cols: 4 }),
+        field(k + "trigger", { label: "Trigger.", hint: "When does it start? Tie it to something you already do.", onInput: paint }),
+        numbered(k + "step", 5, { label: "The steps.", hint: "Five or fewer.", name: "Step", onInput: paint }),
+        checks(k + "lives", ["Inbox", "Calendar", "Tasks", "Notes"], { label: "Where it lives", cols: 4 }),
+        field(k + "where", { label: "Exactly where", hint: "The app, the planner page, or the spot in your house." }),
+        card({ kids: [field(k + "low", { label: "Low-energy version.", hint: "The smallest piece that still helps on a hard day.", rows: 2 })] }),
+        field(k + "easier", { label: "One thing that would make this easier" }),
+        ready);
+    };
+    return [datalist("dl-areas", AREAS.map(a => a[0])),
+      get("spots") ? card({ title: "My list from Start here", h: "h4", sub: get("spots") }) : null,
+      tabs("sb", ["System 1 of 3", "System 2 of 3", "System 3 of 3"], [1, 2, 3].map(sys)),
+      bar("**Need ideas?** See one of mine filled in, or borrow a starter idea.", { extra: h("div", { class: "row" }, btn("See my examples", () => nav("l4-examples"), "sm"), btn("Browse ideas", () => nav("l4-ideas"), "ghost sm")) })];
+  } });
+
+lesson("l4", { id: "l4-examples", title: "Here’s one of mine", tag: "Level 4 · Do", desc: "Three filled-in systems you can copy.",
+  lede: "I’m not a morning person, so my mornings start the night before. This is the system page for my evening launch pad, filled in so you can see how it works.",
+  build: () => [
+    exampleCard(PRESETS.launch, "From Wenda"),
+    bar("**Notice the low-energy version.** On tired nights I do two steps and call it done. The system still holds."),
+    sec("Two more examples", p("Borrow these as they are, or change them to fit your house.", "muted"), exampleCard(PRESETS.dinner, "From Wenda"), exampleCard(PRESETS.tray, "From Wenda"))
+  ] });
+
+lesson("l4", { id: "l4-ideas", title: "System ideas to borrow", tag: "Level 4 · Do", desc: "A starter idea for every area of life.",
+  lede: "Stuck on where to start? Here’s one starter idea for each area. Copy it, change it, or let it spark your own.",
+  build: () => [
+    cols(280, ...IDEAS_A.map(a => card({ eyebrow: a[0], title: a[1], text: a[2], kids: [link("Use this idea", () => copyToBuilder(idea(a[1], a[0], a[2], "")))] }))),
+    sec("More system ideas", p("These are for the jobs that never seem to stay done. Each one comes with a low-energy version for tired days.", "muted"),
+      cols(280, ...IDEAS_B.map(b => card({ eyebrow: b[0], title: b[2], text: b[3], kids: [p("**Low energy:** " + b[4]), link("Use this idea", () => copyToBuilder(idea(b[2], b[1], b[3], b[4])))] })))),
+    bar("**Found one you like?** Use it in the system builder and make it yours.")
+  ] });
+
+lesson("l4", { id: "l4-home", title: "Give each system a home", tag: "Level 4 · Organize", desc: "Pick where each system lives.",
+  lede: "A system needs a place to live so you don’t have to hold it in your head. I use four spots, and each one has one job.",
+  build: () => {
+    const COLS = { "--cols": "1.1fr 1.5fr 1.5fr" };
+    const box = h("div", { class: "rows" });
+    const draw = () => {
+      box.replaceChildren(h("div", { class: "rw hd", style: COLS }, h("span", null, "My system"), h("span", null, "Inbox · Calendar · Tasks · Notes"), h("span", null, "Exactly where")),
+        h("div", { class: "rw exr", style: COLS }, h("span", { class: "exv" }, "Example: Dinner rotation"), h("span", { class: "exv" }, "Calendar, Notes"), h("span", { class: "exv" }, "Sunday block on the family calendar. Meal list in my notes app.")));
+      const n = Number(get("home.n", 9));
+      for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: COLS },
+        h("div", { class: "cell", "data-label": "My system" }, cellInput("home." + i + ".n", { aria: "System " + (i + 1), list: "dl-sys", ph: builderNames()[i] || "" })),
+        h("div", { class: "cell", "data-label": "Where it lives" }, h("div", { class: "chips" }, ["Inbox", "Calendar", "Tasks", "Notes"].map((t, j) => tg("home." + i + ".p." + j, { text: t, txt: true, aria: t })))),
+        h("div", { class: "cell", "data-label": "Exactly where" }, cellInput("home." + i + ".w", { aria: "Exactly where" }))));
+    };
+    draw();
+    return [datalist("dl-sys", builderNames()),
+      cols(220, ...[["Inbox", "Catches new stuff until you sort it."], ["Calendar", "Holds anything tied to a day or time."], ["Tasks", "Holds what you need to do."], ["Notes", "Holds info you’ll look up again."]].map(x => card({ title: x[0], text: x[1] }))),
+      box, h("div", null, btn("Add a row", () => { const n = Number(get("home.n", 9)); if (n < 16) { set("home.n", n + 1); draw(); } }, "ghost sm")),
+      p("“Exactly where” means the app, the planner page, or the spot in your house. The more exact, the less you have to think later.", "muted small")];
+  } });
+
+lesson("l4", { id: "l4-often", title: "How often does it run?", tag: "Level 4 · Plan", desc: "Sort your systems by rhythm.",
+  lede: "Every system has a rhythm. Sort yours by how often they happen, so the big ones stop sneaking up on you.",
+  build: () => {
+    const F = [["Daily", "Like an evening launch pad or a 10-minute tidy"], ["Weekly", "Like a Sunday reset, a meal plan, or one room a day"], ["Monthly", "Like a bills check-in, a deep clean, or a phone cleanup"],
+      ["Each quarter", "Like goal planning or a closet clear-out"], ["Yearly", "Like checkups, tax prep, or smoke detector batteries"]];
+    return [builderNames().length ? p("My systems so far: " + builderNames().join(", "), "muted") : null,
+      h("div", { class: "rows" }, F.map((f, i) => h("div", { class: "rw", style: { "--cols": "220px 1fr" } }, h("div", { class: "stack tight" }, h("h3", null, f[0]), p(f[1], "muted small")), field("often." + i, { rows: 3 })))),
+      bar("**Put the monthly, quarterly, and yearly ones on your calendar.** Set them to repeat, and your brain can let them go.")];
+  } });
+
+lesson("l4", { id: "l4-test", title: "The two-week test", tag: "Level 4 · Review", desc: "Run each system for two weeks.",
+  lede: "Run each system for two weeks. Tap a box on any day you used it. The low-energy version counts. A skipped day is helpful too, because it shows you where the system needs a tweak.",
+  build: () => {
+    const test = n => {
+      const k = "test." + n + ".";
+      const cnt = h("span", { class: "pill" }), msg = h("p", { class: "small" });
+      const upd = () => {
+        const c = Array.from({ length: 14 }, (_, i) => i + 1).filter(i => get(k + "d." + i)).length;
+        cnt.textContent = c + " of 14 days";
+        msg.textContent = c >= 10 ? "Strong run. Add this one to your systems at a glance." : c > 0 ? "A skipped day is helpful too. It shows you where the system needs a tweak. Try your one small change, then run it again." : "";
+      };
+      const days = h("div", { class: "days14" });
+      for (let i = 1; i <= 14; i++) days.append(h("div", { class: "stack tight" }, h("span", { class: "nn" }, String(i)), tg(k + "d." + i, { aria: "Day " + i, onChange: upd })));
+      upd();
+      return card({ cls: "out", kids: [field(k + "name", { label: "System " + n, cls: "inl", def: builderName(n) }), days, cnt, msg,
+        field(k + "hard", { label: "What felt hard" }), field(k + "change", { label: "One small change to try" }), checks(k + "pass", ["This one passed the test"], {})] });
+    };
+    return [test(1), test(2), test(3)];
+  } });
+
+lesson("l4", { id: "l4-glance", title: "My systems at a glance", tag: "Level 4 · Keep it", desc: "Your whole setup on one page.",
+  lede: "Once a system passes the two-week test, add it here. This is your whole setup on one page, so keep a bookmark in it.",
+  build: () => {
+    const COLS = { "--cols": "1fr 1fr 1fr" };
+    const box = h("div", { class: "rows" });
+    const draw = () => {
+      box.replaceChildren(h("div", { class: "rw hd", style: COLS }, h("span", null, "System"), h("span", null, "Trigger"), h("span", null, "Low-energy version")));
+      const n = Number(get("gl.n", 8));
+      for (let i = 0; i < n; i++) box.append(h("div", { class: "rw", style: COLS },
+        ...[["s", "System"], ["t", "Trigger"], ["l", "Low-energy version"]].map(c => h("div", { class: "cell", "data-label": c[1] }, cellInput("gl." + i + "." + c[0], { rows: 2, aria: c[1] + " " + (i + 1) })))));
+      growAll(box);
+    };
+    draw();
+    const pull = () => {
+      let added = 0;
+      [1, 2, 3].forEach(n => {
+        const k = "sb." + n + ".", name = get(k + "name"); if (!name) return;
+        const dupe = Array.from({ length: 20 }, (_, i) => get("gl." + i + ".s")).includes(name); if (dupe) return;
+        for (let i = 0; i < 20; i++) {
+          if (!get("gl." + i + ".s") && !get("gl." + i + ".t") && !get("gl." + i + ".l")) {
+            if (i >= Number(get("gl.n", 8))) set("gl.n", i + 1);
+            set("gl." + i + ".s", name); set("gl." + i + ".t", get(k + "trigger")); set("gl." + i + ".l", get(k + "low")); added++; break;
+          }
+        }
+      });
+      draw(); toast(added ? "Added " + added + " from your builder" : "Nothing new to add");
+    };
+    return [h("div", null, btn("Add my systems from the builder", pull, "ghost sm")), box,
+      h("div", null, btn("Add a row", () => { const n = Number(get("gl.n", 8)); if (n < 20) { set("gl.n", n + 1); draw(); } }, "ghost sm")),
+      bar("**You did it.** Every row on this page is one less thing your brain has to hold.")];
+  } });
+
+/* ============ LAST PAGE ============ */
+lesson("next", { id: "next", title: "What to do next", tag: "What comes next", desc: "Keep your systems going.",
+  lede: "Your systems are built. Here’s how to keep them going, plus a few tools that pair well with this workbook.",
+  build: () => [
+    h("div", { class: "dark-bar" }, eyebrow("Free · Start here"), h("h3", null, "The Weekly Reset Kit"),
+      p("Your systems run best with a weekly check-in. Grab my free kit and give your week ten quiet minutes."),
+      h("a", { href: "https://member.wendaful.com/weeklyresetsystem", target: "_blank", rel: "noopener" }, "member.wendaful.com/weeklyresetsystem")),
+    sec(eyebrow("More from Wendaful Planning"), cols(300,
+      card({ title: "Romanticize Your Real Life", text: "A dopamine menu workbook for making ordinary days feel good." }),
+      card({ title: "Year to Today", text: "Break a yearly goal down into what to do this month, this week, and today." }),
+      card({ title: "The 4-Week Movement Plan", text: "A gentle, floor-first plan for moving your body most days." }),
+      card({ title: "System and routine cards", text: "Printable cards to keep right where each system happens, like the fridge or the entryway." })),
+      h("p", null, "Find them all at ", h("a", { href: "https://shop.wendaful.com", target: "_blank", rel: "noopener" }, "shop.wendaful.com"))),
+    field("next.proud", { label: "The system I’m most proud of", rows: 3 }),
+    field("next.area", { label: "The next area I want to work on", rows: 3 }),
+    bar("**Come say hi.** I share new systems every week at @wendafulplanning and wendaful.com."),
+    legal()
+  ] });
+
+function legal() {
+  return h("p", { class: "legal" }, h("strong", null, "Systems for Real Life. "), "© 2026 Wenda Benavidez, Wendaful Planning. All rights reserved. This course is for your personal use. Please do not copy, share, or resell the pages. Questions? Email hello@wendaful.com.");
+}
+
+/* ============ home ============ */
+const BLURB = {
+  l1: "Set up four parts: inbox, calendar, tasks, and notes. Each part gets one job.",
+  l2: "Turn those four parts into a weekly rhythm with a reset, a plan, and a quick daily check.",
+  l3: "Take out the hard parts. Set a few defaults. Shape it around your brain and your season.",
+  l4: "Use the same steps for home, work, family, health, money, and your own goals."
+};
+function levelTiles() {
+  return h("div", { class: "tiles" }, MODS.slice(1, 5).map((m, i) => {
+    const n = m.lessons.filter(l => !l.cover).length, d = m.lessons.filter(l => !l.cover && isDone(l.id)).length;
+    return h("button", { type: "button", class: "tile" + (i >= 2 ? " d" : ""), onclick: () => nav(m.lessons[0].id) },
+      h("div", { class: "stack tight" }, eyebrow(m.label), h("h3", null, m.title), p(BLURB[m.id])),
+      h("div", { class: "stack tight" }, p("**You finish with:** " + m.finish, "fin"), h("div", { class: "pg" }, h("div", { class: "track" }, h("i", { style: { width: (n ? Math.round(d / n * 100) : 0) + "%" } })), h("span", null, d + "/" + n))));
+  }));
+}
+function renderHome() {
+  const total = LESSONS.length, done = totalDone(), pct = Math.round(done / total * 100);
+  const cont = continueTarget(), started = done > 0 || get("last");
+  const nameFld = field("name", { label: "This workbook belongs to", cls: "inl", ph: "Your name" });
+  const art = h("article", { class: "lesson" },
+    h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Wendaful Planning · Workbook course", "wendaful.com"),
+      h("div", { class: "cv" }, eyebrow("The 4-level Wendaful Planning workbook"), h("h1", { class: "h1" }, "Systems for Real Life"),
+        h("p", { class: "sub" }, "Build, Live, Design, Apply."), p("Plus two bonus sections: The Consistency Pack and My Done-for-You Systems Library.", "small"),
+        nameFld,
+        h("div", { class: "row", style: { paddingTop: "8px" } },
+          h("button", { type: "button", class: "btn light", onclick: () => nav(cont.id) }, started ? "Pick up where you left off" : "Start here"),
+          started ? h("span", { class: "small" }, cont.title) : null)))),
+    h("div", { class: "wrap" }, h("div", { class: "body" },
+      h("div", { class: "stack tight" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("span", { class: "lbl" }, done + " of " + total + " pages done"),
+        get("lvl.most") ? h("span", { class: "pill" }, "Slowing down at: " + get("lvl.most")) : null), h("div", { class: "track" }, h("i", { style: { width: pct + "%" } }))),
+      done === total ? bar("**You finished.** Every row in your workbook is one less thing your brain has to hold.", { cls: "good", extra: btn("See my workbook", () => nav("workbook"), "sm") }) : null,
+      bar("**Not sure where to begin?** Check the lines that sound like you today. The level with the most checks is a good place to slow down.", { extra: btn("Find your level", () => nav("s-find"), "sm") }),
+      sec("How this works", steps([
+        "**Go in order.** Each level builds on the one before it.",
+        "**Write right on the page.** Messy is fine. Your answers save on this device, and you can change them any time.",
+        "**Stay as long as you need.** Live with each level for a week or two before you start the next one."]),
+        bar("**Go at your own pace.** One page a day is plenty. Something is always better than nothing.")),
+      sec("The four levels", levelTiles(), bar("**How to move through them.** Do Level 1 first. Live with it for a week, then start Level 2. Give that rhythm two or three weeks before you move on to Levels 3 and 4.")),
+      sec("Bonus sections", cols(300,
+        h("button", { type: "button", class: "bonus", onclick: () => nav("cp-intro") }, eyebrow("Bonus"), h("h4", null, "The Consistency Pack"), h("p", { class: "small muted" }, "Trackers and restart pages for the all-or-nothing brain.")),
+        h("button", { type: "button", class: "bonus", onclick: () => nav("lib-intro") }, eyebrow("Bonus"), h("h4", null, "My Done-for-You Systems Library"), h("p", { class: "small muted" }, "My own routines, menus, and resets, ready to copy.")))),
+      legal())));
+  return art;
+}
+
+function renderModEnd(m) {
+  const e = m.end, last = m.lessons[m.lessons.length - 1];
+  return h("article", { class: "lesson" },
+    h("div", { class: "cover" }, h("div", { class: "wrap" }, strip("Systems for Real Life", m.strip),
+      h("div", { class: "cv" }, eyebrow(modDone(m) + " of " + m.lessons.length + " pages done"), h("h1", { class: "h1" }, e.head), h("p", { class: "sub" }, e.text)))),
+    h("div", { class: "wrap" }, h("div", { class: "body" },
+      bar("**You finish with: " + m.finish + "**"),
+      h("div", { class: "row" }, btn(e.cta, () => nav(e.next)), btn("Course home", () => nav("home"), "ghost"), link("Back to the last page", () => nav(last.id))))));
+}
+
+/* ============ my workbook ============ */
+const v = k => get(k).trim();
+function summary() {
+  const out = [], add = (title, lessonId, rows) => { rows = rows.filter(r => r[1]); if (rows.length) out.push({ title, lessonId, rows }); };
+  add("Why I picked this up", "s-how", [["", v("why")]]);
+  add("My level", "s-find", [["Slowing down at", v("lvl.most")]]);
+  add("What my planner is for", "l1-needs", [["Style", v("tool.mode")], ["Should help me", v("needs.help")], ["My tools", v("needs.tools")], ["What bugs me", v("needs.bugs")]]);
+  const part = (l, a, bl, b) => [l, [v("part." + a + ".home"), v("part." + a + "." + b) ? bl + ": " + v("part." + a + "." + b) : ""].filter(Boolean).join("\n")];
+  add("My four parts", "l1-parts", [part("Inbox", "inbox", "Backup", "backup"), part("Calendar", "cal", "Shared with", "who"), part("Tasks", "tasks", "Next is marked by", "mark"), part("Notes", "notes", "I find things by", "find"),
+    ["Weekly sort time", [v("sort.day"), v("sort.time"), v("sort.where")].filter(Boolean).join(" · ")]]);
+  add("My weekly rhythm", "l2-rhythm", ["Weekly reset", "Weekly plan", "Daily plan", "Do the work", "Evening review", "Repeat"].map((s, i) => [s, [v("rh." + i + ".when"), v("rh." + i + ".small") ? "Small version: " + v("rh." + i + ".small") : ""].filter(Boolean).join("\n")]));
+  add("My focus areas", "l3-pick", [1, 2, 3].map(n => [v("focus." + n + ".name"), [v("focus." + n + ".why"), v("focus." + n + ".good") ? "Good enough: " + v("focus." + n + ".good") : ""].filter(Boolean).join("\n") || "·"]).filter(r => r[0]));
+  const st = []; for (let i = 0; i < 12; i++) if (get("dec." + i + ".s") && v("dec." + i + ".t")) st.push([v("dec." + i + ".t"), [v("dec." + i + ".a"), v("dec." + i + ".f")].filter(Boolean).join(" · ") || "·"]);
+  add("What I keep deciding (starred)", "l3-decisions", st);
+  add("My day menus", "l3-days", [1, 2].map(n => { const items = Array.from({ length: 20 }, (_, i) => v("cx.mymenu" + n + "." + i + ".t")).filter(Boolean); return [v("cx.mymenu" + n + ".title") ? "When I feel " + v("cx.mymenu" + n + ".title") : "", items.map(x => "· " + x).join("\n")]; }).filter(r => r[0] && r[1]));
+  const fam = []; for (let i = 0; i < 14; i++) if (v("fam." + i + ".h")) fam.push([v("fam." + i + ".h"), ["Floor: " + v("fam." + i + ".f"), "Regular: " + v("fam." + i + ".r"), "Bonus: " + v("fam." + i + ".b")].join("\n")]);
+  add("Floor and More", "l3-floor", fam);
+  add("My minimum viable day", "l3-mvd", [0, 1, 2, 3, 4].map(i => [String(i + 1), v("mvd." + i)]));
+  const ex = []; ["“I’ll do it tomorrow.”", "“I already missed a few days.”", "“I don’t have time for the whole thing.”", "“I need to plan it all out first.”", "“I’m too tired.”"].forEach((t, i) => { if (hasAny("exc." + i + ".")) ex.push([t, v("exc." + i + ".b")]); });
+  for (let i = 0; i < 10; i++) if (v("exc.x" + i + ".a")) ex.push([v("exc.x" + i + ".a"), v("exc.x" + i + ".b")]);
+  add("My excuse answers", "l3-excuse", ex);
+  add("My systems", "l4-builder", [1, 2, 3].filter(n => v("sb." + n + ".name")).map(n => {
+    const k = "sb." + n + ".", steps = [0, 1, 2, 3, 4].map(i => v(k + "step." + i)).filter(Boolean).map((s, i) => (i + 1) + ". " + s).join("\n");
+    const lives = ["Inbox", "Calendar", "Tasks", "Notes"].filter((_, i) => get(k + "lives." + i)).join(", ");
+    return [v(k + "name"), [v(k + "area") ? "Area: " + v(k + "area") : "", v(k + "decision") ? "Replaces: " + v(k + "decision") : "", v(k + "trigger") ? "Trigger: " + v(k + "trigger") : "", steps ? "Steps:\n" + steps : "",
+      lives || v(k + "where") ? "Lives in: " + [lives, v(k + "where")].filter(Boolean).join(". ") : "", v(k + "low") ? "Low-energy version: " + v(k + "low") : ""].filter(Boolean).join("\n")];
+  }));
+  const gl = []; for (let i = 0; i < 20; i++) if (v("gl." + i + ".s")) gl.push([v("gl." + i + ".s"), [v("gl." + i + ".t") ? "Trigger: " + v("gl." + i + ".t") : "", v("gl." + i + ".l") ? "Low-energy version: " + v("gl." + i + ".l") : ""].filter(Boolean).join("\n") || "·"]);
+  add("My systems at a glance", "l4-glance", gl);
+  return out;
+}
+function summaryText() {
+  const name = v("name");
+  return [(name ? name + "’s " : "My ") + "Systems for Real Life workbook", "wendaful.com", ""].concat(summary().map(s => s.title.toUpperCase() + "\n" + s.rows.map(r => (r[0] ? r[0] + ": " : "") + r[1]).join("\n") + "\n")).join("\n");
+}
+function backupCode() { return "SFRL1:" + btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+function restoreFrom(text) {
+  try {
+    let t = String(text).trim();
+    const obj = JSON.parse(t.startsWith("SFRL1:") ? decodeURIComponent(escape(atob(t.slice(6)))) : t);
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) throw new Error("shape");
+    S = obj; flush(); refreshChrome(); nav("workbook"); toast("Your answers are back"); return true;
+  } catch (e) { toast("That backup code did not work. Check that you copied all of it."); return false; }
+}
+function renderWorkbook() {
+  const name = v("name"), secs = summary();
+  const code = h("textarea", { class: "ln", rows: "3", placeholder: "Paste a backup code here", "aria-label": "Backup code", style: { border: "1px solid var(--rule)", padding: "10px", minHeight: "84px", resize: "vertical" } });
+  const file = h("input", { type: "file", accept: ".json,.txt,application/json,text/plain", "aria-label": "Restore from a file", onchange: e => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => restoreFrom(r.result); r.readAsText(f); } });
+  return h("article", { class: "lesson" },
+    h("div", { class: "wrap" }, strip("Systems for Real Life", "My workbook"),
+      h("div", { class: "head" }, eyebrow("Everything you’ve written, in one place"), h("h1", { class: "h1" }, name ? name + "’s workbook" : "My workbook"),
+        p("This page pulls your answers together as you go. Come back to it any time you want to see your whole setup.", "lede"))),
+    h("div", { class: "wrap" }, h("div", { class: "body" },
+      secs.length ? secs.map(s => h("section", { class: "sec" }, h("div", { class: "row", style: { justifyContent: "space-between" } }, h("h2", null, s.title), link("Edit", () => nav(s.lessonId))),
+        h("dl", { class: "dl" }, s.rows.map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())))
+        : bar("Nothing here yet. Fill in a few pages and your answers show up here."),
+      h("hr", { class: "hr" }),
+      sec("Keep a copy", p("Your answers are saved in this browser on this device. A backup lets you move them to a new phone or computer, or keep them safe.", "muted"),
+        h("div", { class: "row" }, btn("Copy my workbook as text", () => copyText(summaryText()), "ghost"), DL ? btn("Save it as a file", () => saveFile("my-systems-for-real-life.txt", summaryText()), "ghost") : null),
+        h("div", { class: "row" }, btn("Copy my backup code", () => copyText(backupCode())), DL ? btn("Save a backup file", () => saveFile("systems-for-real-life-backup.json", JSON.stringify(S, null, 2)), "ghost") : null)),
+      sec("Restore a backup", code, h("div", { class: "row" }, btn("Restore from this code", () => restoreFrom(code.value), "ghost sm"), h("label", { class: "small muted" }, "Or choose a backup file: ", file))),
+      sec("Start over", p("This erases every answer and check mark on this device. Copy a backup first if you might want them back.", "muted"),
+        h("div", null, confirmBtn("Erase everything", "Tap again to erase everything", () => { S = {}; flush(); refreshChrome(); nav("home"); toast("All clear"); }))),
+      legal()))
+  );
+}
+</script>
+<script>
+"use strict";
+/* ============ BONUS: THE CONSISTENCY PACK ============ */
+lesson("cp", { id: "cp-intro", title: "Consistency Pack overview", desc: "", cover: { eyebrow: "Bonus section", title: "The Consistency Pack", sub: "For the all-or-nothing brain. Small, often, and easy to restart." },
+  build: () => {
+    const T = [["I go all in, then I stop.", "Floor and More", "l3-floor"], ["I research and plan, and never start.", "Enough to Start", "cp-start"], ["I have hundreds of content ideas.", "This Week’s 3", "cp-week3"],
+      ["I keep skipping my workouts.", "Movement Minimum", "cp-move"], ["I tell myself I’ll do it tomorrow.", "My Excuse Answers", "l3-excuse"], ["My house is tidy but never really clean.", "One Zone a Day", "cp-zone"],
+      ["I have piles that have sat for months.", "The Pile Plan", "cp-pile"], ["I stopped, and now I feel behind.", "Day One Again", "cp-dayone"], ["I want to see that I’m showing up.", "4-Week Tracker", "cp-tracker"]];
+    return [
+      cols(260,
+        card({ title: "1. Set a floor", text: "Every habit gets a tiny version you can do on your most tired day." }),
+        card({ title: "2. Today only", text: "You only need today’s step. The rest of the plan can stay fuzzy for now." }),
+        card({ title: "3. Color the box", text: "Mark it when you do it. A floor day counts the same as a big day." }),
+        card({ title: "4. Day one again", text: "Missed a day, or four? Today is day one again. There’s nothing to catch up on." })),
+      sec(eyebrow("When this sounds like you, go to this page"), h("div", { class: "toc" }, T.map(t =>
+        h("button", { type: "button", class: "toc-row", onclick: () => nav(t[2]) }, h("span", { class: "tx" }, h("strong", null, t[0]), h("small", null, t[1])), h("span", { class: "go", "aria-hidden": "true" }, "→"))))),
+      p("Using these with a planner? Start with **Using this with your planner**.", "muted"),
+      h("div", null, btn("Using this with your planner", () => nav("cp-planner"), "ghost sm"))
+    ];
+  } });
+
+lesson("cp", { id: "cp-start", title: "Enough to Start", tag: "Consistency Pack · Use when stuck", desc: "For when you want the whole plan before you begin.",
+  lede: "For when you want the whole plan before you begin. You can see the next step from here, and that’s all you need today.",
+  build: () => {
+    const mins = h("input", { class: "ln", type: "number", min: "1", max: "180", "aria-label": "Minutes", style: { width: "5.5rem" } });
+    mins.value = get("es.mins", 20);
+    const t = timer({ getMinutes: () => mins.value, label: "Start research timer", doneMsg: "Time’s up. Pick one and go." });
+    mins.addEventListener("input", () => { set("es.mins", mins.value); t.refresh(); });
+    return [
+      field("es.thing", { label: "The thing I want to start", cls: "inl" }),
+      cols(300,
+        card({ cls: "out", title: "What I already know", h: "h3", sub: "It’s more than you think.", kids: [field("es.know", { rows: 6 })] }),
+        card({ title: "What I can figure out later", h: "h3", sub: "Park it here. It can wait until you get there.", kids: [field("es.later", { rows: 6 })] })),
+      card({ cls: "out", title: "My research limit", h: "h3", sub: "Set it before you look anything up.", kids: [
+        field("es.q", { label: "The one question I’m trying to answer", cls: "inl" }),
+        h("div", { class: "row" }, h("label", { class: "lbl" }, "Timer, in minutes (try 20)"), mins), t,
+        checks("es.src", ["Source 1", "Source 2", "Source 3"], { label: "Sources, three at most", cols: 3 })] }),
+      h("div", { class: "row", style: { alignItems: "flex-end" } }, field("es.going", { label: "Good enough for now, I’m going with", cls: "inl", }), checks("es.chg", ["I can change this later"], {})),
+      cols(300, card({ title: "My next step from what I know", h: "h4", kids: [field("es.next", { rows: 2 })] }), card({ title: "My first 3 minutes", h: "h4", kids: [field("es.first", { rows: 2 })] }))
+    ];
+  } });
+
+lesson("cp", { id: "cp-week3", title: "This Week’s 3", tag: "Consistency Pack · Every week", desc: "Pull five ideas, keep three.",
+  lede: "For the list with hundreds of ideas. Leave the list as it is. Pull five, keep three.",
+  build: () => {
+    const keep = h("div", { class: "stack" });
+    const pickedIdx = () => [0, 1, 2, 3, 4].filter(i => get("w3." + i + ".pick"));
+    const drawKeep = () => {
+      const picks = pickedIdx();
+      keep.replaceChildren(...(picks.length ? picks.map(i => card({ cls: "out", kids: [
+        h("p", { class: "lbl", "data-idea": i }, get("w3." + i + ".t") || "Idea " + (i + 1)),
+        h("div", { class: "cols", style: { "--min": "180px" } }, field("w3." + i + ".fmt", { label: "Format", ph: "Reel" }), field("w3." + i + ".pt", { label: "Points to", ph: get("w3.link") || "My default link" }), field("w3." + i + ".day", { label: "Day", ph: "Tuesday" }))] }))
+        : [p("Tap the circles above to keep three.", "muted")]));
+    };
+    const pull = h("div", { class: "stack tight" });
+    for (let i = 0; i < 5; i++) {
+      const pk = h("button", { type: "button", class: "tg r", "aria-label": "Keep idea " + (i + 1), "aria-pressed": get("w3." + i + ".pick") ? "true" : "false" });
+      pk.addEventListener("click", () => {
+        const on = !get("w3." + i + ".pick");
+        if (on && pickedIdx().length >= 3) { toast("Three is enough. Let go of one first."); return; }
+        set("w3." + i + ".pick", on ? 1 : false); pk.setAttribute("aria-pressed", on ? "true" : "false"); drawKeep();
+      });
+      const inp = cellInput("w3." + i + ".t", { aria: "Idea " + (i + 1), onInput: () => { const el = keep.querySelector('[data-idea="' + i + '"]'); if (el) el.textContent = inp.value || "Idea " + (i + 1); } });
+      pull.append(h("div", { class: "num" }, pk, inp));
+    }
+    drawKeep();
+    return [
+      field("w3.of", { label: "Week of", cls: "inl" }),
+      card({ eyebrow: "Decide this once: my default link", kids: [field("w3.link", { label: "When I’m not sure what a post points to, it points to", cls: "inl" }), p("Now every idea has a place to send people, and you can post before the whole year is mapped out.", "muted small")] }),
+      sec(h("h2", null, "1. Pull five"), p("Set a 5-minute timer. Take the first five that catch your eye. Tap the circle on the three you keep.", "muted"),
+        timer({ minutes: 5, label: "Start 5-minute timer", doneMsg: "Time’s up. Keep three." }), pull),
+      sec(h("h2", null, "2. Keep three"), p("Give each one a format, a link, and a day.", "muted"), keep),
+      bar("**3. Close the list.** The other two go back. They’ll still be there next week, along with all the rest.", { extra: h("div", { class: "row" }, checks("w3.closed", ["Closed it"], {}),
+        confirmBtn("Start a new week", "Tap again to clear this week", () => { const l = get("w3.link"); clearPrefix("w3."); if (l) set("w3.link", l); nav("cp-week3"); })) })
+    ];
+  } });
+
+lesson("cp", { id: "cp-move", title: "Movement Minimum", tag: "Consistency Pack · 4 weeks", desc: "A workout plan that works in a messy week.",
+  lede: "A workout plan that still works in a messy week. Tap the size you did. Any circle counts.",
+  build: () => {
+    const L = ["M", "T", "W", "T", "F", "S", "S"], SZ = [["F", "Floor"], ["R", "Regular"], ["B", "Bonus"]];
+    const week = w => {
+      const cnt = h("span", { class: "pill" }), grid = h("div", { class: "mvgrid" });
+      const upd = () => { const n = L.filter((_, d) => get("mv." + w + "." + d)).length; cnt.textContent = n + (n === 1 ? " day" : " days"); };
+      L.forEach((l, d) => {
+        const k = "mv." + w + "." + d, btns = SZ.map(s => {
+          const b = h("button", { type: "button", class: "tg r", "aria-label": "Week " + (w + 1) + " " + l + " " + s[1], "aria-pressed": get(k) === s[0] ? "true" : "false" }, s[0]);
+          b.addEventListener("click", () => { const cur = get(k) === s[0]; set(k, cur ? "" : s[0]); btns.forEach((x, i) => x.setAttribute("aria-pressed", get(k) === SZ[i][0] ? "true" : "false")); upd(); });
+          return b;
+        });
+        grid.append(h("div", { class: "mvday" }, h("span", { class: "hd" }, l), h("div", { class: "fbr" }, ...btns)));
+      });
+      upd();
+      return card({ cls: "out", kids: [h("div", { class: "row", style: { justifyContent: "space-between" } }, h("h3", null, "Week " + (w + 1)), cnt), grid] });
+    };
+    return [
+      cols(220,
+        card({ cls: "out", eyebrow: "My floor (5 min or less)", kids: [field("mm.floor", { rows: 2 })] }),
+        card({ eyebrow: "My regular", kids: [field("mm.reg", { rows: 2 })] }),
+        card({ eyebrow: "My bonus", kids: [field("mm.bonus", { rows: 2 })] })),
+      cols(280, field("mm.spot", { label: "Same time, same spot" }), field("mm.set", { label: "What I set out the night before" })),
+      p("F is floor, R is regular, B is bonus.", "muted small"),
+      [0, 1, 2, 3].map(week),
+      bar("**Been a few days?** The gap is only a number. Do today’s floor, tap the F, and you’re back. Rest days are part of the plan, so leave those blank.")
+    ];
+  } });
+
+lesson("cp", { id: "cp-zone", title: "One Zone a Day", tag: "Consistency Pack · Every week", desc: "One small clean each day.",
+  lede: "You already keep things tidy. This adds one small clean each day, so the deep stuff gets done a little at a time.",
+  build: () => {
+    const CLEANS = ["Wipe the stove and counters", "Scrub one sink", "Clean one toilet", "Vacuum one room", "Mop one floor", "Wipe the bathroom mirror", "Change one set of sheets", "Clean the microwave", "Dust one room"];
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], COLS = { "--cols": "70px 1fr 1.5fr 56px 56px" };
+    const rows = h("div", { class: "rows" }, h("div", { class: "rw hd", style: COLS }, h("span", null, "Day"), h("span", null, "Zone"), h("span", null, "One 10-minute clean"), h("span", null, "Week 1"), h("span", null, "Week 2")));
+    const cleanInputs = [];
+    DAYS.forEach((d, i) => {
+      const ci = cellInput("zone." + i + ".c", { aria: d + " clean", list: "dl-cleans", ph: i === 0 ? "Example: Wipe the stove and counters" : "" });
+      cleanInputs.push(ci);
+      rows.append(h("div", { class: "rw", style: COLS }, h("div", { class: "cell mid" }, h("strong", null, d)),
+        h("div", { class: "cell", "data-label": "Zone" }, cellInput("zone." + i + ".z", { aria: d + " zone", ph: i === 0 ? "Example: Kitchen" : "" })),
+        h("div", { class: "cell", "data-label": "One 10-minute clean" }, ci),
+        h("div", { class: "cell mid", "data-label": "Week 1" }, tg("zone." + i + ".w1", { aria: d + " week 1 done" })),
+        h("div", { class: "cell mid", "data-label": "Week 2" }, tg("zone." + i + ".w2", { aria: d + " week 2 done" }))));
+    });
+    return [datalist("dl-cleans", CLEANS), rows,
+      card({ eyebrow: "10-minute cleans to pick from", kids: [p("Tap one to drop it into the next empty day.", "muted small"), h("div", { class: "chips" }, ...CLEANS.map(c => h("button", { type: "button", class: "chip", onclick: () => {
+        const e = cleanInputs.find(x => !x.value); if (!e) { toast("Every day has a clean. Clear one to swap it."); return; }
+        e.value = c; e.dispatchEvent(new Event("input"));
+      } }, c)))] }),
+      timer({ minutes: 10, label: "Start a 10-minute clean", doneMsg: "Time’s up. You’re done, even if the zone could use more." }),
+      bar("**The timer rule:** set 10 minutes. When it rings, you’re done, even if the zone could use more. It gets another turn next week.")];
+  } });
+
+lesson("cp", { id: "cp-pile", title: "The Pile Plan", tag: "Consistency Pack · Use as needed", desc: "One pile, 10 minutes, four spots.",
+  lede: "For piles that have been sitting a while. One pile, 10 minutes, four spots. A smaller pile is a win.",
+  build: () => {
+    const COLS = { "--cols": "34px 1fr 230px 64px" };
+    const rows = h("div", { class: "rows" }, h("div", { class: "rw hd", style: COLS }, h("span", null, "#"), h("span", null, "My piles (where each one is)"), h("span", null, "10-minute rounds"), h("span", null, "Gone")));
+    for (let i = 0; i < 7; i++) rows.append(h("div", { class: "rw", style: COLS }, h("div", { class: "cell mid" }, h("strong", null, String(i + 1))),
+      h("div", { class: "cell", "data-label": "My pile" }, cellInput("pile." + i + ".n", { aria: "Pile " + (i + 1) })),
+      h("div", { class: "cell mid", "data-label": "10-minute rounds" }, h("div", { class: "circles" }, [0, 1, 2, 3, 4, 5].map(j => tg("pile." + i + ".r." + j, { round: true, aria: "Pile " + (i + 1) + " round " + (j + 1) })))),
+      h("div", { class: "cell mid", "data-label": "Gone" }, tg("pile." + i + ".g", { aria: "Pile " + (i + 1) + " gone" }))));
+    return [
+      sec(eyebrow("Every item goes to one of four spots"), cols(210,
+        card({ title: "Trash", text: "Or recycle. Bag it now." }), card({ title: "Elsewhere", text: "Into a basket. Deliver it when the timer rings." }),
+        card({ title: "Needs action", text: "Into your inbox. Deal with it at your weekly reset." }), card({ title: "Stays", text: "It lives here. Put it back neatly." }))),
+      timer({ minutes: 10, label: "Start a round", doneMsg: "Time’s up. Stop and color one circle." }), rows,
+      bar("**How a round works:** pick the smallest pile. Set a 10-minute timer. Sort into the four spots. When it rings, stop and color one circle. You can do another round, or call it good for today.")];
+  } });
+
+lesson("cp", { id: "cp-dayone", title: "Day One Again", tag: "Consistency Pack · Use as needed", desc: "Restart with the smallest version.",
+  lede: "You stopped for a bit. Today you start again, with the smallest version. There’s nothing to catch up on. Three restarts fit on this page.",
+  build: () => {
+    const one = n => {
+      const k = "d1." + n + ".", back = h("p", { class: "bar good", hidden: !get(k + "done") }, rt("**You’re back.** The days since are only a number."));
+      return card({ cls: "out", kids: [
+        h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "h", { label: "The habit I’m picking back up", ph: "Walking" }), field(k + "days", { label: "Days since", ph: "4" })),
+        field(k + "w", { label: "What got in the way", hint: "One line is plenty.", rows: 2 }),
+        h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "f", { label: "Today’s floor version" }), field(k + "t", { label: "What time today" })),
+        checks(k + "done", ["Did it. I’m back."], { onChange: on => { back.hidden = !on; } }), back] });
+    };
+    return [one(1), one(2), one(3), bar("**The days since are only a number.** Write it down and move on to today’s floor.")];
+  } });
+
+lesson("cp", { id: "cp-tracker", title: "4-Week Tracker", tag: "Consistency Pack · 4 weeks", desc: "Color a box any day you did the floor or more.",
+  lede: "Up to three habits. Color a box any day you did the floor or more. A blank box is fine. Color the next one.",
+  build: () => {
+    const D = ["M", "T", "W", "T", "F", "S", "S"], cmp = h("div", { class: "res" });
+    const total = r => { let n = 0; for (let hb = 1; hb <= 3; hb++) for (let w = 1; w <= 4; w++) for (let d = 0; d < 7; d++) if (get("tr." + r + "." + hb + "." + w + "." + d)) n++; return n; };
+    const paintCmp = () => {
+      const a = total(1), b = total(2);
+      cmp.replaceChildren(h("div", { class: "row" }, h("span", { class: "pill" }, "Round 1: " + a + " boxes"), h("span", { class: "pill" }, "Round 2: " + b + " boxes")),
+        p(a && b ? (b > a ? "**Round 2 has " + (b - a) + " more colored boxes.** More than last month means it’s working." : b === a ? "**Same number of boxes in both rounds.** Showing up the same way twice is a win." : "**Round 1 had more boxes.** That’s okay. Pick your floor again and start the next round small.")
+          : "Color some boxes in both rounds to see how they compare.", "small"));
+    };
+    const habit = (r, hb) => {
+      const k = "tr." + r + "." + hb + ".", cnt = h("span", { class: "pill" });
+      const upd = () => { let n = 0; for (let w = 1; w <= 4; w++) for (let d = 0; d < 7; d++) if (get(k + w + "." + d)) n++; cnt.textContent = n + " boxes colored"; paintCmp(); };
+      const g = h("div", { class: "trk" }, h("span"), ...D.map(x => h("span", { class: "hd" }, x)));
+      for (let w = 1; w <= 4; w++) { g.append(h("span", { class: "wk" }, "Wk " + w)); for (let d = 0; d < 7; d++) g.append(tg(k + w + "." + d, { aria: "Habit " + hb + " week " + w + " " + D[d], onChange: upd })); }
+      let n = 0; for (let w = 1; w <= 4; w++) for (let d = 0; d < 7; d++) if (get(k + w + "." + d)) n++; cnt.textContent = n + " boxes colored";
+      return card({ cls: "out", kids: [h("div", { class: "cols", style: { "--min": "220px" } }, field(k + "name", { label: "Habit " + hb }), field(k + "floor", { label: "My floor" })), g, cnt] });
+    };
+    paintCmp();
+    return [tabs("tr", ["Round 1 of 2", "Round 2 of 2"], [1, 2].map(r => stack(...[1, 2, 3].map(hb => habit(r, hb))))), cmp,
+      bar("**What to look for:** count the boxes you colored, and leave the blank ones out of the math. More colored boxes than last month means it’s working.")];
+  } });
+
+lesson("cp", { id: "cp-planner", title: "Using this with your planner", tag: "Consistency Pack · Read once", desc: "What goes in your planner and what stays here.",
+  lede: "Most of these pages get filled out once and kept nearby. Only a few small things go into the planner you already use.",
+  build: () => {
+    const T = [["Right here in this course", "Floor and More, My Excuse Answers, Enough to Start, The Pile Plan, and Day One Again. Fill them out once and come back when you need them."],
+      ["Planner weekly page", "Your three content picks, your zones for the week, and the days you plan to move."],
+      ["Planner daily page", "Today’s floor, in a time block or on your list. One 10-minute spot for a clean or a pile round."],
+      ["Habit tracker", "One row per habit. Color the box for a floor day the same as a big day. If your planner has a tracker, use it and save the 4-Week Tracker pages for later."],
+      ["Brain dump or notes page", "New ideas wait here until the end of the month, so you can keep going on today’s step."]];
+    return [
+      h("div", { class: "rows" }, h("div", { class: "rw hd", style: { "--cols": "220px 1fr" } }, h("span", null, "Where"), h("span", null, "What goes there")),
+        ...T.map(t => h("div", { class: "rw", style: { "--cols": "220px 1fr" } }, h("strong", null, t[0]), h("p", null, t[1])))),
+      bar("**Write the floor right in the plan.** For example: “7:30 Move. Shoes on, 5 minutes.” The small version is the plan, and anything more is a bonus."),
+      sec("When each thing happens", cols(220,
+        card({ cls: "out", title: "Weekly planning", h: "h4", text: "Pull this week’s 3. Write in your zones. Pick your movement days." }),
+        card({ cls: "out", title: "Daily planning", h: "h4", text: "Copy today’s floor into your day." }),
+        card({ cls: "out", title: "Evening", h: "h4", text: "Color your boxes. Set out one thing for tomorrow." }),
+        card({ cls: "out", title: "After a gap", h: "h4", text: "Fill out a Day One Again box and put the floor in tomorrow’s plan." }))),
+      bar("**Start with one habit.** Add the next one once the first feels easy. One small thing done every day gets you further than three big things done for a week.")
+    ];
+  } });
+
+/* ============ BONUS: SYSTEMS LIBRARY ============ */
+const G = (h_, items) => ({ h: h_, items });
+function L(id, title, sub, body, o = {}) {
+  const grouped = Array.isArray(body) && body.length && typeof body[0] === "object" && body[0].items;
+  return checklistCard(Object.assign({ id, title, sub, tone: o.tint ? "tint" : "out", badge: o.badge }, grouped ? { groups: body } : { items: body }, o));
+}
+const W_ = { badge: "From Wenda" };
+
+lesson("lib", { id: "lib-intro", title: "Systems Library overview", desc: "", cover: { eyebrow: "Bonus section", title: "My Done-for-You Systems Library", sub: "The routines, menus, and resets I use in real family life. Copy what fits and skip the rest." },
+  build: () => {
+    const M = [["High energy and ready to work", "High-energy day menu", "lib-energy", "he"], ["Low energy, barely moving", "Low-energy day menu", "lib-energy", "le"],
+      ["Overwhelmed and frozen", "Overwhelmed and frozen menu", "lib-hard", "frozen"], ["Too full in the head to think", "Brain cleanse menu", "lib-hard", "brain"],
+      ["Ready for a soft, slow day", "Soft day menu", "lib-hard", "soft"], ["It’s a content day", "Content flow menu", "lib-content", "flow"],
+      ["In need of a reset", "Reset day menu", "lib-content", "reset"], ["Like it’s a normal day", "Morning routine", "lib-daily", "morning"]];
+    return [
+      bar("**Think of this as a menu.** You open it, ask yourself what kind of day it is, and pick the list that fits. Nobody does every list every day, me included."),
+      sec(eyebrow("If you feel, open this"), h("div", { class: "toc" }, M.map(m => h("button", { type: "button", class: "toc-row", onclick: () => nav(m[2], { focus: m[3] }) },
+        h("span", { class: "tx" }, h("strong", null, m[0]), h("small", null, m[1])), h("span", { class: "go", "aria-hidden": "true" }, "→"))))),
+      cols(300, card({ title: "Daily habits", h: "h4", text: "Things you do every day without thinking, like making the bed, drinking water, or a 10-minute tidy." }),
+        card({ title: "Routines and menus", h: "h4", text: "Things you choose based on the day, your energy, or the season. Those live in this library." })),
+      sec(eyebrow("All the lists"), moduleToc(MODS[6])),
+      bar("**Pick one. Follow it. Done.** Cross out anything that doesn’t fit your life and add your own on the last two pages.")
+    ];
+  } });
+
+lesson("lib", { id: "lib-floor", title: "Start with your floor", tag: "Systems library · Start here", desc: "Decide what you protect when life gets hard.",
+  lede: "Before the routines and menus, decide what you protect when life gets hard. Everything else is allowed to flex.",
+  build: () => [
+    libPage([
+      L("mk-w", "My must-keeps", "These happen every week, no matter what.", [G("DAILY", ["Morning water and planner", "Workout or walk, 20 minutes", "Deep work block, Monday to Thursday", "Dinner cooked at home", "House reset before bed"]), G("WEEKLY", ["Sunday reset, even the short version", "Home-cooked dinner 4 nights"])], W_),
+      customList("mk-you", { badge: "Yours", title: "Your must-keeps", n: 7 })],
+      [L("mvd-w", "My minimum viable day", "For when everything goes sideways.", ["Drink water", "Write my top 3 in my planner", "Do one deep work task", "Move my body for 20 minutes", "Quick tidy before bed"], { tint: true, badge: "From Wenda" }),
+        customList("mvd-you", { badge: "Yours", title: "Your minimum viable day", sub: "Copy yours from the Level 3 page, or write it fresh. It stays in sync with that page.", n: 5, fixed: true, textKey: i => "mvd." + i })]),
+    bar("**Hit your 5 and the day counts.** You adapted, and that’s the system working.")
+  ] });
+
+lesson("lib", { id: "lib-daily", title: "Daily routines", tag: "Systems library · Daily", desc: "Morning routine and two evening sizes.",
+  build: () => [
+    libPage([
+      L("morning", "Morning routine", "Do what you can. Half still counts.", ["No phone for the first 10 minutes", "Drink a full glass of water", "Wash face and brush teeth", "Get dressed, even at home", "Make the bed", "Eat something, make coffee or tea", "Check today’s calendar", "Pick my top 3 tasks", "Move for 5 minutes"], { daily: true }),
+      L("launch", "Evening launch pad", "My 5-step version for busy nights.", ["Clear the sink", "Prep coffee, set the timer", "Fill water bottles, pack bags", "Set out tomorrow’s clothes", "Open planner, pick my top 3"], { tint: true, daily: true })],
+      [L("eve", "Full evening reset", "For nights with a little more energy.", [G("RESET THE HOUSE", ["Tidy main living areas, 10 minutes", "Load the dishwasher, clear the kitchen", "Start or switch laundry"]),
+        G("PREP FOR TOMORROW", ["Check tomorrow’s calendar", "Lay out clothes, mine and the kids’", "Pack bags, backpacks, and lunches", "Set the coffee maker", "Refill water bottles", "Write tomorrow’s top 3"]),
+        G("WIND DOWN", ["Charge devices, do not disturb on", "Skincare", "Read or relax, no scrolling"])], { daily: true })]),
+    bar("**Two sizes, same job.** Use the launch pad on busy nights and the full reset when you have more in the tank.")
+  ] });
+
+lesson("lib", { id: "lib-energy", title: "Energy menus", tag: "Systems library · Energy menus", desc: "High-energy and low-energy day menus.",
+  build: () => [
+    libPage([
+      L("he", "High-energy day", "Focused and ready. Use it while it lasts.", [G("HOME AND LIFE", ["Do the task I’ve been avoiding", "Deep clean one room", "Batch cook or prep meals", "Declutter one hotspot", "Knock out phone calls and forms", "Plan the month ahead"]),
+        G("WORK AND CONTENT", ["Film a batch of short videos", "Write 2 or 3 emails or newsletters", "Record a YouTube video", "Build or update a workflow", "Write sales page copy", "Work on a course lesson", "Batch carousel content", "Write scripts for the next 2 weeks", "Do a content or business audit"])], { daily: true })],
+      [L("le", "Low-energy day", "Running at 20%. Pick 1 to 3.", [G("HOME AND LIFE", ["Fold laundry during a show", "Order groceries from the couch", "Wipe one counter", "Reply to a few texts", "Make the easiest dinner we have", "Rest completely. It counts."]),
+        G("WORK AND CONTENT", ["Answer emails or DMs from the couch", "Record a voiceover, no editing", "Outline something in my notes", "Reply to comments", "Plan or pin future posts", "Schedule content that’s ready", "Batch low-brain tasks like filing", "Watch a tutorial (it’s research)", "Brain dump into my task app"])], { tint: true, daily: true })]),
+    bar("**Skip the half that isn’t yours.** If you don’t make content, the “home and life” lists are all you need.")
+  ] });
+
+lesson("lib", { id: "lib-hard", title: "Menus for hard and soft days", tag: "Systems library · Energy menus", desc: "Overwhelmed, soft day, brain cleanse, and self-care.",
+  build: () => [libPage([
+    L("frozen", "Overwhelmed and frozen", "Brain is full. Pick one thing only.", ["Brain dump everything onto paper", "Do one task under 10 minutes", "Clean one surface", "Make coffee or tea, sit 5 minutes", "Text one person back", "Move 3 tasks out of today", "Close all tabs and start fresh", "Go outside for 10 minutes", "Let today be a slow day"], { daily: true }),
+    L("brain", "Brain cleanse", "Head too full to think? Reset first.", ["Full brain dump, no filter", "Close all apps and tabs", "List what has to happen today", "Delete, delegate, or move the rest", "Tidy my workspace", "10-minute walk with no phone", "Free write for 5 minutes", "Do one simple, satisfying task", "Drink water and eat something"], { tint: true, daily: true })],
+    [L("soft", "Soft day", "A slower day. Still moving, just gently.", ["Tidy with a podcast or playlist on", "Fold laundry during a show", "Reply to comments or DMs slowly", "Plan next week on paper", "Order groceries from the couch", "Skincare or a face mask", "Take a slow walk outside", "Meal plan without pressure", "Browse Pinterest for ideas", "Journal with no agenda"], { tint: true, daily: true }),
+      L("selfcare", "Self-care menu", "Pick what you need today.", ["Nails: paint, clean up, or remove", "Hair wash, style, or treatment", "Face mask or extra skincare", "Brows", "Shave or wax", "Workout, walk, or stretch", "Journal or brain dump", "Read something for fun", "Take a bath or long shower", "Rest without guilt"], { daily: true })])] });
+
+lesson("lib", { id: "lib-content", title: "Content and reset menus", tag: "Systems library · Energy menus", desc: "Content flow, reset day, and two blank menus.",
+  build: () => [libPage([
+    L("flow", "Content flow", "For content days with scattered energy.", ["Film one short video, just one", "Write one caption or script", "Turn an old post into a new format", "Grab B-roll while I do chores", "Edit a video that’s already filmed", "Reply and engage for 20 minutes", "Write one email", "Update my content calendar", "Post one thing, anything", "Brainstorm 10 hooks in 15 minutes"], { daily: true }),
+    customList("cm1", { badge: "Yours", titleLabel: "When I feel", n: 8 })],
+    [L("reset", "Reset day", "For weekends or after a hard week.", ["Tidy main living spaces, 30 min max", "Do laundry start to finish", "Meal plan and order groceries", "Catch up on missed self-care", "Review the week: wins, leftovers", "Move undone tasks to next week", "Reset my planner for the new week", "Name one thing I’m proud of", "Do something fun, just because", "Early bedtime or extra rest"], { tint: true }),
+      customList("cm2", { badge: "Yours", titleLabel: "When I feel", n: 8 })]),
+    p("The blank menus are for your own kind of day.", "muted small")] });
+
+lesson("lib", { id: "lib-reset", title: "Weekly reset", tag: "Systems library · Resets", desc: "The full weekly reset and the 20-minute version.",
+  build: () => [libPage([
+    L("wr1", "The full weekly reset", "Once a week. Saturday or Sunday works.", [G("CLEAR YOUR MIND", ["Brain dump everything in my head", "Capture loose tasks and ideas", "Review last week: wins and misses", "Celebrate small wins"]),
+      G("RESET YOUR SPACE", ["Tidy main living areas", "Clear kitchen counters", "Quick bedroom reset", "Reset my desk"]), G("INBOX AND DIGITAL", ["Process my email inbox", "Clear phone notifications", "Sort downloads and desktop"]),
+      G("PLAN THE WEEK AHEAD", ["Check the calendar and kids’ schedule", "Choose my top 3 priorities", "Pull them into my task app", "Prep planner pages", "Prep outfits for the week"])])],
+    [L("wr2", "The full reset, part 2", "", [G("MEALS AND GROCERIES", ["Plan meals for the week", "Order groceries or write the list", "Batch any food prep"]), G("BUDGET AND BILLS", ["Check bills due this week", "Quick glance at spending"]),
+      G("WORK AND CONTENT", ["Reset my task app for the week", "Review my content calendar", "Flag anything urgent"])]),
+      L("wr20", "The 20-minute version", "For weeks when that’s all you have.", ["Check the calendar", "Check the kids’ schedule", "Meal plan and grocery list", "Pick my top 3 priorities", "Empty my inbox", "Reset my desk"], { tint: true })])] });
+
+lesson("lib", { id: "lib-homemoney", title: "Home and money", tag: "Systems library · Home and money", desc: "Weekly cleaning, weekly bills, and a monthly reset.",
+  build: () => [libPage([
+    L("wc", "Weekly cleaning", "Pick your day. Friday or Saturday works.", ["Vacuum or sweep all floors", "Mop floors", "Wipe kitchen counters and stove", "Clean bathroom sinks and toilets", "Dust surfaces and baseboards", "Wash and replace bathroom towels", "Change bed sheets", "Empty all trash bins", "Clean out the fridge", "Water indoor plants"]),
+    L("wb", "Weekly bills and money", "Set one repeating day each week.", ["Update my budget tracker", "Pay any pending bills", "Check recent charges for errors", "Track income and expenses", "Check upcoming due dates", "File receipts", "Check savings goals", "Review subscriptions that are due"], { tint: true })],
+    [L("mh", "Monthly household reset", "Once a month. Pick a weekend afternoon.", [G("DEEP CLEAN", ["Deep clean one area, like the oven", "Declutter one hotspot", "Wipe doors, switches, baseboards", "Clean out my purse and car"]),
+      G("RESTOCK", ["Check pantry, toss expired items", "Restock the medicine cabinet", "Restock household supplies", "Check cleaners and toiletries", "Check subscriptions and deliveries"]),
+      G("CLOTHES AND HOME", ["Rotate seasonal clothes", "Check smoke alarms and air filters"]), G("LIFE ADMIN", ["Schedule any doctor appointments", "Add school events to the calendar", "Cancel subscriptions I don’t use", "Check savings goals"])])])] });
+
+lesson("lib", { id: "lib-admin", title: "Monthly admin and my planner", tag: "Systems library · Planning", desc: "A monthly admin hour and what goes in a paper planner.",
+  build: () => [libPage([
+    L("ma", "Monthly admin hour", "One hour, once a month.", [G("HOME", ["Pay bills", "Renew subscriptions", "Review the budget", "Order household supplies"]), G("HEALTH", ["Schedule appointments", "Refill prescriptions", "Check insurance paperwork"]),
+      G("FAMILY", ["School forms", "Birthday gifts", "Upcoming trips"]), G("BUSINESS", ["Profit report", "Review goals", "Update my content calendar"])])],
+    [L("pp", "What goes in my paper planner", "", [G("EACH EVENING", ["Tomorrow’s top 3", "Tomorrow’s appointments"]), G("EACH SUNDAY", ["Top 3 business priorities", "Top 3 home priorities", "Important appointments", "The meal plan"])], { tint: true }),
+      card({ cls: "out", title: "My admin day", sub: "The day of the month I do this, and where.", kids: [field("adm.day", { rows: 2 })] }),
+      card({ cls: "out", title: "Add to my admin hour", sub: "Anything your house needs that mine doesn’t.", kids: [field("adm.add", { rows: 5 })] })])] });
+
+lesson("lib", { id: "lib-quarter", title: "Quarterly planning session", tag: "Systems library · Planning", desc: "A planning session at the start of each quarter.",
+  lede: "Do this at the start of each quarter. Block 2 to 3 hours, make a coffee, and treat it like a meeting with yourself.",
+  build: () => [libPage([
+    L("qr", "Review last quarter", "", ["My top 3 wins", "What didn’t get done, and why", "What drained my energy most", "What gave me momentum", "Where my income goals landed"]),
+    L("qg", "Set this quarter’s goals", "", ["Check that my yearly goals still fit", "Pick 3 focus areas, just 3", "Give each one 1 to 3 outcomes", "Name the goal that matters most"], { tint: true }),
+    L("qp", "Plan the quarter", "", ["Map big events and deadlines", "Give each month a focus", "Block travel and school breaks", "Schedule the next review now"])],
+    [L("qb", "Business and content", "", ["Review offers: what’s selling", "New products or projects to plan", "Check my email list and funnel", "Platforms to drop, add, or shift"], { tint: true }),
+      L("ql", "Life and household", "", ["Big household projects", "Appointments to schedule", "Money goals to set or adjust", "Self-care or personal goals"]),
+      card({ title: "My 3 focus areas", kids: [field("qtr.focus", { rows: 3 })] })])] });
+
+lesson("lib", { id: "lib-annual", title: "Annual review and reset", tag: "Systems library · Planning", desc: "A yearly look back and a plan for the next one.",
+  lede: "Do this in late December or early January. Block a full morning or afternoon. This one is worth the time.",
+  build: () => [libPage([
+    L("ay", "Review the year", "", ["My top 5 wins", "The hardest thing I got through", "What surprised me, good or bad", "What I started and didn’t finish", "Where I grew personally", "Where I grew in business", "The relationships that mattered most", "What I’d do differently"]),
+    L("ab", "Business and money", "", ["Total income: did I hit my goal?", "My best offers or products", "Content that drove growth or sales", "My most valuable platform", "Tools or subscriptions to drop", "My biggest business lesson"], { tint: true })],
+    [L("an", "Next year’s vision", "", ["What success looks like in a year", "My top 3 life goals", "My top 3 business goals", "Income target, split by quarter", "The one thing that makes it a win"], { tint: true }),
+      L("ap", "Plan the year", "", ["Map known events and launches", "Pick a theme or word for the year", "Schedule all 4 quarterly sessions", "Block vacations and school breaks", "Review recurring costs"]),
+      L("apl", "Personal and household", "", ["Big home or family goals", "Health or wellness intentions", "Books, courses, or skills", "One thing just for me"], { tint: true })])] });
+
+lesson("lib", { id: "lib-family", title: "Kids and family flow", tag: "Systems library · Family", desc: "School mornings, after school, bedtime, and busy weeks.",
+  build: () => [libPage([
+    L("sm", "School morning", "Prep the night before. Mornings run easier.", ["Wake kids at the set time", "Breakfast ready, or grab-and-go", "Get dressed, clothes already out", "Brush teeth, hair, faces", "Backpacks by the door", "Shoes on, water bottles filled", "Out the door by ____"], { after: "**Going sideways?** Fed and dressed is enough." }),
+    L("as", "After-school flow", "From school brain to home brain.", ["Backpacks emptied, papers out", "Snack time, no questions yet", "Check folders for forms to sign", "Homework or reading, with a timer", "Free play or activity time", "Start thinking about dinner"], { tint: true })],
+    [L("kb", "Kids’ bedtime", "Same steps every night.", ["30-minute warning, screens off", "Bath or shower", "Pajamas and brush teeth", "Pick tomorrow’s clothes", "Pack backpacks for tomorrow", "Read together or quiet time", "Lights out at the set time", "No renegotiating"], { tint: true }),
+      L("am", "Activity shuttle mode", "For weeks packed with practices.", ["Check the week on Sunday for overlaps", "Prep a car bag: snacks, water, charger", "Batch errands near activities", "Keep spare clothes in the car", "Use drive time to talk"])])] });
+
+lesson("lib", { id: "lib-partner", title: "Family and partner time", tag: "Systems library · Family", desc: "Check-ins, connection, date nights, and ground rules.",
+  build: () => [libPage([
+    L("fc", "Weekly family check-in", "Sunday or Monday. 10 minutes max.", ["Review the week’s schedule together", "Who needs what: projects, rides", "Hand out age-appropriate chores", "Ask each kid what they look forward to", "Flag anything stressful early"]),
+    L("wcn", "Weekly connection", "Even 15 minutes. Pick one.", ["Couch, snacks, and a show we both like", "Cook dinner together, phones away", "Walk the neighborhood after bedtime", "Play a card or board game", "Sit outside with coffee and talk", "Watch something funny together", "Start a small project together"], { tint: true }),
+    L("gr", "Our ground rules", "", ["Phones away during date time", "Small counts", "It goes on the calendar", "At-home dates are real dates"])],
+    [L("dn", "Monthly date night menu", "Pick what fits the budget and energy.", ["Dinner out, just the two of us", "At-home date: cook something new", "Activity date: bowling, hiking, sunset", "Takeout and a movie, phones away", "Explore a new neighborhood or cafe", "Double date with friends"], { tint: true }),
+      L("qpc", "Quarterly partner check-in", "A calm talk, on purpose.", ["How are we doing? No blame.", "What’s been working well lately?", "One thing I can do better for you", "Are we getting enough time together?", "Any small frustrations to talk through?", "One fun thing for the next 3 months", "Shared goals: money, travel, family"])])] });
+
+lesson("lib", { id: "lib-travel", title: "Travel prep", tag: "Systems library · Travel", desc: "From one week before to coming home.",
+  build: () => [libPage([
+    L("t1", "One week before", "Start here and skip the night-before panic.", ["Confirm reservations and tickets", "Start a packing list for each person", "Check the weather there", "Batch content for while I’m gone", "Schedule posts and emails", "Arrange pet care", "Set an out-of-office reply", "Plan to empty the fridge", "Start laundry"]),
+    L("td", "Day of", "One last sweep, then go.", ["Chargers, meds, IDs, wallets, keys", "Kids’ comfort items packed", "Lock up and check the windows", "Breathe. I prepped for this."], { tint: true })],
+    [L("t2", "2 to 3 days before", "Use the list and skip the guessing.", ["Pack bags from the list", "Charge devices and cameras", "Download shows for the kids", "Save confirmations in one spot", "Move urgent tasks to after the trip", "Prep car snacks and a road trip bag", "Clean the kitchen, make the beds", "Take out trash, clear the fridge", "Water the plants"]),
+      L("th", "Coming home reset", "Day one at home is a slow day.", ["Unpack right away", "Start the trip laundry", "Restock groceries or order delivery", "Quick house reset: mail, dishes", "Check the calendar for the week", "Ease back in"], { tint: true })])] });
+
+lesson("lib", { id: "lib-pack", title: "Packing list", tag: "Systems library · Travel", desc: "A list for every trip and room for this one.",
+  build: () => [libPage([
+    L("pk", "Every trip", "The things I never want to forget.", ["Meds and first aid basics", "Phone chargers and a portable battery", "Snacks, more than I think we need", "Water bottles", "Entertainment for the kids", "Sunscreen", "A comfort item for each kid"]),
+    L("tp", "Theme park days", "For long days on our feet.", ["Ponchos, just in case", "Broken-in walking shoes", "Portable phone charger", "A small backpack for each person"], { tint: true }),
+    customList("lock", { badge: "Yours", title: "Before we lock the door", sub: "Add your own last checks.", n: 4 })],
+    [customList("trip", { badge: "Yours", title: "This trip", sub: "Add what this trip needs.", n: 14, max: 30 })])] });
+
+lesson("lib", { id: "lib-seasons", title: "Seasonal resets", tag: "Systems library · Seasons", desc: "Spring, summer, back-to-school, and the holidays.",
+  build: () => [libPage([
+    L("sp", "Spring refresh", "March and April. Shake off winter.", ["Declutter one room or zone", "Rotate seasonal wardrobes", "Deep clean windows and baseboards", "Refresh the patio or yard", "Check in on yearly goals", "Plan spring break", "Toss expired pantry items", "Refresh my content plan", "Donate or sell unused things"]),
+    L("su", "Summer mode", "June. New season, new systems.", ["Adjust work hours around the kids", "Set a flexible daily rhythm", "Plan camps and adventure days", "Make a “bored jar” for the kids", "Stock easy meals and snacks", "Plan for less filming time", "Plan one big family adventure", "Work less and be present more", "Protect 2 deep work blocks a week"], { tint: true })],
+    [L("bs", "Back-to-school", "August. From summer days to school days.", ["Buy supplies, clothes, and shoes", "Set up and label backpacks", "Shift bedtimes 1 to 2 weeks early", "Add school dates to the calendar", "Set the after-school schedule", "Plan simple school lunches", "Make a morning chart for the kids", "Deep clean the kids’ rooms", "Stock grab-and-go breakfasts", "Batch content before it gets busy"], { tint: true }),
+      L("hp", "Holiday prep", "October and November. Get ahead early.", ["Start the gift list early", "Set a holiday budget", "Plan holiday content ahead", "Batch December content in November", "Pick the traditions that matter", "Plan meals, order specialty items", "Schedule family photos", "Block rest days in December", "Prep the house for hosting", "Review year-end business tasks"])])] });
+
+lesson("lib", { id: "lib-batch", title: "Content batch day", tag: "Systems library · Work", desc: "Set up, film, edit, and schedule in blocks.",
+  build: () => [libPage([
+    L("bb", "Before I start", "10 minutes of setup saves an hour.", ["Check what’s due this week and next", "Pull scripts, outlines, and hooks", "Camera charged, light on, backdrop set", "Get camera-ready", "Phone on do not disturb", "Water and a snack nearby", "Set a timer: 2 to 3 hours max"]),
+    L("be", "Editing block", "Different energy, different brain.", ["Edit the YouTube video", "Trim and caption short videos", "Add text overlays and music", "Export into folders by publish date"], { tint: true }),
+    L("br", "My batch day rules", "", ["Done is better than perfect", "Energy drops? Switch to captions.", "I can stop before it’s all done", "Batch day is protected time"])],
+    [L("bf", "Filming block", "Batch by format.", [G("YOUTUBE", ["Film 1 or 2 videos", "Keep my B-roll list handy", "Record several intros and outros"]), G("SHORT VIDEOS", ["Film 5 to 10 clips in one sitting", "Use audios I already saved", "Talking clips first, then voiceovers"]),
+      G("CAROUSELS", ["Design 3 to 5 in one session", "Write all captions in one block", "Save drafts in my scheduler"])]),
+      L("bsch", "Scheduling block", "Get everything queued.", ["Upload and schedule YouTube", "Schedule short videos for the week", "Queue the email newsletter", "Schedule carousel posts", "Double-check dates and captions", "Write the blog post that goes with it"], { tint: true })])] });
+
+lesson("lib", { id: "lib-digital", title: "Digital cleanup", tag: "Systems library · Work", desc: "Monthly and quarterly digital resets.",
+  build: () => [libPage([
+    L("dm", "Monthly digital reset", "Pick one day a month.", ["Clear phone storage", "Back up phone photos", "Clean up my cloud drive", "Empty the downloads folder", "Clear old bookmarks", "Unsubscribe from 5 to 10 emails", "Delete unused apps", "Clear desktop clutter", "Check cloud storage space"]),
+    L("qf", "Quick fixes", "Anytime things feel slow or noisy.", ["Close all tabs and start fresh", "Restart my devices", "Clear the browser cache", "Sort recent photos into albums", "Delete old text threads", "Turn off noisy notifications"], { tint: true })],
+    [L("dq", "Quarterly deep clean", "Go deeper once a quarter.", ["Update passwords for key accounts", "Review two-factor settings", "Run software updates", "Archive finished projects", "Close stale tasks in my task app", "Remove access for unused apps", "Back up important documents", "Check my website for broken links", "Delete old funnels I don’t use", "Back up my email list and stats"]),
+      card({ cls: "out", title: "My digital day", sub: "The day of the month I do my reset.", kids: [field("dig.day", { rows: 2 })] })])] });
+
+lesson("lib", { id: "lib-yours", title: "Make it yours", tag: "Systems library · Yours", desc: "Four blank lists for your own routines and menus.",
+  lede: "Copy what fits and cross out the rest. Then use these blank lists for the routines and menus that belong only to you.",
+  build: () => [
+    cols(330, ...[1, 2, 3, 4].map(n => customList("free" + n, { badge: "Yours", titleLabel: "List name", useLabel: "I use it when", n: 8 }))),
+    bar("**Want to turn one of these into a full system?** Take it to the system builder.", { extra: btn("Open the system builder", () => nav("l4-builder"), "sm") })
+  ] });
+</script>
+<script>
+"use strict";
+(function boot() {
+  wireChrome();
+  const last = BYID[get("last")];
+  OPENMOD[last ? last.mod.id : "start"] = true;
+  buildSide();
+  const hash = (location.hash || "").replace(/^#/, "");
+  if (hash === "workbook") nav("workbook");
+  else if (BYID[hash]) nav(hash);
+  else nav("home");
+})();
+</script>
