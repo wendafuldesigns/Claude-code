@@ -2096,6 +2096,8 @@ function summary() {
   const part = (l, a, bl, b) => [l, [v("part." + a + ".home"), v("part." + a + "." + b) ? bl + ": " + v("part." + a + "." + b) : ""].filter(Boolean).join("\n")];
   add("My four parts", "l1-parts", [part("Inbox", "inbox", "Backup", "backup"), part("Calendar", "cal", "Shared with", "who"), part("Tasks", "tasks", "Next is marked by", "mark"), part("Notes", "notes", "I find things by", "find"),
     ["Weekly sort time", [v("sort.day"), v("sort.time"), v("sort.where")].filter(Boolean).join(" · ")]]);
+  add("My tools", "l1-setup", toolsUsed().map(id => [TOOL_NAME[id], TOOL_JOB[id].replace(/^My /, "")]));
+  add("My night before", "l3-floorrun", [0, 1, 2, 3].map(i => ["", v("night." + i)]).concat([["On a day I don’t feel like it, I’ll just", v("night.just")]]));
   add("My weekly rhythm", "l2-rhythm", ["Weekly reset", "Weekly plan", "Daily plan", "Do the work", "Evening review", "Repeat"].map((s, i) => [s, [v("rh." + i + ".when"), v("rh." + i + ".small") ? "Small version: " + v("rh." + i + ".small") : ""].filter(Boolean).join("\n")]));
   add("My focus areas", "l3-pick", [1, 2, 3].map(n => [v("focus." + n + ".name"), [v("focus." + n + ".why"), v("focus." + n + ".good") ? "Good enough: " + v("focus." + n + ".good") : ""].filter(Boolean).join("\n") || "·"]).filter(r => r[0]));
   const st = []; for (let i = 0; i < 12; i++) if (get("dec." + i + ".s") && v("dec." + i + ".t")) st.push([v("dec." + i + ".t"), [v("dec." + i + ".a"), v("dec." + i + ".f")].filter(Boolean).join(" · ") || "·"]);
@@ -2590,7 +2592,7 @@ function buildPlan(JS) {
   const reg = (file, data, fam, style) => { doc.addFileToVFS(file, data); doc.addFont(file, fam, style); };
   reg("is400.ttf", FONT.sans, "ISans", "normal"); reg("is600.ttf", FONT.sansb, "ISans", "bold");
   reg("iserif.ttf", FONT.serif, "ISerif", "normal"); reg("iserifi.ttf", FONT.serifi, "ISerif", "italic");
-  doc.setProperties({ title: "My real life system", subject: "Systems for Real Life", creator: "Systems for Real Life, wendaful.com" });
+  doc.setProperties({ title: "My real life system", subject: APP_NAME, creator: "wendaful.com" });
 
   const W = 612, H = 792, M = 46, CW = W - 2 * M, TOTAL = 3, LH = 17;
   const C = { green: [84, 100, 91], light: [218, 223, 220], ink: [55, 58, 64], gray: [84, 84, 84], warm: [244, 241, 237], rule: [188, 184, 176], white: [255, 255, 255] };
@@ -2635,7 +2637,7 @@ function buildPlan(JS) {
   const newPage = (title, sub, extra) => {
     if (pageNo) doc.addPage();
     pageNo++;
-    cap("Systems for Real Life", M, 36); cap("My real life system · " + pageNo + " of " + TOTAL, W - M, 36, C.gray, { align: "right" });
+    cap(APP_NAME, M, 36); cap("My real life system · " + pageNo + " of " + TOTAL, W - M, 36, C.gray, { align: "right" });
     rule(M, 44, W - M);
     font("ISerif", "normal", 34, C.green); txt(title, M, 84);
     if (sub) { font("ISans", "normal", 9.5, C.gray); txt(sub, M, 102); }
@@ -2646,7 +2648,7 @@ function buildPlan(JS) {
   };
 
   /* ---------- page 1: the setup ---------- */
-  newPage("My real life system", "Four homes and one weekly rhythm. Keep this where you plan.", () => {
+  newPage("My real life system", "Four homes, one weekly sort, and one job for each tool. Keep this where you plan.", () => {
     cap("This plan belongs to", W - M - 200, 64); rule(W - M - 200, 84, W - M);
     font("ISerif", "italic", 15, C.green); txt(fit(val("name"), 196, 1)[0] || "", W - M - 198, 81);
   });
@@ -2666,17 +2668,19 @@ function buildPlan(JS) {
   });
   sectionTitle("My weekly sort time", 378, "A set time to empty your inbox into the calendar, tasks, and notes.");
   labeled(M, 386, 130, "Day", val("sort.day")); labeled(M + 145, 386, 130, "Time", val("sort.time")); labeled(M + 290, 386, CW - 290, "Where", val("sort.where"));
-  sectionTitle("My weekly rhythm", 436, "Give each step a time and a small version for tired days.");
-  cap("Step", M, 454); cap("When I’ll do it", M + 172, 454); cap("Small version for tired days", M + 312, 454);
+  sectionTitle("My tools", 436, "Each tool gets one job. Nothing gets planned in two places.");
+  cap("I use it", M, 454); cap("Tool", M + 38, 454); cap("Its one job", M + 160, 454);
   rule(M, 459, W - M, C.ink, 0.8);
-  PLAN_RHYTHM.forEach((r, i) => {
-    const ry = 459 + i * 44;
-    num(M, ry + 17, i + 1);
-    font("ISans", "bold", 9.5, C.ink); txt(r[0], M + 20, ry + 16);
-    font("ISans", "normal", 7.6, C.gray); fit(r[1], 138, 2).forEach((l, j) => txt(l, M + 20, ry + 26 + j * 9));
-    ruled(M + 172, ry + 5, 128, val("rh." + i + ".when"), 2);
-    ruled(M + 312, ry + 5, CW - 312, val("rh." + i + ".small"), 2);
+  [["planner", "Paper planner"], ["dcal", "Digital calendar"], ["wall", "Wall calendar"], ["tasks", "Task or project app"], ["notes", "Notes app"]].forEach((t, i) => {
+    const ry = 459 + i * 34;
+    box(M + 8, ry + 12, !!get("tools.use." + t[0]));
+    font("ISans", "bold", 9.5, C.ink); txt(t[1], M + 38, ry + 20);
+    ruled(M + 160, ry + 2, CW - 160, TOOL_JOB[t[0]], 2, 11);
   });
+  sectionTitle("My night before", 652, "Decide tomorrow tonight, so there is nothing to talk yourself out of.");
+  const nw = (CW - 20) / 2;
+  for (let i = 0; i < 4; i++) { const nx = M + (i % 2) * (nw + 20), ny = 660 + Math.floor(i / 2) * 22; box(nx, ny + 9, false); ruled(nx + 16, ny + 3, nw - 16, val("night." + i), 1); }
+  labeled(M, 706, CW, "On a day I don’t feel like it, I’ll just", val("night.just"));
 
   /* ---------- page 2: the systems ---------- */
   newPage("My systems", "One small system per card. Small enough to do on a tired Tuesday.");
@@ -2706,7 +2710,7 @@ function buildPlan(JS) {
   ["Habit or system", "Floor", "Regular", "Bonus"].forEach((t, i) => cap(t, cX[i], 150));
   rule(M, 155, W - M, C.ink, 0.8);
   fillRect(M, 155, CW, 24, C.warm);
-  ["Workout", "Shoes on, 5 minutes", "20 minutes", "45 minutes"].forEach((t, i) => { font("ISerif", "italic", 11.5, C.green); txt(t, cX[i] + 1.5, 171); });
+  ["Example: Reading", "One page", "20 minutes", "An hour with tea"].forEach((t, i) => { font("ISerif", "italic", 11.5, C.green); txt(t, cX[i] + 1.5, 171); });
   const fam = []; for (let i = 0; i < 14 && fam.length < 5; i++) if (val("fam." + i + ".h")) fam.push(i);
   for (let r = 0; r < 5; r++) {
     const ry = 179 + r * 24, i = fam[r];
@@ -2762,13 +2766,13 @@ async function savePlan(btnEl) {
     toast("Could not make the PDF here. Use Copy as text instead.");
   } finally { btnEl.disabled = false; btnEl.textContent = old; }
 }
-/* the card people see at the end and on My workbook */
+/* the card people see at the end of setup and on My system */
 function planCard() {
   return card({ cls: "out", title: "Your printable plan", h: "h3",
-    sub: "A 3-page PDF with your answers filled in. Print it for the fridge or your planner, or keep it on your phone. Anything you haven’t filled in prints as a blank line, so you can write it by hand.",
+    sub: "A 3-page PDF with everything your assistant set up. Print it for the fridge or your planner, or keep it on your phone. Anything blank prints as a line, so you can write it by hand.",
     kids: [
       h("ul", { class: "stack tight" },
-        h("li", null, rt("**Page 1, My real life system.** Your 4 parts, weekly sort time, and weekly rhythm.")),
+        h("li", null, rt("**Page 1, My real life system.** Your 4 parts, weekly sort time, one job for each tool, and your night-before list.")),
         h("li", null, rt("**Page 2, My systems.** Up to three system cards with triggers, steps, and low-energy versions.")),
         h("li", null, rt("**Page 3, My floor plan.** Floor and More, minimum viable day, rough-week restart, and excuse answers."))),
       h("div", { class: "row" }, btn("Save my plan as a PDF", e => savePlan(e.currentTarget)), btn("Copy as text", () => copyText(summaryText()), "ghost")),
@@ -3274,14 +3278,19 @@ const HABITS = [
 ];
 const MVD_STARTER = ["Drink water", "Write my top 3 in my planner", "Do one deep work task", "Move my body for 20 minutes", "Quick tidy before bed"];
 
+/* the tools a person can pick. Each tool gets one job. */
+const TOOL_OPTS = [["Paper planner", "planner"], ["Digital calendar", "dcal"], ["Wall calendar", "wall"], ["Task or project app", "tasks"], ["Notes app", "notes"]];
+const TOOL_DEFAULT = ["planner", "dcal", "tasks"];
+const toolsUsed = () => TOOL_OPTS.map(o => o[1]).filter(id => get("tools.use." + id));
 /* where each part lives, chosen from the tools the person uses */
-function homesFor(med) {
-  const P = med.includes("planner"), ph = med.includes("phone"), co = med.includes("computer"), dig = ph || co;
+function homesFor(T) {
+  const has = x => T.includes(x), P = has("planner");
   return {
-    inbox: P ? "A brain dump page in my planner" : (ph && co) ? "A note called Inbox that syncs to my phone and computer" : ph ? "A note called Inbox in my notes app" : "A note called Inbox on my computer",
-    cal: dig ? ((ph && co) ? "A calendar app that syncs to my phone and computer" : ph ? "A calendar app on my phone" : "A calendar on my computer") : "The weekly pages in my planner",
-    tasks: (P && dig) ? "A task app, with my top 3 copied into my planner" : P ? "A task list page in my planner" : "A task app",
-    notes: dig ? "A notes app with folders" : "A notes section at the back of my planner"
+    inbox: P ? "A brain dump page in my planner" : has("notes") ? "A note called Inbox in my notes app" : has("tasks") ? "An Inbox list in my task app" : "A notebook page I call Inbox",
+    cal: has("dcal") ? (has("wall") ? "A digital calendar, copied to our wall calendar each week" : P ? "A digital calendar, copied into my planner each week" : "A digital calendar")
+      : has("wall") ? "A wall calendar" : "The weekly pages in my planner",
+    tasks: has("tasks") ? (P ? "A task app, with my top 3 copied into my planner" : "A task app") : P ? "A task list page in my planner" : has("notes") ? "A checklist in my notes app" : "A to-do list in a notebook",
+    notes: has("notes") ? "A notes app with folders" : P ? "A notes section at the back of my planner" : "A notebook just for info"
   };
 }
 function ideasFor(area) {
@@ -3347,7 +3356,8 @@ function createChat(root) {
       const btns = opts.map(o => h("button", { type: "button", class: "chip", "aria-pressed": picked.has(o[1]) ? "true" : "false",
         onclick: e => { picked.has(o[1]) ? picked.delete(o[1]) : picked.add(o[1]); e.currentTarget.setAttribute("aria-pressed", picked.has(o[1]) ? "true" : "false"); } }, o[0]));
       body = h("div", { class: "stack tight" }, h("div", { class: "chips" }, ...btns),
-        h("div", { class: "row" }, btn("Continue", () => finish([...picked], opts.filter(o => picked.has(o[1])).map(o => o[0]).join(", ") || "Not sure"), "sm")));
+        h("div", { class: "row" }, btn(cfg.cont || "Continue", () => finish([...picked], opts.filter(o => picked.has(o[1])).map(o => o[0]).join(", ") || cfg.none || "Not sure"), "sm"),
+          cfg.more ? btn(cfg.more, () => finish("__more__", cfg.more), "ghost sm") : null));
     } else {
       body = h("div", { class: "chips" }, ...opts.map(o => h("button", { type: "button", class: "chip" + (o[2] ? " rec" : ""), onclick: () => finish(o[1], o[0]) }, o[0])));
     }
@@ -3360,6 +3370,23 @@ function createChat(root) {
 }
 
 /* ============ the build conversation ============ */
+async function habitFlow(c, idx) {
+  const k = "fam." + idx + ".", taken = [0, 1, 2].filter(i => i !== idx).map(i => get("fam." + i + ".h")).filter(Boolean);
+  const names = HABITS.map(x => x.name).filter(n => !taken.includes(n));
+  const v = await c.ask({ options: names.concat(["Something else"]), def: names[0] });
+  let hb = HABITS.find(x => x.name === v);
+  if (!hb) {
+    await c.say("What’s the habit?");
+    const nm = await c.ask({ type: "text", placeholder: "For example: Stretch", aria: "Habit name", skip: "Skip", def: names[0] });
+    hb = nm ? { name: nm, f: "Just start for 5 minutes", r: "20 minutes", b: "An hour", just: "start for 5 minutes", night: ["Set out what I need", "Plan my meal", "Write tomorrow’s top 3"] } : HABITS.find(x => x.name === names[0]) || HABITS[0];
+  }
+  set(k + "h", hb.name); set(k + "f", hb.f); set(k + "r", hb.r); set(k + "b", hb.b); if (idx === 0) set("night.just", hb.just);
+  await c.say(idx === 0 ? "Here’s the trick. You only have to do the **floor**. On a hard day, that’s all. Most days you’ll do more once you start." : "Same trick. You only have to do the **floor**.",
+    card({ title: hb.name, h: "h3", kids: [h("dl", { class: "dl" }, ...[["Floor", hb.f], ["Regular", hb.r], ["Bonus", hb.b]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }), "When will you do it?");
+  const w = await c.ask({ options: ["In the morning", "In the afternoon", "In the evening", "After work"], def: "In the morning" });
+  set(k + "when", (w || "In the morning").toLowerCase()); set(k + "freq", "Every day");
+  return hb;
+}
 async function systemFlow(c, slot) {
   const first = slot === 1;
   if (!first) {
@@ -3408,16 +3435,10 @@ const STEPS = [
     await c.say("I’ll build your system around that.");
   } },
   { id: "tools", run: async c => {
-    await c.say("Where do you plan? Pick everything you use. A mix is great.");
-    const v = await c.ask({ multi: true, options: [["Paper planner", "planner"], ["My phone", "phone"], ["My computer", "computer"]], def: ["planner", "phone"] });
-    const med = v && v.length ? v : ["planner", "phone"];
-    clearPrefix("setup.med."); med.forEach(m => set("setup.med." + m, 1));
-    set("tool.mode", med.includes("planner") ? (med.length > 1 ? "Hybrid" : "Paper") : "Digital");
-    Object.keys(TABMEM).forEach(k => { if (k.startsWith("tg-")) delete TABMEM[k]; });
-    const H = homesFor(med), dig = med.includes("phone") || med.includes("computer"), P = med.includes("planner");
-    set("part.inbox.home", H.inbox); set("part.cal.home", H.cal); set("part.tasks.home", H.tasks); set("part.notes.home", H.notes);
-    set("part.inbox.backup", med.includes("phone") ? "A note on my phone" : "A sticky note");
-    set("part.tasks.mark", P ? "I star it" : "I flag it"); set("part.notes.find", dig ? "I search for it" : "Tabs and dividers");
+    await c.say("What do you plan with? Pick everything you use. A mix is great, and each tool gets one job.");
+    const v = await c.ask({ multi: true, options: TOOL_OPTS, def: TOOL_DEFAULT });
+    const T = v && v.length ? v : TOOL_DEFAULT;
+    const H = saveTools(T);
     await c.say("Here’s the setup I chose for you. Each part has one home, so you always know where things go.");
     await c.say(card({ title: "Your 4 parts", h: "h3", kids: [h("dl", { class: "dl" },
       ...[["Inbox", H.inbox], ["Calendar", H.cal], ["Tasks", H.tasks], ["Notes", H.notes]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }));
@@ -3446,19 +3467,7 @@ const STEPS = [
   { id: "system", run: async c => { await systemFlow(c, 1); } },
   { id: "habit", run: async c => {
     await c.say("Now one habit you want to keep up, even on tired days. Pick one. I’ll make it tiny so it’s easy to start.");
-    const v = await c.ask({ options: HABITS.map(x => x.name).concat(["Something else"]), def: "Move my body" });
-    let hb = HABITS.find(x => x.name === v);
-    if (!hb) {
-      await c.say("What’s the habit?");
-      const nm = await c.ask({ type: "text", placeholder: "For example: Stretch", aria: "Habit name", skip: "Skip", def: "Move my body" });
-      hb = nm ? { name: nm, f: "Just start for 5 minutes", r: "20 minutes", b: "An hour", just: "start for 5 minutes", night: ["Set out what I need", "Plan my meal", "Write tomorrow’s top 3"] } : HABITS[0];
-    }
-    set("fam.0.h", hb.name); set("fam.0.f", hb.f); set("fam.0.r", hb.r); set("fam.0.b", hb.b); set("night.just", hb.just);
-    await c.say("Here’s the trick. You only have to do the **floor**. On a hard day, that’s all. Most days you’ll do more once you start.");
-    await c.say(card({ title: hb.name, h: "h3", kids: [h("dl", { class: "dl" }, ...[["Floor", hb.f], ["Regular", hb.r], ["Bonus", hb.b]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }), "When will you do it?");
-    const w = await c.ask({ options: ["In the morning", "In the afternoon", "In the evening", "After work"], def: "In the morning" });
-    set("fam.0.when", (w || "In the morning").toLowerCase()); set("fam.0.freq", "Every day");
-    c.habit = hb;
+    c.habit = await habitFlow(c, 0);
   } },
   { id: "night", run: async c => {
     const hb = c.habit || HABITS.find(x => x.name === get("fam.0.h")) || HABITS[0];
@@ -3478,8 +3487,8 @@ const STEPS = [
     set("asst.done.finish", 1); refreshChrome();
     await c.say("That’s it. **Your system is built.** Here’s what I set up for you:", systemGlance());
     await c.say("Next, let’s put it where you’ll see it. That’s what makes it stick.");
-    const v = await c.ask({ options: ["Set it up in my tools", "Open Today", "Save my printable plan"], def: "Open Today", guess: false });
-    if (v === "Set it up in my tools") await setupWalk(c);
+    const v = await c.ask({ options: ["Put it in my tools", "Open Today", "Save my printable plan"], def: "Open Today", guess: false });
+    if (v === "Put it in my tools") await applyWalk(c);
     else if (v === "Save my printable plan") await c.say(printCard());
     else if (v === "Open Today") { nav("today"); }
   } }
@@ -3500,24 +3509,12 @@ function printCard() {
   return card({ cls: "out", title: "Your printable plan", h: "h3", sub: "A 3-page PDF with everything I just set up. Print it, or keep it on your phone.",
     kids: [h("div", { class: "row" }, btn("Save my plan as a PDF", e => savePlan(e.currentTarget)), btn("Copy as text", () => copyText(summaryText()), "ghost"))] });
 }
-async function setupWalk(c) {
-  const med = MEDIA.find(m => m[0] === firstMed());
-  await c.say("I’ll walk you through it one part at a time. Open your " + (med ? med[1].toLowerCase() : "planner") + " and follow along. Each part takes about 3 minutes.");
-  const parts = [["Inbox", "inbox"], ["Calendar", "cal"], ["Tasks", "tasks"], ["Notes", "notes"]];
-  for (const [name, key] of parts) {
-    await c.say("**" + name + ".** " + (get("part." + key + ".home") ? "Your home: " + get("part." + key + ".home") + "." : ""));
-    await c.say(card({ cls: "out", title: name, h: "h3", kids: [toolGuide("setup-" + key, SETUP[key])] }));
-    const v = await c.ask({ options: ["Done, next", "I’ll do this later"], def: "I’ll do this later", guess: false });
-    if (v === "Done, next") set("asst.setup." + key, 1);
-  }
-  await c.say("That’s your four parts. **The hard part is done.** Come back to Today each morning, and I’ll keep you on track.");
-}
-
 /* ============ what do you need? ============ */
 const ACTIONS = [
   ["Plan my day", "plan"], ["I don’t feel like it", "nofeel"], ["I’m overwhelmed", "overwhelmed"], ["I skipped a few days", "restart"],
-  ["Do my weekly reset", "weekly"], ["Set up my tools", "setup"], ["Add another system", "addsystem"], ["Print my plan", "print"], ["Change something", "change"], ["Teach me the method", "learn"]
+  ["Match my energy", "energy"], ["Keep me consistent", "consistent"], ["Give me a routine", "routine"], ["Do my weekly reset", "weekly"], ["More…", "more"]
 ];
+const MORE = [["Put it in my tools", "setup"], ["Add another system", "addsystem"], ["Print my plan", "print"], ["Change something", "change"], ["Teach me the method", "learn"]];
 function timerCard(min, label, doneMsg, onDone) {
   return card({ cls: "out", kids: [timer({ minutes: min, label, doneMsg, onDone })] });
 }
@@ -3525,6 +3522,13 @@ function markFloorToday() { if (get("fam.0.h")) set("fl." + today() + ".0", "F")
 const justText = () => get("night.just") || (get("fam.0.f") ? "do your floor: " + get("fam.0.f") : "start for 5 minutes");
 
 async function runAction(c, key) {
+  if (PACKS[key]) { await PACKS[key](c); return; }
+  if (key === "more") {
+    await c.say("What else can I do?");
+    const v = await c.ask({ options: MORE.concat([["Never mind", "back"]]), guess: false });
+    if (v && v !== "back") await runAction(c, v);
+    return;
+  }
   if (key === "plan") {
     const T = today(), rows = h("div", { class: "stack tight" });
     for (let i = 0; i < 3; i++) rows.append(chkEl("top." + T + "." + i + ".c", cellInput("top." + T + "." + i + ".t", { aria: "Top " + (i + 1), ph: i === 0 ? "The one thing I’ll do first" : "" }), { cls: "line" }));
@@ -3553,7 +3557,7 @@ async function runAction(c, key) {
     const med = firstMed();
     await c.say("Let’s do your weekly reset. It takes about 10 minutes. I’ll go one step at a time.",
       checklistCard({ id: "wr-run", title: "My weekly reset", tone: "out", items: WEEKLY_STEPS[med], startMode: "one" }));
-  } else if (key === "setup") { await setupWalk(c); }
+  } else if (key === "setup") { await applyWalk(c); }
   else if (key === "addsystem") {
     const slot = [2, 3].find(n => !get("sb." + n + ".name"));
     if (!slot) { await c.say("You have three systems built already. That’s plenty. Run them for two weeks, then we’ll add more."); return; }
@@ -3597,6 +3601,324 @@ function renderAssistant() {
   const c = createChat(root);
   setTimeout(() => { runAssistant(c).catch(e => console.error(e)); }, 0);
   return art;
+}
+</script>
+<script>
+"use strict";
+/* ============ Systems Library and Consistency Pack, in the chat ============
+   The assistant picks from the same lists the Toolbox pages use, so a tick in one place shows up in the other.
+   Library: energy menus and routines. Consistency Pack: one small flow for each "I always…" problem. */
+const shuffle = a => { const x = a.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
+function needList(id, page) { if (!LIBREG[id]) BYID[page].build(); return LIBREG[id]; }
+const ask1 = (c, ph, aria, skip) => c.ask({ type: "text", placeholder: ph, aria, skip: skip || "Skip", guess: false });
+const PACKS = {}, CP = {};
+
+/* ---- Systems Library: what kind of day is this? ---- */
+PACKS.energy = async c => {
+  await c.say("What kind of day is this?");
+  const hv = await c.ask({ options: HUB.map(x => [x[0], x[1]]), guess: false });
+  const e = HUB.find(x => x[1] === hv); if (!e) return;
+  const o = needList(e[1], e[2]);
+  await c.say("**" + o.title + ".** " + (o.sub || "") + " Tap what you want to do today. One to three is plenty.");
+  let pool = shuffle(cardItems(o).map(it => it.t)), at = 0;
+  for (;;) {
+    if (at >= pool.length) { at = 0; pool = shuffle(pool); }
+    const v = await c.ask({ multi: true, options: pool.slice(at, at + 6).map(t => [t, t]), more: "Show different ones", cont: "Add to Today", none: "Nothing today", guess: false });
+    if (v === "__more__") { at += 6; continue; }
+    if (v && v.length) { v.forEach(addToDay); await c.say("Added " + v.length + " to Today. That’s your day. Anything else is a bonus."); }
+    else await c.say("That’s okay. Rest counts too.");
+    break;
+  }
+};
+
+/* ---- Systems Library: give me a routine ---- */
+const ROUTINES = [["Morning routine", "morning", "lib-daily"], ["Evening reset", "eve", "lib-daily"], ["School morning", "sm", "lib-family"], ["After-school flow", "as", "lib-family"],
+  ["Kids’ bedtime", "kb", "lib-family"], ["Weekly cleaning", "wc", "lib-homemoney"], ["Weekly bills and money", "wb", "lib-homemoney"], ["Monthly admin hour", "ma", "lib-admin"],
+  ["Weekly family check-in", "fc", "lib-partner"], ["Trip prep", "t1", "lib-travel"], ["Packing list", "pk", "lib-pack"], ["Content batch day", "bb", "lib-batch"], ["Digital cleanup", "dm", "lib-digital"]];
+async function routineEvent(c, name) {
+  await c.say("How often?");
+  const f = await c.ask({ options: ["Every day", "Weekdays", "Every week", "Every month"], def: "Every week", guess: false });
+  await c.say("What time?");
+  const t = await ask1(c, "7:00 am", "Time");
+  await c.say("Add this to your calendar.", genBlock("Repeating event in my calendar", "Make a new event, paste this in, and set it to repeat.",
+    "Title: " + name + "\nRepeat: " + f + (t ? " at " + t : "") + "\nAlert: 10 minutes before\nNote: Open my checklist and do it one step at a time."));
+}
+PACKS.routine = async c => {
+  for (;;) {
+    await c.say("Which routine do you want?");
+    const rv = await c.ask({ options: ROUTINES.map(r => [r[0], r[1]]), guess: false });
+    const r = ROUTINES.find(x => x[1] === rv); if (!r) return;
+    const o = needList(r[1], r[2]);
+    await c.say("Here’s my **" + r[0] + "**. Tick things off, go one at a time, or tap **Make it mine** to cross out what doesn’t fit.", checklistCard(Object.assign({}, o, { startMode: "view" })));
+    const v = await c.ask({ options: ["Put it on my calendar", "Show me another", "I’m good"], def: "I’m good", guess: false });
+    if (v === "Show me another") continue;
+    if (v === "Put it on my calendar") await routineEvent(c, r[0]);
+    return;
+  }
+};
+
+/* ---- Consistency Pack: what's getting in the way? ---- */
+const CP_PROBLEMS = [["I go all in, then I stop.", "floor"], ["I research and plan, and never start.", "start"], ["I have hundreds of content ideas.", "week3"],
+  ["I keep skipping my workouts.", "move"], ["I tell myself I’ll do it tomorrow.", "excuse"], ["My house is tidy but never really clean.", "zone"],
+  ["I have piles that have sat for months.", "pile"], ["I want to see that I’m showing up.", "track"], ["I stopped, and now I feel behind.", "restart"]];
+PACKS.consistent = async c => {
+  await c.say("What’s getting in the way? Pick the one that sounds like you.");
+  const v = await c.ask({ options: CP_PROBLEMS.map(x => [x[0], x[1]]).concat([["Never mind", "back"]]), guess: false });
+  if (v && CP[v]) await CP[v](c);
+};
+
+/* the 4-week tracker and movement plan need a start date, so the first use anchors the week */
+function cpSlot() {
+  if (!get("cp.start")) { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); set("cp.start", ymd(d)); }
+  const st = new Date(get("cp.start") + "T12:00:00"), now = new Date(); now.setHours(12, 0, 0, 0);
+  const days = Math.round((now - st) / 86400000);
+  return days >= 0 && days < 56 ? { w: Math.floor(days / 7), d: days % 7 } : null;
+}
+
+CP.floor = async c => {
+  const hb = get("fam.0.h");
+  await c.say("That’s the all-or-nothing trap. The fix is a **floor**: a tiny version you can do on your most tired day. The floor always counts.");
+  if (hb) await c.say("You already have one for **" + hb + "**: " + get("fam.0.f") + ".");
+  const v = await c.ask({ options: ["Add another habit"].concat(hb ? ["Make my floor smaller"] : [], ["I’m good"]), def: "I’m good", guess: false });
+  if (v === "Add another habit") {
+    const slot = [0, 1, 2].find(i => !get("fam." + i + ".h"));
+    if (slot == null) { await c.say("You have three habits. That’s plenty. Run them for two weeks first."); return; }
+    await c.say("Which habit should I add?"); await habitFlow(c, slot);
+    await c.say("Added. Its floor shows up on your Today page.");
+  } else if (v === "Make my floor smaller") {
+    await c.say("What’s a version so small you can’t say no?");
+    const t = await ask1(c, "Shoes on, 2 minutes", "My smaller floor", "Never mind");
+    if (t) { set("fam.0.f", t); await c.say("Done. Your floor is now **" + t + "**."); }
+  }
+};
+
+CP.start = async c => {
+  await c.say("Researching feels like progress, but it isn’t starting. Let’s start with what you already know.", "What’s the thing you want to start?");
+  const th = await ask1(c, "A podcast, a meal plan, a business idea", "The thing I want to start");
+  if (th) set("es.thing", th);
+  await c.say("Set a research limit before you look anything up. Twenty minutes, one question, three sources at most. Then you pick one and go.", timerCard(20, "Start my research timer", "Time’s up. Pick one and go."));
+  await c.ask({ options: ["The timer’s done", "I know enough already"], def: "I know enough already", guess: false });
+  await c.say("What’s your next step, using only what you know right now?");
+  const nx = await ask1(c, "Order the supplies", "My next step");
+  if (nx) { set("es.next", nx); addToDay(nx); await c.say("Good enough for now. I put it on Today. Now give it your first 3 minutes.", timerCard(3, "Start my first 3 minutes", "That was your start.")); }
+};
+
+CP.week3 = async c => {
+  await c.say("Leave the big list alone. Pull five ideas that catch your eye, then keep three.", "Type up to five. Separate them with commas.");
+  const raw = await ask1(c, "Idea one, idea two, idea three", "Five ideas");
+  const ideas = String(raw || "").split(/[,;\n]+/).map(x => x.trim()).filter(Boolean).slice(0, 5);
+  if (!ideas.length) return;
+  let keep = ideas, prev = [];
+  while (ideas.length > 3) {
+    await c.say("Now keep three. The rest go back on the list.");
+    const v = await c.ask({ multi: true, options: ideas.map(x => [x, x]), def: prev, cont: "Keep these", none: "None", guess: false });
+    if (v && v.length >= 1 && v.length <= 3) { keep = v; break; }
+    prev = v || [];
+    await c.say(v && v.length > 3 ? "Three is enough. Let go of " + (v.length - 3) + "." : "Pick at least one.");
+  }
+  clearPrefix("w3."); ideas.forEach((t, i) => { set("w3." + i + ".t", t); if (keep.includes(t)) set("w3." + i + ".pick", 1); });
+  await c.say("Here’s your week.", card({ cls: "out", title: "This week’s 3", h: "h3", kids: [h("ol", { class: "stack tight" }, keep.map((t, i) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(i + 1)), h("span", null, t)))),
+    h("div", null, btn("Copy my 3", () => copyText("This week’s 3\n" + keep.map((t, i) => (i + 1) + ". " + t).join("\n")), "ghost sm"))] }),
+    "Close the list. The other ones will still be there next week.");
+};
+
+function markMove(sz) {
+  const s = cpSlot(); if (s && s.w < 4) set("mv." + s.w + "." + s.d, sz);
+  if (get("fam.0.h") === "Move my body") set("fl." + today() + ".0", sz);
+}
+CP.move = async c => {
+  const mv = get("fam.0.h") === "Move my body" ? { f: get("fam.0.f"), r: get("fam.0.r"), b: get("fam.0.b") } : { f: HABITS[0].f, r: HABITS[0].r, b: HABITS[0].b };
+  if (!get("mm.floor")) set("mm.floor", mv.f); if (!get("mm.reg")) set("mm.reg", mv.r); if (!get("mm.bonus")) set("mm.bonus", mv.b);
+  if (!get("mm.set") && nightList().length) set("mm.set", nightList().join(", "));
+  await c.say("A workout plan that works in a messy week has three sizes. Any one counts.",
+    card({ title: "My movement plan", h: "h3", kids: [h("dl", { class: "dl" }, ...[["Floor", get("mm.floor")], ["Regular", get("mm.reg")], ["Bonus", get("mm.bonus")]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }), "What do you want to do right now?");
+  const v = await c.ask({ options: ["Start my floor now", "I already moved today", "Not today"], def: "Not today", guess: false });
+  if (v === "Start my floor now") await c.say("Shoes on. Five minutes. When it rings, you’re done, and it counts.", timerCard(5, "Start my floor (5 min)", "That counts. You moved.", () => markMove("F")));
+  else if (v === "I already moved today") {
+    await c.say("Nice. Which size?");
+    const z = await c.ask({ options: [["Floor", "F"], ["Regular", "R"], ["Bonus", "B"]], def: "F", guess: false });
+    markMove(z || "F"); await c.say("Marked. Any size counts.");
+  } else await c.say("That’s okay. Rest days are part of the plan.");
+  await c.say("Your 4-week plan keeps track of every day you move.", h("div", null, btn("Open my 4-week plan", () => nav("cp-move"), "ghost sm")));
+};
+
+CP.excuse = async c => {
+  await c.say("Pick your answer ahead of time, so there’s nothing to debate. Which excuse do you tell yourself?");
+  const v = await c.ask({ options: PLAN_EXCUSES.map((e, i) => [e[0], String(i)]).concat([["Something else", "x"]]), guess: false });
+  if (v == null) return;
+  let key, excuse, def;
+  if (v === "x") {
+    await c.say("What do you tell yourself?");
+    const t = await ask1(c, "I’ll start Monday", "My excuse", "Never mind"); if (!t) return;
+    const n = [0, 1, 2, 3, 4, 5].find(i => !get("exc.x" + i + ".a")); if (n == null) { await c.say("Your list is full. You can edit it on My system."); return; }
+    key = "exc.x" + n; set(key + ".a", t); excuse = t; def = "I do the floor version right now. It takes 5 minutes.";
+  } else { const i = Number(v); key = "exc." + i; excuse = PLAN_EXCUSES[i][0]; def = PLAN_EXCUSES[i][1]; }
+  const cur = get(key + ".b") || def;
+  await c.say("When you hear **" + excuse + "**, your answer is:", "*" + cur + "*");
+  const w = await c.ask({ options: ["Use that", "Write my own"], def: "Use that", guess: false });
+  if (w === "Write my own") {
+    await c.say("What will you do instead?");
+    const t = await ask1(c, def, "My answer", "Keep it");
+    if (t) { set(key + ".b", t); await c.say("Saved. Next time, say it out loud."); return; }
+  }
+  set(key + ".b", cur);
+  await c.say("Good. Next time you hear it, do that. No debate.");
+};
+
+const ZONE_PLAN = [["Kitchen", "Wipe the stove and counters"], ["Bathroom", "Scrub one sink"], ["Bathroom", "Clean one toilet"], ["Living room", "Vacuum one room"], ["Floors", "Mop one floor"], ["Bedrooms", "Change one set of sheets"], ["Kitchen", "Clean the microwave"]];
+CP.zone = async c => {
+  await c.say("You already keep things tidy. This adds **one 10-minute clean a day**, so the deep stuff gets done a little at a time. Want me to set your week?");
+  const v = await c.ask({ options: ["Set my week for me", "Not now"], def: "Set my week for me", guess: false });
+  if (v !== "Set my week for me") return;
+  ZONE_PLAN.forEach((z, i) => { set("zone." + i + ".z", z[0]); set("zone." + i + ".c", z[1]); });
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], di = (new Date().getDay() + 6) % 7;
+  await c.say("Here’s your week.", card({ title: "My zone week", h: "h3", kids: [h("dl", { class: "dl" }, ...DAYS.map((d, i) => [h("dt", null, d), h("dd", null, ZONE_PLAN[i][0] + ": " + ZONE_PLAN[i][1])]).flat())] }),
+    "Today is " + DAYS[di] + ". **" + ZONE_PLAN[di][1] + ".** Set the timer. When it rings, you’re done, even if the zone could use more.",
+    timerCard(10, "Start a 10-minute clean", "Time’s up. You’re done.", () => set("zone." + di + ".w1", 1)));
+};
+
+CP.pile = async c => {
+  await c.say("Piles get smaller one round at a time. One pile, 10 minutes, four spots.", "Where’s the pile?");
+  const t = await ask1(c, "Mail on the counter", "My pile"); if (!t) return;
+  let i = [0, 1, 2, 3, 4, 5, 6].find(j => get("pile." + j + ".n") === t);
+  if (i == null) i = [0, 1, 2, 3, 4, 5, 6].find(j => !get("pile." + j + ".n"));
+  if (i == null) { await c.say("Your pile list is full. Finish one first."); return; }
+  set("pile." + i + ".n", t);
+  await c.say("Every item goes to one of four spots.", card({ kids: [h("dl", { class: "dl" }, ...[["Trash", "Or recycle. Bag it now."], ["Elsewhere", "Into a basket. Deliver it when the timer rings."],
+    ["Needs action", "Into your inbox. Deal with it at your weekly reset."], ["Stays", "It lives here. Put it back neatly."]].map(r => [h("dt", null, r[0]), h("dd", null, r[1])]).flat())] }),
+    "Set the timer and sort. When it rings, stop.");
+  for (;;) {
+    const j = [0, 1, 2, 3, 4, 5].find(r => !get("pile." + i + ".r." + r));
+    await c.say(timerCard(10, "Start a round", "Time’s up. Stop and color one circle.", () => { if (j != null) set("pile." + i + ".r." + j, 1); }));
+    const v = await c.ask({ options: ["The pile is gone", "Another round", "Good for today"], def: "Good for today", guess: false });
+    if (v === "The pile is gone") { set("pile." + i + ".g", 1); await c.say("Gone. That’s a win."); break; }
+    if (v === "Another round") continue;
+    await c.say("A smaller pile is a win. See you next round."); break;
+  }
+};
+
+CP.track = async c => {
+  const s = cpSlot(), habits = [0, 1, 2].filter(i => get("fam." + i + ".h"));
+  if (!s) { await c.say("Your 4-week tracker has run its course. Open it to start fresh.", h("div", null, btn("Open my tracker", () => nav("cp-tracker"), "sm"))); return; }
+  if (!habits.length) { await c.say("Add a habit first, so I know what to track. Tap **Keep me consistent**, then **I go all in, then I stop.**"); return; }
+  await c.say("Color a box on any day you did the floor or more. A blank box is fine.", "Which did you do today?");
+  const v = await c.ask({ multi: true, options: habits.map(i => [get("fam." + i + ".h"), String(i)]), cont: "Color today’s boxes", none: "None today", guess: false });
+  const r = s.w < 4 ? 1 : 2, wk = s.w % 4 + 1;
+  (v || []).forEach(i => set("tr." + r + "." + (Number(i) + 1) + "." + wk + "." + s.d, 1));
+  let n = 0; for (let hb = 1; hb <= 3; hb++) for (let w = 1; w <= 4; w++) for (let d = 0; d < 7; d++) if (get("tr." + r + "." + hb + "." + w + "." + d)) n++;
+  await c.say(v && v.length ? "Colored. That’s **" + n + " boxes** so far in round " + r + ". More colored boxes than last month means it’s working." : "A blank box is fine. Tomorrow is a fresh box.",
+    h("div", null, btn("Open my 4-week tracker", () => nav("cp-tracker"), "ghost sm")));
+};
+CP.restart = c => runAction(c, "restart");
+</script>
+<script>
+"use strict";
+/* ============ put it in my tools ============
+   Each tool gets one job, and nothing gets planned in two places. The kits below turn what the person
+   told the assistant into copy-ready text for a paper planner, a digital calendar, a wall calendar,
+   a task or project app, and a notes app. */
+const TOOL_JOB = { planner: "My top 3, my brain dump, and my week at a glance", dcal: "Appointments and anything with a time",
+  wall: "What the whole family needs to see", tasks: "Everything to do that has no set time", notes: "Info and ideas to keep" };
+const TOOL_NAME = { planner: "Paper planner", dcal: "Digital calendar", wall: "Wall calendar", tasks: "Task or project app", notes: "Notes app" };
+
+function saveTools(T) {
+  clearPrefix("tools.use."); T.forEach(m => set("tools.use." + m, 1));
+  const dig = T.includes("dcal") || T.includes("tasks") || T.includes("notes"), P = T.includes("planner");
+  clearPrefix("setup.med."); if (P) set("setup.med.planner", 1); if (dig) { set("setup.med.phone", 1); set("setup.med.computer", 1); }
+  if (!P && !dig) set("setup.med.planner", 1);
+  set("tool.mode", P && dig ? "Hybrid" : dig ? "Digital" : "Paper");
+  Object.keys(TABMEM).forEach(k => { if (k.startsWith("tg-")) delete TABMEM[k]; });
+  const H = homesFor(T);
+  set("part.inbox.home", H.inbox); set("part.cal.home", H.cal); set("part.tasks.home", H.tasks); set("part.notes.home", H.notes);
+  set("part.inbox.backup", dig ? "A note on my phone" : "A sticky note"); set("part.tasks.mark", P ? "I star it" : "I flag it"); set("part.notes.find", T.includes("notes") ? "I search for it" : "Tabs and dividers");
+  return H;
+}
+
+const sortWhen = () => [get("sort.day"), get("sort.time")].filter(Boolean).join(" at ");
+const habitAt = () => ({ "in the morning": "7:00 am", "in the afternoon": "1:00 pm", "in the evening": "7:00 pm", "after work": "5:30 pm" })[get("fam.0.when")] || "7:00 am";
+const nightList = () => [0, 1, 2, 3].map(i => get("night." + i)).filter(Boolean);
+const sysSteps = n => [0, 1, 2, 3, 4].map(i => get("sb." + n + ".step." + i)).filter(Boolean);
+const sysNums = () => [1, 2, 3].filter(n => get("sb." + n + ".name"));
+const usesT = id => !!get("tools.use." + id);
+
+const KITS = {
+  planner: () => {
+    const hb = get("fam.0.h"), nl = nightList();
+    return { steps: [
+      "Pick a blank page near the front and write **Inbox** at the top. Everything new lands here first.",
+      "On this week’s page, write your sort time: **" + (sortWhen() || "my weekly sort") + "**.",
+      "Add a small **Top 3** box to each daily page. Fill it in the night before.",
+      "Write your floor right in the plan" + (hb ? ", like **" + hb + ": " + get("fam.0.f") + "**" : "") + ". The small version is the plan, and anything more is a bonus.",
+      "Use the back pages for notes, so the front stays clear."],
+      blocks: [["What to write in my planner", "Copy it by hand. Writing it down helps you remember it.",
+        ["INBOX PAGE", "Everything new goes here first.", "", "THIS WEEK", "Weekly sort: " + (sortWhen() || "my sort day") + " (10 min)", "", "EVERY DAY", "Top 3:  1.    2.    3.",
+          hb ? (get("fam.0.when") ? get("fam.0.when").replace(/^./, x => x.toUpperCase()) + ": " : "") + hb + ": " + get("fam.0.f") : "", nl.length ? "Night before: " + nl.join(", ") : "",
+          "", get("night.just") ? "ON A HARD DAY\nJust: " + get("night.just") : ""].filter((x, i, a) => x !== "" || (a[i - 1] !== "" && i > 0)).join("\n").trim()]] };
+  },
+  dcal: () => {
+    const hb = get("fam.0.h"), nl = nightList(), who = get("part.cal.who"), blocks = [];
+    blocks.push(["Repeating event: weekly sort", "Make a new event, paste this in, and set it to repeat.",
+      "Title: Weekly sort (10 minutes)\nRepeat: Weekly on " + (sortWhen() || "my sort day") + "\nAlert: 10 minutes before\nNote: Empty my inbox into my calendar, tasks, and notes."]);
+    if (hb) blocks.push(["Repeating event: " + hb, "Same thing. Put the floor right in the title.", "Title: " + hb + ": " + get("fam.0.f") + "\nRepeat: Every day at " + habitAt() + "\nAlert: 5 minutes before\nNote: The floor counts. Anything more is a bonus."]);
+    if (nl.length) blocks.push(["Repeating event: night before", "This one makes tomorrow’s choices tonight.", "Title: Night before: " + nl.join(", ") + "\nRepeat: Every day at 8:30 pm\nAlert: At the time of the event\nNote: Decide tomorrow tonight."]);
+    return { steps: [
+      "Use the calendar you already have, or make one just for your system.",
+      "Add each event below. Paste it in, set the repeat, and save.",
+      who && who !== "Just me" ? "Share it with **" + who.replace(/^My /, "your ").toLowerCase() + "**. Most apps have a Share option in the calendar’s settings." : "Keep it private, since this one is just for you.",
+      "One rule: only things with a **date or a time** go here. To-dos go in your task list."], blocks };
+  },
+  wall: () => ({ steps: [
+    "Hang it where everyone walks past, like the kitchen or the entryway. Keep a pen on a string beside it.",
+    "Give each person a color. One color for the whole family works too.",
+    "Only write things other people need to know: appointments, practices, days off school, trips, birthdays.",
+    usesT("dcal") ? "Your digital calendar is the source of truth. At your weekly sort" + (get("sort.day") ? " on " + get("sort.day") : "") + ", copy the next week’s shared plans onto the wall." : "This is your main calendar. Write new dates on it the moment you hear them.",
+    "Keep to-dos and your top 3 off the wall. They live in your planner or task list."],
+    blocks: [["My wall calendar rules", "Write these on a sticky note and stick it to the calendar.",
+      "• Only shared stuff goes on the wall\n• One color per person\n• " + (usesT("dcal") ? "New dates go in my digital calendar first, then the wall" : "New dates go on the wall right away") + "\n• I update it at my weekly sort" + (sortWhen() ? " (" + sortWhen() + ")" : "")]] }),
+  tasks: () => {
+    const first = sysNums()[0], nm = first ? get("sb." + first + ".name") : "My first system", st = first ? sysSteps(first) : [], hb = get("fam.0.h"), nl = nightList();
+    const rep = ["Weekly sort: repeats weekly on " + (get("sort.day") || "my sort day")];
+    if (hb) rep.push(hb + ": " + get("fam.0.f") + ": repeats every day"); if (nl.length) rep.push("Night before: " + nl.join(", ") + ": repeats every day");
+    return { steps: [
+      "Make three lists or projects: **Inbox**, **This week**, and one for **" + nm + "**.",
+      st.length ? "Paste in the tasks for " + nm + ". Many apps make one task for each line you paste." : "Add the steps of your first system as tasks.",
+      "Set up the repeating tasks, so you never have to remember them.",
+      "Mark what’s next the way you chose: **" + (get("part.tasks.mark") || "I star it") + "**. Three at most each day.",
+      "One rule: if it has a time, it goes on the calendar. Everything else goes here."],
+      blocks: [["Lists or projects to make", "Names you can paste in.", "Inbox\nThis week\n" + nm],
+        st.length ? ["Tasks for " + nm, "One task per line.", st.join("\n")] : null,
+        ["Repeating tasks", "Set each one to repeat.", rep.join("\n")]] };
+  },
+  notes: () => ({ steps: [
+    "Make a folder for each area of life. Start with the five below. You can rename them later.",
+    /notes app/i.test(get("part.inbox.home")) ? "Make a note called **Inbox** and pin it to the top." : "Pin the notes you open every week.",
+    "Search finds almost anything, so folders don’t have to be perfect."],
+    blocks: [["Folders to make", "Rename any of them.", ["Home", "Family", "Work or content", "Ideas", "Reference"].join("\n")]] })
+};
+
+async function applyWalk(c) {
+  let T = toolsUsed();
+  if (T.length) {
+    await c.say("You use " + T.map(id => TOOL_NAME[id].toLowerCase()).join(", ") + ". Each one gets a single job, so nothing gets planned in two places.");
+    const v = await c.ask({ options: ["Set them up", "Change my tools"], def: "Set them up", guess: false });
+    if (v === "Change my tools") T = [];
+  }
+  if (!T.length) {
+    await c.say("What do you plan with? Pick everything you use.");
+    const v = await c.ask({ multi: true, options: TOOL_OPTS, def: TOOL_DEFAULT, guess: false });
+    T = v && v.length ? v : TOOL_DEFAULT; saveTools(T);
+    await c.say("Got it. I updated your four homes to match.");
+  }
+  for (let i = 0; i < T.length; i++) {
+    const id = T[i], k = KITS[id]();
+    await c.say("**" + TOOL_NAME[id] + ".** Its one job: " + TOOL_JOB[id].replace(/^My /, "your ").replace(/^./, x => x.toLowerCase()) + ".");
+    await c.say(card({ cls: "out", title: "Set it up", h: "h3", kids: [h("ol", { class: "stack tight" }, k.steps.map((t, j) => h("li", { class: "num solid" }, h("span", { class: "n" }, String(j + 1)), h("span", null, rt(t)))))] }));
+    for (const b of k.blocks.filter(Boolean)) await c.say(genBlock(b[0], b[1], b[2]));
+    const v = await c.ask({ options: [i < T.length - 1 ? "Done, next tool" : "Done", "I’ll do this later"], def: "I’ll do this later", guess: false });
+    if (v && !/later/.test(v)) set("tools.done." + id, 1);
+  }
+  await c.say("That’s your tools. Here’s who does what:", card({ title: "One job each", h: "h3", kids: [h("dl", { class: "dl" }, ...T.map(id => [h("dt", null, TOOL_NAME[id]), h("dd", null, TOOL_JOB[id].replace(/^My /, "")) ]).flat())] }),
+    "**The hard part is done.** Come back to Today each morning, and I’ll keep you on track.");
 }
 </script>
 <script>
