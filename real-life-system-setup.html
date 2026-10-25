@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Real Life System Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap">
+<style>
+/* Layout: one centered column. Header, a short answers card, then a long plan in four parts that follow the Wendaful Method. */
+:root {
+  --bg: #faf5f0;
+  --surface: #ffffff;
+  --surface-2: #f4f1ed;
+  --tint: #dadfdc;
+  --line: #dfdad4;
+  --ink: #373a40;
+  --ink-2: #545454;
+  --accent: #54645b;
+  --accent-ink: #ffffff;
+  --sage: #94a69c;
+  --hi: #fdfff0;
+  --focus: #54645b;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1b211e;
+    --surface: #232b27;
+    --surface-2: #2a332f;
+    --tint: #34413a;
+    --line: #3b4740;
+    --ink: #f0eee7;
+    --ink-2: #b7c0ba;
+    --accent: #a9bfb1;
+    --accent-ink: #17201b;
+    --sage: #7f9588;
+    --hi: #2b352f;
+    --focus: #a9bfb1;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1b211e;
+  --surface: #232b27;
+  --surface-2: #2a332f;
+  --tint: #34413a;
+  --line: #3b4740;
+  --ink: #f0eee7;
+  --ink-2: #b7c0ba;
+  --accent: #a9bfb1;
+  --accent-ink: #17201b;
+  --sage: #7f9588;
+  --hi: #2b352f;
+  --focus: #a9bfb1;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 var(--font-body);
+}
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding-block: 32px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+  margin: 0;
+}
+p { margin: 0; }
+a { color: var(--accent); }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* header */
+.eyebrow {
+  font: 600 12px/1 var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+h1 { font-size: clamp(34px, 6.5vw, 54px); letter-spacing: -0.01em; }
+.lede { font-size: 18px; max-width: 58ch; color: var(--ink-2); margin-top: 16px; }
+.tagline {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* answers card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+}
+.answers { margin-top: 32px; }
+.answers h2 { font-size: 26px; }
+.answers .note { color: var(--ink-2); font-size: 15px; margin-top: 6px; }
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.field { min-width: 0; display: flex; flex-direction: column; gap: 8px; border: 0; padding: 0; margin: 0; }
+.field.wide { grid-column: 1 / -1; }
+.lab { font-weight: 600; font-size: 14px; padding: 0; }
+.hint { font-weight: 400; color: var(--ink-2); }
+input[type="text"], select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+}
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { position: relative; }
+.pill input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pill span {
+  display: block;
+  padding: 10px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 15px;
+  line-height: 20px;
+}
+.pill input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pill input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn {
+  font: 600 15px/1 var(--font-body);
+  padding: 14px 20px;
+  min-height: 46px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.on-accent { background: var(--accent-ink); color: var(--accent); border-color: var(--accent-ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+
+/* plan */
+#plan { margin-top: 40px; }
+.banner {
+  background: var(--tint);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+}
+.plan-title { font-size: clamp(28px, 5vw, 40px); margin-top: 28px; }
+.intro { max-width: 62ch; color: var(--ink-2); font-size: 17px; margin-top: 12px; }
+.intro + .intro { margin-top: 10px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.part { margin-top: 60px; }
+.part-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: end; }
+.num { font-family: var(--font-display); font-size: 64px; line-height: 0.9; color: var(--sage); }
+.part-head h2 { font-size: clamp(26px, 4.5vw, 36px); }
+.part-sub { grid-column: 2; color: var(--ink-2); }
+.sub { font-size: 22px; margin-top: 36px; }
+.blurb { color: var(--ink-2); max-width: 62ch; margin-top: 8px; }
+.rule-box {
+  background: var(--hi);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-top: 20px;
+  max-width: 70ch;
+}
+.rule-box b { font-family: var(--font-display); font-size: 20px; display: block; margin-bottom: 6px; font-weight: 600; }
+
+.tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 20px; }
+.tool { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.tool.hub { background: var(--hi); }
+@media (min-width: 720px) { .tool.hub { grid-column: span 2; } }
+.tool .lbl { font: 600 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.tool h3 { font-size: 22px; margin: 10px 0 6px; overflow-wrap: anywhere; }
+.tool p { color: var(--ink-2); font-size: 15px; }
+
+.rows { list-style: none; margin: 18px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 4px 20px; padding: 14px 16px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .a { font-weight: 600; }
+.row .b { min-width: 0; overflow-wrap: anywhere; }
+.row .b strong { color: var(--accent); }
+.row .ex { grid-column: 1 / -1; color: var(--ink-2); font-size: 14px; }
+@media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+
+.checks, .steps, .days { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
+.check {
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.check > span { min-width: 0; }
+.check .t { font-weight: 600; display: block; }
+.check .d { color: var(--ink-2); font-size: 15px; display: block; margin-top: 2px; }
+
+.step {
+  display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 14px; align-items: start;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.mins { font-family: var(--font-display); font-size: 20px; text-align: center; background: var(--tint); color: var(--ink); border-radius: 10px; padding: 8px 4px; line-height: 1.1; }
+.mins small { display: block; font: 500 11px/1.2 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); margin-top: 2px; }
+.step .t { font-weight: 600; display: block; }
+.total { margin-top: 12px; color: var(--ink-2); font-size: 15px; }
+
+.sizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 20px; }
+.size { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.size .when { font: 600 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.size h3 { font-size: 22px; margin-top: 10px; }
+.size .time { font-family: var(--font-display); font-size: 32px; color: var(--accent); margin: 2px 0 6px; }
+.size p { color: var(--ink-2); font-size: 15px; }
+
+.stuck { background: var(--hi); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-top: 20px; }
+.tag { display: inline-block; font: 600 11px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 10px; border-radius: 999px; background: var(--tint); color: var(--ink); }
+.stuck h3 { font-size: 26px; margin-top: 12px; }
+.stuck p { max-width: 62ch; margin-top: 10px; }
+.try { margin-top: 16px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; max-width: 62ch; }
+.try b { display: block; font: 600 11px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 6px; }
+
+.list { margin: 12px 0 0; padding-left: 20px; max-width: 62ch; }
+.list li + li { margin-top: 6px; }
+
+.day { display: grid; grid-template-columns: 22px 64px minmax(0, 1fr); gap: 12px; align-items: start; cursor: pointer; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.day input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--accent); }
+.day .n { font: 600 12px/1.6 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+
+.rules { background: var(--accent); color: var(--accent-ink); border-radius: 18px; padding: 26px; margin-top: 40px; }
+.rules h2 { font-size: 30px; }
+.rules .sub-t { margin-top: 6px; opacity: 0.9; }
+.rules ol { margin: 18px 0 0; padding-left: 24px; display: grid; gap: 8px; max-width: 62ch; }
+.rules .btn { margin-top: 20px; }
+
+.foot { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-2); }
+.foot p + p { margin-top: 8px; }
+.foot .big { font-family: var(--font-display); font-size: 24px; color: var(--ink); }
+
+@media print {
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --bg: #ffffff; --surface: #ffffff; --surface-2: #ffffff; --tint: #eef0ee; --line: #cfd3d0;
+    --ink: #222222; --ink-2: #444444; --accent: #54645b; --accent-ink: #ffffff; --hi: #ffffff; --sage: #94a69c;
+    color-scheme: light;
+  }
+  .no-print { display: none !important; }
+  .wrap { padding-block: 0; }
+  .part + .part { break-before: page; }
+  .tool, .check, .step, .row, .size, .stuck, .day, .rules, .rule-box { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="no-print">
+    <p class="eyebrow">Wendaful Planning</p>
+    <h1>Real Life System Setup</h1>
+    <p class="lede">Tell me what you use. I'll give every tool one job, then build your weekly rhythm and a plan for the days life gets busy.</p>
+    <p class="tagline">Set it up. Keep it going.</p>
+  </header>
+
+  <form id="answers" class="card answers no-print" autocomplete="off">
+    <h2>Your answers</h2>
+    <p class="note">Ten quick questions. Everything happens on this page. Nothing is saved or sent anywhere.</p>
+    <div class="fields" id="fields"></div>
+    <div class="actions">
+      <button type="submit" class="btn">Build my setup</button>
+    </div>
+  </form>
+
+  <p id="status" class="sr-only" role="status"></p>
+  <noscript><p class="banner">This page needs JavaScript to build your setup.</p></noscript>
+  <main id="plan" tabindex="-1"></main>
+</div>
+
+<script>
+/* ---------- Things you can edit ---------- */
+const CONFIG = {
+  ctaText: "Want more help keeping this going? The Planning Lab membership has courses and templates built around this same system.",
+  ctaLabel: "See the Planning Lab",
+  ctaUrl: "https://wendaful.com",
+  partOf: "This setup is part of the Real Life System."
+};
+/* Add page names or tips for a specific planner here. They show up in the planner setup step. */
+const PLANNER_NOTES = {
+  rls: "",
+  weekly: "", daily: "", bujo: "", digital: "", none: ""
+};
+
+/* ---------- Questions ---------- */
+const FIELDS = [
+  { id: "name", type: "text", label: "What should I call you?", hint: "Optional", placeholder: "Your first name", max: 30 },
+  { id: "kind", type: "select", label: "What kind of planner do you use?", def: "weekly", options: [
+    ["rls", "Real Life System Planner"],
+    ["weekly", "Weekly planner"],
+    ["daily", "Daily planner"],
+    ["bujo", "Bullet journal or notebook"],
+    ["digital", "Digital planner"],
+    ["none", "I don't have one yet"]
+  ] },
+  { id: "pname", type: "text", label: "Planner name", hint: "Optional", placeholder: "The name on the cover", max: 40 },
+  { id: "cal", type: "select", label: "Where do your appointments live?", def: "apple", options: [
+    ["apple", "Apple Calendar"], ["google", "Google Calendar"], ["outlook", "Outlook Calendar"],
+    ["paper", "Paper calendar only"], ["other", "Another calendar app"]
+  ] },
+  { id: "tasks", type: "select", label: "Where do your to-dos live?", def: "reminders", options: [
+    ["reminders", "Apple Reminders"], ["todoist", "Todoist"], ["gtasks", "Google Tasks"],
+    ["app", "Another app (Notion, ClickUp, and so on)"], ["paper", "Paper lists"], ["mess", "All over the place"]
+  ] },
+  { id: "notes", type: "select", label: "Where do your notes live?", def: "apple", options: [
+    ["apple", "Apple Notes"], ["google", "Google Docs or Keep"], ["notion", "Notion"],
+    ["paper", "A paper notebook"], ["mess", "All over the place"]
+  ] },
+  { id: "when", type: "pills", label: "When do you plan?", def: "night", options: [
+    ["night", "The night before"], ["morning", "In the morning"], ["weekly", "Once a week"]
+  ] },
+  { id: "mins", type: "pills", label: "How many minutes a day can you really give it?", def: "10", options: [
+    ["5", "5"], ["10", "10"], ["15", "15"], ["20", "20 or more"]
+  ] },
+  { id: "stuck", type: "select", label: "Where do you get stuck?", def: "fallsoff", wide: true, options: [
+    ["fallsoff", "I start strong, then stop"],
+    ["where", "I never know where things go"],
+    ["places", "I write things in too many places"],
+    ["overwhelm", "My lists get too long and I feel behind"],
+    ["followthrough", "I plan it all but don't do it"],
+    ["hopping", "I keep switching planners and apps"]
+  ] },
+  { id: "area", type: "pills", label: "What do you want it to run first?", def: "home", options: [
+    ["home", "Home"], ["business", "Business"], ["content", "Content"],
+    ["kids", "Kids and school"], ["health", "Health"], ["money", "Money"]
+  ] },
+  { id: "style", type: "pills", label: "What kind of system do you like?", def: "simple", options: [
+    ["simple", "Simple and flexible"], ["detailed", "Detailed and structured"],
+    ["pretty", "Pretty and creative"], ["hands", "Low maintenance"]
+  ] }
+];
+
+/* ---------- Tool labels ---------- */
+const CALS = {
+  apple: { name: "Apple Calendar", ref: "Apple Calendar" },
+  google: { name: "Google Calendar", ref: "Google Calendar" },
+  outlook: { name: "Outlook Calendar", ref: "Outlook Calendar" },
+  paper: { name: "Paper calendar", ref: "your paper calendar" },
+  other: { name: "Calendar app", ref: "your calendar app" }
+};
+const TASKS = {
+  reminders: { name: "Apple Reminders", ref: "Apple Reminders", digital: true },
+  todoist: { name: "Todoist", ref: "Todoist", digital: true },
+  gtasks: { name: "Google Tasks", ref: "Google Tasks", digital: true },
+  app: { name: "Task app", ref: "your task app", digital: true },
+  paper: { name: "Master List", ref: "your Master List", digital: false },
+  mess: { name: "Master List", ref: "your Master List", digital: false }
+};
+const NOTES = {
+  apple: { name: "Apple Notes", ref: "Apple Notes" },
+  google: { name: "Google Docs or Keep", ref: "Google Docs or Keep" },
+  notion: { name: "Notion", ref: "Notion" },
+  paper: { name: "Notes notebook", ref: "your notes notebook" },
+  mess: { name: "One notes app", ref: "your notes app" }
+};
+const KINDS = {
+  rls: { name: "Real Life System Planner", ref: "your Real Life System Planner" },
+  weekly: { name: "Weekly planner", ref: "your planner" },
+  daily: { name: "Daily planner", ref: "your planner" },
+  bujo: { name: "Notebook planner", ref: "your notebook" },
+  digital: { name: "Digital planner", ref: "your digital planner" },
+  none: { name: "Notebook", ref: "your notebook" }
+};
+const AREAS = {
+  home: "Home", business: "Business", content: "Content",
+  kids: "Kids and school", health: "Health", money: "Money"
+};
+const EX = {
+  home: { appt: "Plumber comes Thursday at 10", task: "Order the new vacuum filters", inbox: "We are almost out of paper towels", note: "The paint color we picked for the hallway", repeat: "Trash and recycling day", big: "\"Clean out the garage\" becomes \"Move the bikes to one wall.\"" },
+  business: { appt: "Call with a brand at 1:00", task: "Send the Friday email", inbox: "An idea for a new freebie", note: "Notes from the sponsor call", repeat: "Email day every week", big: "\"Write the sales page\" becomes \"Write the headline.\"" },
+  content: { appt: "Filming day on Tuesday at 9", task: "Edit the Reel for Friday", inbox: "An idea for a carousel", note: "Hooks I want to try", repeat: "Your posting days", big: "\"Plan a month of content\" becomes \"List five ideas.\"" },
+  kids: { appt: "Dentist on Monday at 3:30", task: "Sign the field trip form", inbox: "Ask about the carpool", note: "Teacher email and class list", repeat: "Practice every Wednesday", big: "\"Plan the birthday party\" becomes \"Pick a date.\"" },
+  health: { appt: "Checkup on the 12th at 8", task: "Book the eye appointment", inbox: "Try that stretching video", note: "My workout plan", repeat: "Walks on Monday and Thursday", big: "\"Get back into working out\" becomes \"Walk for five minutes.\"" },
+  money: { appt: "Meeting with the tax person at 2", task: "Pay the water bill", inbox: "Look into a savings plan", note: "Budget notes and savings goals", repeat: "Bill due dates", big: "\"Fix the budget\" becomes \"List this month's bills.\"" }
+};
+const WHEN_TEXT = { night: "the night before", morning: "in the morning", weekly: "once a week" };
+
+/* ---------- Helpers ---------- */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+const done = new Set();
+const chk = key => `<input type="checkbox" data-k="${key}"${done.has(key) ? " checked" : ""}>`;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------- Build the form ---------- */
+const form = document.getElementById("answers");
+const fieldsEl = document.getElementById("fields");
+const planEl = document.getElementById("plan");
+const statusEl = document.getElementById("status");
+
+function buildForm() {
+  fieldsEl.innerHTML = FIELDS.map(f => {
+    const hint = f.hint ? ` <span class="hint">(${f.hint})</span>` : "";
+    if (f.type === "text") {
+      return `<div class="field"><label class="lab" for="f-${f.id}">${f.label}${hint}</label>
+        <input type="text" id="f-${f.id}" maxlength="${f.max}" placeholder="${f.placeholder}"></div>`;
+    }
+    if (f.type === "select") {
+      const opts = f.options.map(o => `<option value="${o[0]}"${o[0] === f.def ? " selected" : ""}>${o[1]}</option>`).join("");
+      return `<div class="field${f.wide ? " wide" : ""}"><label class="lab" for="f-${f.id}">${f.label}</label>
+        <select id="f-${f.id}">${opts}</select></div>`;
+    }
+    const pills = f.options.map(o => `<label class="pill"><input type="radio" name="${f.id}" id="f-${f.id}-${o[0]}" value="${o[0]}"${o[0] === f.def ? " checked" : ""}><span>${o[1]}</span></label>`).join("");
+    return `<fieldset class="field wide"><legend class="lab">${f.label}</legend><div class="pills">${pills}</div></fieldset>`;
+  }).join("");
+}
+
+function read() {
+  const a = {};
+  for (const f of FIELDS) {
+    if (f.type === "pills") {
+      const c = form.querySelector(`input[name="${f.id}"]:checked`);
+      a[f.id] = c ? c.value : f.def;
+    } else {
+      a[f.id] = document.getElementById("f-" + f.id).value.trim();
+    }
+  }
+  a.mins = Number(a.mins) || 10;
+  return a;
+}
+
+/* ---------- Content builders ---------- */
+function refs(a) {
+  const cal = CALS[a.cal];
+  const tasks = TASKS[a.tasks];
+  const notes = NOTES[a.notes];
+  const pn = a.pname ? esc(a.pname) : "";
+  const kind = KINDS[a.kind];
+  const planner = pn ? { name: pn, ref: "your " + pn } : kind;
+  const inbox = tasks.digital
+    ? { name: "Inbox list", ref: a.tasks === "todoist" ? "your Todoist Inbox" : `the Inbox list in ${tasks.ref}` }
+    : { name: "Brain Dump page", ref: `your Brain Dump page` };
+  return { cal, tasks, notes, planner, inbox, N: a.style === "hands" ? 2 : 3, area: AREAS[a.area], ex: EX[a.area] };
+}
+
+function setupItems(a, r) {
+  const { cal, tasks, notes, planner, inbox, N } = r;
+  const day = a.when === "morning" ? "today" : "tomorrow";
+  const items = [];
+
+  items.push({
+    t: "Make your Inbox",
+    d: tasks.digital
+      ? { reminders: "Open Apple Reminders. Make a list called Inbox and drag it to the top.",
+          todoist: "Open Todoist. Your Inbox is already there. Keep it where you see it first.",
+          gtasks: "Open Google Tasks. Make a list called Inbox and keep it first.",
+          app: "Open your task app. Make one list called Inbox." }[a.tasks]
+      : `Pick one page in ${planner.ref} and label it Brain Dump. Add a sticky tab so it is easy to find.`
+  });
+
+  items.push({
+    t: "Set up your task list",
+    d: tasks.digital
+      ? `Make a few short lists in ${tasks.ref} for your big areas, like Home, Work, and Kids. Four or fewer is plenty. Start with your ${r.area} list.`
+      : (a.tasks === "mess" ? "First, gather. Collect every sticky note, list, and screenshot you can find and put them on one page. Sort them once, then stop. " : "")
+        + `Pick one page in ${planner.ref} for your Master List. Make four boxes: Home, Work, Personal, and Waiting On. Fill in your ${r.area} box first.`
+  });
+
+  items.push({
+    t: "Add the real stuff to your calendar",
+    d: a.cal === "paper"
+      ? "Fill in the dates that are already set. Use pencil for the maybes."
+      : `Add what is already set: appointments, school dates, and things that repeat, like trash day. Skip the maybes for now.`
+  });
+
+  items.push({
+    t: "Pick one home for notes",
+    d: { apple: "Make three notes: Home, Family, and Ideas. Add more later if you need them.",
+         google: "Make three docs or notes: Home, Family, and Ideas. Add more later if you need them.",
+         notion: "Make three pages: Home, Family, and Ideas. Add more later if you need them.",
+         paper: "Pick one notebook just for info. Write a short list of what is inside on the first page.",
+         mess: "Pick one notes app you already have on your phone. Move nothing today. Anything new goes there from now on." }[a.notes]
+  });
+
+  const pages = tasks.digital ? ["Brain Dump", "This Week", "My Rules"] : ["Brain Dump", "Master List", "This Week", "My Rules"];
+  const stepByKind = {
+    weekly: `Open to this week. Write your Top ${N} for the week at the top. Add this week's appointments from ${cal.ref} so you can see how your week fits together. If something changes, change it in ${cal.ref} first.`,
+    daily: `Open to ${day}'s page. Leave the pages ahead blank. You only fill in one page at a time, and that is plenty.`,
+    bujo: `Set up ${pages.length === 3 ? "three" : "four"} pages: ${pages.join(", ")}. Skip the fancy index for now. Add more pages only when you need them.`,
+    digital: `Duplicate one weekly page and one brain dump page. Keep everything in one planning app so you have nothing to hop to. Write your Top ${N} on the weekly page.`,
+    none: `Grab any notebook you already own and use it for 30 days before you buy a planner. Set up ${pages.length === 3 ? "three" : "four"} pages: ${pages.join(", ")}.`
+  };
+  stepByKind.rls = stepByKind.weekly;
+  items.push({
+    t: `Set up ${planner.ref}`,
+    d: stepByKind[a.kind] + (PLANNER_NOTES[a.kind] ? " " + PLANNER_NOTES[a.kind] : "")
+  });
+
+  items.push({
+    t: "Pick your planning time",
+    d: a.when === "weekly"
+      ? `Pick one day for your weekly reset. Add it to ${cal.ref} as a repeating event so you never have to remember it.`
+      : `Pick a spot you already sit down, like ${a.when === "night" ? "after dinner" : "with your coffee"}. Set a repeating phone alarm called "Plan, ${a.mins} minutes."`
+  });
+
+  items.push({
+    t: "Copy your rules",
+    d: "Copy the system rules at the bottom of this page onto the inside cover of your planner or the first page of your notebook."
+  });
+  return items;
+}
+
+const DAILY = {
+  5: [["cal", 1], ["pick", 2], ["write", 1], ["inbox", 1]],
+  10: [["cal", 2], ["energy", 1], ["pick", 3], ["write", 2], ["inbox", 2]],
+  15: [["back", 2], ["cal", 2], ["energy", 1], ["pick", 3], ["first", 2], ["write", 2], ["inbox", 3]],
+  20: [["back", 2], ["cal", 2], ["energy", 1], ["pick", 3], ["first", 2], ["blocks", 4], ["write", 2], ["inbox", 4]]
+};
+
+function dailySteps(a, r) {
+  const { cal, tasks, planner, N } = r;
+  const day = a.when === "morning" ? "today" : "tomorrow";
+  if (a.when === "weekly") {
+    return {
+      title: "Your daily glance",
+      total: 3,
+      steps: [
+        [1, "Check the calendar", `Look at today in ${cal.ref}. See what is already set.`],
+        [1, "Read your Top " + N, `Open ${planner.ref} to this week's Top ${N}. Pick the one that fits today.`],
+        [1, "Find the first step", "Choose the tiny first step and do it when you have a free minute."]
+      ]
+    };
+  }
+  const text = {
+    back: ["Look back", `${a.when === "morning" ? "Look at yesterday" : "Look at today"}. Cross off what got done. Move one thing forward or let it go on purpose.`],
+    cal: ["Schedule first", `Look at ${day} in ${cal.ref}. Your appointments make the frame for the day.`],
+    energy: ["Check your energy", `Is ${day} a full day, a medium day, or a low day? Plan for the day you really have.`],
+    pick: [`Pick your Top ${N}`, `Choose them from ${tasks.ref}. Let them fill in around your schedule.`],
+    first: ["Find the tiny first step", `Choose a first step for your Top 1. Make it so small it feels silly.`],
+    blocks: ["Time block", `Give each Top ${N} a spot on ${day}'s page in ${planner.ref}.`],
+    write: ["Write it down", `Put your Top ${N} on ${day}'s page in ${planner.ref}. Writing it down helps you remember it.`],
+    inbox: ["Empty your Inbox", "Send each thing where it goes. Not sure yet? Leave it for your weekly reset."]
+  };
+  const list = DAILY[a.mins] || DAILY[10];
+  return {
+    title: `Your ${a.mins}-minute daily plan`,
+    total: a.mins,
+    steps: list.map(([k, m]) => [m, text[k][0], text[k][1]])
+  };
+}
+
+function weeklySteps(a, r) {
+  const { cal, planner, N } = r;
+  return [
+    ["Brain dump", `Write down everything on your mind. Add whatever is sitting in your Inbox.`],
+    ["Look back", `What got done? What got pushed again? Write down one thing that went well.`],
+    ["Look ahead", `Open ${cal.ref} and look at the next two weeks. Mark the busy days in ${planner.ref}.`],
+    ["Sort it", `Send each brain dump item where it goes: calendar, tasks, or notes. The table in Part 1 helps.`],
+    [`Pick your Top ${N}`, `Choose what matters most this week. Match it to the time you really have.`],
+    ["Let something go", `Pick one thing to drop, delay, or ask for help with. Doing this on purpose makes room.`],
+    ["Set up Monday", `Open ${planner.ref} to Monday and write down the first step.`]
+  ];
+}
+
+const STUCK = {
+  fallsoff: (a, r) => ({
+    title: "You start strong, then stop",
+    tag: "Reset, don't restart",
+    body: [
+      "Most people do. Week one feels great. Then a busy week hits, the planner sits closed, and starting over feels like too much work.",
+      `So skip the starting over. When you miss a few days, open ${r.planner.ref} to today's page and use the Minimum routine. Leave the old pages alone. That is the whole restart.`
+    ],
+    tryFirst: "Use only the Minimum routine for your first 7 days. Tie it to something you already do, like pouring your coffee or finishing dinner."
+  }),
+  where: (a, r) => ({
+    title: "You never know where things go",
+    tag: "Reduce decisions",
+    body: [
+      "When every new thing needs a decision, your brain gets tired fast.",
+      `Use the Where does it go? table in Part 1. When you're unsure, the answer is always the Inbox. Sorting can wait for your weekly reset.`
+    ],
+    tryFirst: "Copy that table onto a sticky note and stick it inside your planner cover."
+  }),
+  places: (a, r) => ({
+    title: "You write things in too many places",
+    tag: "Remove friction",
+    body: [
+      `Every task gets one real home, and yours is ${r.tasks.ref}. Your planner page can show a task. The real one lives in ${r.tasks.ref}.`,
+      `Copying a task onto paper on purpose is fine because writing it down helps you remember it. Just finish it in ${r.tasks.ref} too.`
+    ],
+    tryFirst: "Spend 15 minutes gathering every loose list, sticky note, and screenshot onto one page. Sort it once, then stop."
+  }),
+  overwhelm: (a, r) => ({
+    title: "Your lists get too long and you feel behind",
+    tag: "Protect white space",
+    body: [
+      `A long list never feels finished. Your Top ${r.N} are the only things that count today.`,
+      "Everything else can wait, and waiting is allowed."
+    ],
+    tryFirst: "Make a Not Now list. Move anything that is not for this month onto it. Then look at the short list that is left."
+  }),
+  followthrough: (a, r) => ({
+    title: "You plan it all but don't do it",
+    tag: "Design for reality",
+    body: [
+      "A great plan falls apart when the first step is too big. Plan for about two thirds of the time you think you have.",
+      `Give every Top ${r.N} item a tiny first step you can do in five minutes. Starting is the hard part, so make it small.`
+    ],
+    tryFirst: "Write the first step right on the page. Example: Open the doc and type the title."
+  }),
+  hopping: (a, r) => ({
+    title: "You keep switching planners and apps",
+    tag: "Systems first, tools second",
+    body: [
+      "A new planner feels like a fresh start. The same four jobs still need to happen, and they follow you to the new one.",
+      "If you do buy another planner, bring these same rules with you. Change the pages as much as you like."
+    ],
+    tryFirst: "Give what you have a 30 day trial. Put the end date in your calendar. Shop again after that if you still want to."
+  })
+};
+
+const STYLE_TIPS = {
+  simple: ["Keep it light. If a step feels like too much, skip it and do the next one."],
+  detailed: [
+    "After your weekly reset, give each Top 3 item a time block. Put firm ones in your calendar and flexible ones in your planner.",
+    "Color code if you like it. One color for each area, and four colors at most."
+  ],
+  pretty: [
+    "Plan first, then decorate. Set a 5 minute timer for stickers and color so the fun part never eats your planning time.",
+    "A page you love opening is a great reason to keep going. Keep the setup quick so you have energy left for it."
+  ],
+  hands: [
+    "Do your weekly reset, then keep daily to the Short routine. Fewer touches means it is easier to keep going.",
+    "Let repeating events do the work. If something happens every week, set it to repeat once."
+  ]
+};
+
+function areaSteps(a, r) {
+  const { cal, tasks, notes } = r;
+  return {
+    home: {
+      tiny: "Put trash day in your calendar as a repeat. It takes one minute.",
+      steps: [
+        `Add the repeating stuff to ${cal.ref} first: trash day, laundry day, meal plan day.`,
+        `Start a Home list in ${tasks.ref}. Add five things and stop there.`,
+        `Pick one 10 minute reset a day, like the kitchen counter, and name it in ${cal.ref}.`
+      ]
+    },
+    business: {
+      tiny: "Write down the one task this week that brings money in.",
+      steps: [
+        `List your top three income tasks for this month in ${tasks.ref}.`,
+        `Block one work window in ${cal.ref} before anything else goes on this week.`,
+        `Keep ideas in ${notes.ref} so they don't take over your task list.`
+      ]
+    },
+    content: {
+      tiny: "Write three post ideas in your Inbox. It takes two minutes.",
+      steps: [
+        `Make a Content list in ${tasks.ref} with one line for each post.`,
+        `Pick two content days in ${cal.ref} and protect them.`,
+        `Keep hooks and ideas in ${notes.ref}. Move the one you are making to ${tasks.ref}.`
+      ]
+    },
+    kids: {
+      tiny: "Put next week's school dates in your calendar.",
+      steps: [
+        `Add school dates, practices, and birthdays to ${cal.ref}. Set the weekly ones to repeat.`,
+        `Make one Kids note in ${notes.ref} for sizes, teacher info, and class lists.`,
+        "Add a look-ahead to your weekly reset: what is due, what to pack, and who needs a ride."
+      ]
+    },
+    health: {
+      tiny: "Put one walk in your calendar this week.",
+      steps: [
+        `Pick one move or one habit and add it to ${cal.ref} as a repeat. Small counts.`,
+        `Put appointments to book in ${tasks.ref}. Once they are booked, move them to ${cal.ref}.`,
+        `Track it with a simple check mark in ${r.planner.ref}. A fancy tracker can wait.`
+      ]
+    },
+    money: {
+      tiny: "Put your next bill due date in your calendar.",
+      steps: [
+        `Add bill due dates to ${cal.ref} and set them to repeat.`,
+        `Make a Money list in ${tasks.ref} for things to pay, cancel, or check.`,
+        `Keep budget notes in ${notes.ref}. Passwords belong in a password manager, not in notes.`
+      ]
+    }
+  }[a.area];
+}
+
+function fourteenDays(a, r) {
+  const day = a.when === "morning" ? "today" : "tomorrow";
+  const full = a.when === "weekly" ? "the daily glance" : `your full ${a.mins} minute routine`;
+  return [
+    ["30 min", "Set up your tools with the checklist in Part 1. Two sittings is fine."],
+    ["1 min", "Do the Minimum routine. It is 60 seconds and it counts."],
+    ["3 min", "Do the Short routine."],
+    [`${a.when === "weekly" ? 3 : a.mins} min`, `Do ${full} once. Set a timer. When it rings, you are done.`],
+    ["2 min", "Empty your Inbox. Even one thing counts."],
+    ["5 min", "Pick the tiny first step for your Top 1 and do it."],
+    [`${weeklyMinutes(a)} min`, "Do your first weekly reset. The short version is fine."],
+    ["1 to 3 min", "Pick the routine that fits today: Full, Short, or Minimum."],
+    ["2 min", "Notice something that landed in the wrong place. Move it. No shame."],
+    [`${a.when === "weekly" ? 3 : a.mins} min`, `Plan ${a.when === "weekly" ? "today" : day}'s schedule first. Then let the tasks fill in around it.`],
+    ["1 min", "Easy day. Look at your calendar for 60 seconds and call it done."],
+    ["2 min", "Cross off what you finished this week. Say it out loud. It adds up."],
+    ["3 min", "Read your rules. If one needs a change, change just one."],
+    ["10 min", "Look back. What worked? What would you change? Keep it, tweak it, or reset it."]
+  ];
+}
+
+function weeklyMinutes(a) {
+  return ({ 5: 15, 10: 20, 15: 25, 20: 30 }[a.mins] || 20) + (a.when === "weekly" ? 10 : 0);
+}
+
+function rulesList(a, r) {
+  const { cal, tasks, N } = r;
+  return [
+    a.cal === "paper" ? "My paper calendar is the boss of my schedule." : `${cal.ref} is the boss of my schedule.`,
+    `Every task has one real home: ${tasks.ref}.`,
+    `My planner page is a shortlist. It holds my Top ${N} and nothing extra.`,
+    "Notes hold info. Tasks hold actions.",
+    "New things go in the Inbox first. I sort them at my weekly reset.",
+    "Something is better than nothing. The Minimum routine counts.",
+    "If I fall off, I open to today and keep going. There is no catching up.",
+    "I can change my planner whenever I want. These rules come with me."
+  ];
+}
+
+/* ---------- Assemble the plan ---------- */
+function buildPlan(a, sample) {
+  const r = refs(a);
+  const { cal, tasks, notes, planner, inbox, N, area, ex } = r;
+  const day = a.when === "morning" ? "today" : "tomorrow";
+  const name = a.name ? esc(a.name) : "";
+  const daily = dailySteps(a, r);
+  const stuck = STUCK[a.stuck](a, r);
+  const areaPlan = areaSteps(a, r);
+  const rules = rulesList(a, r);
+  const reset = weeklyMinutes(a);
+  const dayWord = a.when === "weekly" ? "today" : day;
+  let h = "";
+
+  if (sample) {
+    h += `<p class="banner no-print"><b>This is a sample.</b> Change any answer above and your setup updates right here.</p>`;
+  }
+  h += `<h2 class="plan-title">${name ? name + ", here is your setup" : "Here is your setup"}</h2>`;
+  h += `<p class="intro">You told me about ${planner.ref}, ${cal.ref}, ${tasks.ref}, and ${notes.ref}. Each one gets a single job, so nothing gets planned in two places.</p>`;
+  h += `<p class="intro">You plan ${WHEN_TEXT[a.when]} and have about ${a.mins} minutes${a.mins === 20 ? " or more" : ""} a day. I built everything to fit that. Start with Part 1 and take it one part at a time.</p>`;
+  h += `<div class="toolbar no-print">
+    <button type="button" class="btn" id="copyPlan">Copy my plan</button>
+    <button type="button" class="btn ghost" id="printBtn" hidden>Print or save as PDF</button>
+  </div>`;
+
+  /* Part 1 */
+  h += `<section class="part" aria-labelledby="p1"><div class="part-head"><span class="num" aria-hidden="true">1</span>
+    <h2 id="p1">Build your system</h2><p class="part-sub">Where does everything live?</p></div>`;
+  const plannerJob = tasks.digital
+    ? `Your command center. You pick your Top ${N} here and see your week and your day.`
+    : `Your command center. You pick your Top ${N} here, and your Master List lives here too.`;
+  const cards = [
+    ["Inbox", inbox.name, "Everything new lands here first. You do not have to sort it yet."],
+    ["Calendar", cal.name, "Anything with a day and a time. It is the boss of your schedule."],
+    ["Tasks", tasks.name, tasks.digital ? "Every to-do with no set time lives on one list." : "Every to-do with no set time lives on one page in your planner."],
+    ["Notes", notes.name, "Info you want to keep, like ideas, sizes, class lists, and links. Tasks do not live here."],
+    ["Planner", planner.name, plannerJob]
+  ];
+  h += `<div class="tools">` + cards.map(c =>
+    `<div class="tool${c[0] === "Planner" ? " hub" : ""}"><span class="lbl">${c[0]}</span><h3>${c[1]}</h3><p>${c[2]}</p></div>`).join("") + `</div>`;
+
+  h += `<div class="rule-box"><b>Nothing gets planned in two places</b>Each thing has one real home. ${cap(cal.ref)} wins for appointments and ${tasks.ref} wins for to-dos. Copying something onto paper on purpose is fine, because writing it down helps you remember it. Just know which one is the real one.</div>`;
+
+  h += `<h3 class="sub">Where does it go?</h3><p class="blurb">When something new shows up, find the line that sounds like it. Each line tells you where it goes.</p>`;
+  const routes = [
+    ["It has a day and a time", `<strong>Calendar</strong> in ${cal.ref}`, ex.appt],
+    ["It is a to-do with no set time", `<strong>Tasks</strong> in ${tasks.ref}`, ex.task],
+    ["It just popped into your head", `<strong>Inbox</strong>, which is ${inbox.ref}`, ex.inbox],
+    ["It is info you want to keep", `<strong>Notes</strong> in ${notes.ref}`, ex.note],
+    ["It happens on repeat", `<strong>Calendar</strong>, set to repeat in ${cal.ref}`, ex.repeat],
+    ["It feels too big to start", `<strong>Tasks</strong>, as one tiny first step`, ex.big],
+    ["It is what matters today", `<strong>Planner</strong>, on your Top ${N} list`, `Pick it from ${tasks.ref} and write it in ${planner.ref}`]
+  ];
+  h += `<ul class="rows">` + routes.map(x =>
+    `<li class="row"><span class="a">${x[0]}</span><span class="b">${x[1]}</span><span class="ex">Example: ${x[2]}</span></li>`).join("") + `</ul>`;
+
+  h += `<h3 class="sub">Your setup checklist</h3><p class="blurb">About 30 minutes. Two sittings is fine. Get the structure working first and make it pretty later.</p>`;
+  h += `<div class="checks">` + setupItems(a, r).map((it, i) =>
+    `<label class="check">${chk("setup-" + i)}<span><span class="t">${it.t}</span><span class="d">${it.d}</span></span></label>`).join("") + `</div></section>`;
+
+  /* Part 2 */
+  h += `<section class="part" aria-labelledby="p2"><div class="part-head"><span class="num" aria-hidden="true">2</span>
+    <h2 id="p2">Live your system</h2><p class="part-sub">Your weekly rhythm.</p></div>`;
+  h += `<h3 class="sub">Your weekly reset: about ${reset} minutes</h3>`;
+  h += `<p class="blurb">Pick a day that stays steady for you. Many people like Sunday. Add it to ${cal.ref} as a repeating event so you never have to remember it.</p>`;
+  h += `<ol class="steps">` + weeklySteps(a, r).map((s, i) =>
+    `<li class="step"><span class="mins" aria-hidden="true">${i + 1}</span><span><span class="t">${s[0]}</span>${s[1]}</span></li>`).join("") + `</ol>`;
+
+  h += `<h3 class="sub">${daily.title}</h3>`;
+  h += `<p class="blurb">${a.when === "weekly" ? "Your weekly reset does the heavy lifting. Daily is only a quick look." : `You plan ${dayWord === "today" ? "in the morning" : "the night before"}. Schedule first, then let your tasks fill in around it.`}</p>`;
+  h += `<ol class="steps">` + daily.steps.map(s =>
+    `<li class="step"><span class="mins">${s[0]}<small>min</small></span><span><span class="t">${s[1]}</span>${s[2]}</span></li>`).join("") + `</ol>`;
+  h += `<p class="total">Total: about ${daily.total} minutes.</p>`;
+
+  h += `<h3 class="sub">Three sizes of the same routine</h3><p class="blurb">Pick the size that fits the day. They all count.</p>`;
+  h += `<div class="sizes">
+    <div class="size"><span class="when">Normal day</span><h3>Full</h3><p class="time">${daily.total} min</p><p>${a.when === "weekly" ? "Your daily glance, plus your weekly reset." : "Your whole daily plan from above."}</p></div>
+    <div class="size"><span class="when">Busy day</span><h3>Short</h3><p class="time">3 min</p><p>Look at ${dayWord} in ${cal.ref}. Pick one thing that matters. Write it in ${planner.ref}.</p></div>
+    <div class="size"><span class="when">Rough day</span><h3>Minimum</h3><p class="time">60 sec</p><p>Open ${planner.ref}. Write down the one thing you will do next. Close it. That counts.</p></div>
+  </div>`;
+  h += `<p class="blurb">Something is better than nothing. Sick kid, travel, or a packed week all call for the Minimum routine.</p></section>`;
+
+  /* Part 3 */
+  h += `<section class="part" aria-labelledby="p3"><div class="part-head"><span class="num" aria-hidden="true">3</span>
+    <h2 id="p3">Design it to bend</h2><p class="part-sub">What to do when life gets busy.</p></div>`;
+  h += `<div class="stuck"><span class="tag">${stuck.tag}</span><h3>${stuck.title}</h3>${stuck.body.map(t => `<p>${t}</p>`).join("")}
+    <div class="try"><b>Try this first</b>${stuck.tryFirst}</div></div>`;
+
+  const fails = [
+    ["You miss a day", "Do the Short routine at your next quiet moment, or start fresh tomorrow. There is no catching up."],
+    ["You miss your weekly reset", `Do a 10 minute catch-up. Look at ${cal.ref}, pick this week's Top ${N}, and write the first step.`],
+    [`You do not finish your Top ${N}`, "Look at what is left. Does it still matter? Move it, shrink it, or let it go. You do not have to move all of it."],
+    ["Things land in four places again", "Gather them in your Inbox. Sort them at your next weekly reset."],
+    ["The list gets huge", `Start a Not Now list. Work from your Top ${N} only.`],
+    ["You want a new planner", "Wait 30 days. Then bring these same rules to whatever you pick."],
+    ["Life blows up", "Use the Minimum routine until things calm down. Sixty seconds a day keeps the habit alive."],
+    ["A new season starts", "Run this setup again. School starting, summer, and the holidays all change what fits."]
+  ];
+  h += `<h3 class="sub">When this happens, do this</h3>`;
+  h += `<ul class="rows">` + fails.map(f => `<li class="row"><span class="a">${f[0]}</span><span class="b">${f[1]}</span></li>`).join("") + `</ul>`;
+
+  h += `<h3 class="sub">A note for your style</h3><ul class="list">` + STYLE_TIPS[a.style].map(t => `<li>${t}</li>`).join("") + `</ul></section>`;
+
+  /* Part 4 */
+  h += `<section class="part" aria-labelledby="p4"><div class="part-head"><span class="num" aria-hidden="true">4</span>
+    <h2 id="p4">Apply it to real life</h2><p class="part-sub">Start with ${area}. Then your first 14 days.</p></div>`;
+  h += `<div class="stuck"><span class="tag">Your tiny first step</span><h3>${areaPlan.tiny}</h3></div>`;
+  h += `<h3 class="sub">Then set up ${area}</h3><ul class="list">` + areaPlan.steps.map(t => `<li>${t}</li>`).join("") + `</ul>`;
+
+  h += `<h3 class="sub">Your first 14 days</h3><p class="blurb">Missed a day? Skip ahead to the next one. Nothing resets.</p>`;
+  h += `<div class="days">` + fourteenDays(a, r).map((d, i) =>
+    `<label class="day">${chk("day-" + i)}<span class="n">Day ${i + 1}</span><span><b>${d[0]}.</b> ${d[1]}</span></label>`).join("") + `</div>`;
+
+  h += `<div class="rules" id="rules"><h2>My system rules</h2><p class="sub-t">Copy these onto the inside cover of your planner.</p>
+    <ol>${rules.map(t => `<li>${t}</li>`).join("")}</ol>
+    <button type="button" class="btn on-accent no-print" id="copyRules">Copy my rules</button></div></section>`;
+
+  h += `<footer class="foot"><p class="big">Set it up. Keep it going.</p><p>${CONFIG.partOf}</p>
+    <p class="no-print">${CONFIG.ctaText} <a href="${CONFIG.ctaUrl}" target="_blank" rel="noopener">${CONFIG.ctaLabel}</a></p></footer>`;
+  return h;
+}
+
+/* ---------- Render and wire up ---------- */
+let touched = false;
+const rulesText = () => Array.from(document.querySelectorAll("#rules li")).map((li, i) => (i + 1) + ". " + li.textContent).join("\n");
+
+function render() {
+  const a = read();
+  planEl.innerHTML = buildPlan(a, !touched);
+  const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  const pb = document.getElementById("printBtn");
+  if (pb && !inFrame) pb.hidden = false;
+  statusEl.textContent = touched ? "Your setup was updated." : "";
+}
+
+function flash(btn, msg) {
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+  btn.textContent = msg;
+  setTimeout(() => { btn.textContent = btn.dataset.label; }, 1800);
+}
+
+async function copyText(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    flash(btn, "Copied");
+    return;
+  } catch (e) { /* fall through */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (ok) { flash(btn, "Copied"); return; }
+  } catch (e) { /* fall through */ }
+  flash(btn, "Select the text and copy it");
+}
+
+form.addEventListener("input", () => { touched = true; render(); });
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  touched = true;
+  render();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  planEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  planEl.focus({ preventScroll: true });
+});
+planEl.addEventListener("change", e => {
+  const k = e.target && e.target.dataset && e.target.dataset.k;
+  if (!k) return;
+  if (e.target.checked) done.add(k); else done.delete(k);
+});
+planEl.addEventListener("click", e => {
+  const id = e.target && e.target.id;
+  if (id === "copyPlan") copyText("Real Life System Setup\n\n" + planEl.innerText, e.target);
+  if (id === "copyRules") copyText("My system rules\n" + rulesText(), e.target);
+  if (id === "printBtn") window.print();
+});
+
+buildForm();
+render();
+</script>
+</body>
+</html>
