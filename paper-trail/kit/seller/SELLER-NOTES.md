@@ -30,6 +30,8 @@ cd paper-trail/kit
 ./make-kit.sh             # the real one
 ```
 
+You can also just ask Claude Code: "Build the Paper Trail kit." It runs the same script.
+
 The real build refuses to run until every `REVIEW-BEFORE-SELLING` line is gone. There is one now, in `buyer/TERMS.txt`. The script also stops if it finds an em dash, a model name, or an unfilled placeholder in anything a buyer reads.
 
 ## Before you sell
