@@ -1,0 +1,14 @@
+Use this if Claude did not pick up the setup on its own, or if you are not working inside the Paper Trail folder. Attach paper-trail.html to the chat, then paste everything below the line.
+
+----------------------------------------------------------------
+
+Please set up Paper Trail for me.
+
+I have a file called paper-trail.html. It is a finished app. Publish it as a Claude artifact exactly as it is. Do not edit it or rewrite it.
+
+Use these settings:
+- icon: document
+- description: Snap a receipt, bill, or form and Claude pulls out the details, then files it with your car, home, health, and pet records.
+- capabilities: {"db": {}, "sample": {"images": true}, "assets": {}, "downloads": true, "user": {}}
+
+Keep it private. When it is published, send me the link and tell me how to open it on my phone. If anything fails, tell me what the error said in plain words and stop.

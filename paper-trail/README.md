@@ -117,3 +117,15 @@ Publish the same file to the same artifact URL to keep the saved records. The re
 - Photos are downsized before they are read, so hold the camera close to the paper.
 - The prompt tells Claude to leave out full card, bank, and Social Security numbers. Still, check each record before saving.
 - Renaming a car (or person or pet) across all its records is not built yet. Fix a name inside a record, and the other records keep theirs.
+
+## Giving it to other people
+
+The published artifact itself can't be shared with customers. People outside your Claude account can look at it but can't save records or photos, and everyone who can save shares one set of records.
+
+So the plan is a kit. Each buyer publishes their own copy of `paper-trail.html` into their own Claude account. They own it, their records stay private, and scans use their own Claude usage. The kit is in `kit/`:
+
+- `kit/buyer/` is what buyers get: a start-here guide, setup instructions for Claude, a paste-in prompt, and the rules.
+- `kit/seller/` is for the seller only: notes, sales copy, and a checklist for testing with a friend.
+- `kit/make-kit.sh` builds the zip.
+
+Start with `kit/seller/SELLER-NOTES.md`. The fresh-account setup and the phone camera have not been tested yet. `kit/seller/TEST-WITH-A-FRIEND.md` is how to find out.

@@ -1,0 +1,29 @@
+PAPER TRAIL: THE SHORT VERSION OF THE RULES
+Version {{VERSION}}
+Made by Wendaful Planning (wendaful.com)
+
+REVIEW-BEFORE-SELLING: this file is a plain-words draft, not legal advice. Have someone qualified read it, then delete this line.
+
+What you can do
+- Use Paper Trail for your own household. That includes the people who live with you.
+- Make your own copy by following START-HERE.html.
+- Change your own records any way you like.
+
+What you can't do
+- Resell it, give it away, or post the file anywhere.
+- Share the file with people outside your household.
+- Teach it or sell it as your own.
+
+One purchase covers one household.
+
+What to know
+- Paper Trail reads your papers with Claude. It can make mistakes. Check every record before you save it.
+- Don't file full card numbers, bank account numbers, or Social Security numbers. Paper Trail asks Claude to leave them out, but check before you save.
+- Paper Trail is a filing helper. It is not legal, tax, financial, or medical advice.
+- Your records live in your own Claude account, not with Wendaful Planning. Wendaful Planning cannot see them and cannot recover them. Save a spreadsheet once in a while as your own backup.
+- Scans use your own Claude usage.
+- Claude and its artifact features belong to Anthropic. They can change, and Paper Trail may need an update when they do. Wendaful Planning is not affiliated with Anthropic.
+- Paper Trail is provided as is, with no promise that it will always work or fit your needs.
+- Refunds follow the policy on the page where you bought it.
+
+Questions? Reach out through wendaful.com.
