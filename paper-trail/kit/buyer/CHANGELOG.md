@@ -1,5 +1,10 @@
 # What changed
 
+## Version 1.1.2
+
+- Fixed: in the Vision column, the Prescription box now holds the prescription (sphere, cylinder, and axis), not a detail like "Prescription expires". The expiry date goes to Next Appointment. The eye doctor box shows the doctor's name and the practice, and the phone box skips fax and license numbers.
+- Capabilities did not change.
+
 ## Version 1.1.1
 
 - Fixed: Vision and Dental in the Household Hub have a column for each person, so those papers now copy as a column with **Copy column**. Health and dental papers also let you choose the table (Vision or Dental, Receipts, Appointments).

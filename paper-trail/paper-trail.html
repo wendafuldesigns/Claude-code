@@ -1976,16 +1976,23 @@ function hubHealthTargets(r, ver) {
     cols: ['Date', 'Provider', 'Service', 'Amount', 'Paid With', 'Reimbursed?'],
     cells: [day, r.vendor, withWho(work || what), total, '', ''] };
   if (r.category === 'health') return rem || r.total == null ? [appointments, receipts] : [receipts, appointments];
-  const eye = /\b(eye|eyes|vision|optic\w*|optom\w*|ophthal\w*|glasses|contacts?|lens(?:es)?)\b/i.test([what, r.vendor, work].join(' '));
+  const eye = /\b(eye\w*|vision|optic\w*|optom\w*|ophthal\w*|glasses|contacts?|lens(?:es)?|sphere|cylinder)\b/i.test([what, r.vendor, work].join(' '));
   const col = ', in ' + (r.subject ? r.subject + "'s" : "the person's") + ' column';
   const last = rem ? '' : day;
+  // the prescription itself is usually saved under work done (sphere, cylinder, axis); a detail named "Prescription expires" is a date, not the prescription
+  const rxLines = r.work.filter(w => /sphere|cylinder|axis|\bsph\b|\bcyl\b|[+-]\d+\.\d{2}/i.test(w));
+  const rxDetail = (r.details.find(p => p.value && /prescription|\brx\b/i.test(p.label) && !/expir|date|valid|until|issued|written|renew|type/i.test(p.label)) || {}).value || '';
+  const rx = [find(/\brx type\b/i), rxLines.length ? rxLines.join('; ') : rxDetail].filter(Boolean).join('. ');
+  // a doctor's name, not their phone number or license: skip details whose label is about those
+  const named = re => { const p = r.details.find(x => x.value && re.test(x.label) && !/phone|fax|licen|address|email|number|#/i.test(x.label)); return p ? p.value : ''; };
+  const doctor = (words, fallback) => [named(words), fallback].filter(Boolean).join(', ');
   const grid = eye
     ? { id: 'vision', label: 'Vision', layout: 'column', where: (sheet ? 'Health & Safety tab, the Vision table' : 'Medical, Vision') + col,
       cols: ['Eye Doctor', 'Phone', 'Last Exam', 'Prescription', 'Next Appointment'],
-      cells: [r.vendor, find(/phone/i), last, find(/prescription|\brx\b/i), r.nextDueDate] }
+      cells: [doctor(/optometrist|ophthalmologist|eye doctor|doctor|physician|provider/i, r.vendor), find(/phone/i), last, rx, r.nextDueDate] }
     : { id: 'dental', label: 'Dental', layout: 'column', where: (sheet ? 'Health & Safety tab, the Dental table' : 'Medical, Dental') + col,
       cols: ['Dentist', 'Phone', 'Last Cleaning', 'Next Appointment', 'Notes'],
-      cells: [r.vendor, find(/phone/i), last, r.nextDueDate, [work, total, r.notes].filter(Boolean).join('; ')] };
+      cells: [doctor(/dentist|orthodontist|doctor/i, r.vendor), find(/phone/i), last, r.nextDueDate, [work, total, r.notes].filter(Boolean).join('; ')] };
   return rem ? [appointments, grid, receipts] : [grid, receipts, appointments];
 }
 function hubTarget(r, ver) {
