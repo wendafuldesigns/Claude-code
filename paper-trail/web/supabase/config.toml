@@ -1,0 +1,4 @@
+# Settings for the Supabase CLI. The scan service checks the person's token itself (see handler.js),
+# so the gateway check is off: it does not yet understand every kind of signing key.
+[functions.scan]
+verify_jwt = false

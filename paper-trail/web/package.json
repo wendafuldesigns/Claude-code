@@ -5,7 +5,8 @@
   "description": "The Paper Trail web app: database, scan service, and app shell.",
   "scripts": {
     "test:db": "node supabase/tests/db.test.mjs",
-    "test": "npm run test:db"
+    "test:scan": "node supabase/tests/scan.test.mjs",
+    "test": "npm run test:db && npm run test:scan"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10"
