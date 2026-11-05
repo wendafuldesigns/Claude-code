@@ -1,0 +1,13 @@
+{
+  "name": "paper-trail-web",
+  "private": true,
+  "type": "module",
+  "description": "The Paper Trail web app: database, scan service, and app shell.",
+  "scripts": {
+    "test:db": "node supabase/tests/db.test.mjs",
+    "test": "npm run test:db"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10"
+  }
+}
