@@ -545,7 +545,7 @@ const UNSURE_KEYS = new Set(['category', 'title', 'date', 'vendor', 'subject', '
 
 /* ---------- state ---------- */
 const state = {
-  view: 'home',            // home | ideas | reading | detail | edit
+  view: 'home',            // home | ideas | reading | detail | edit | account
   storage: 'loading',      // loading | ready | none
   loaded: false,           // true after the first database snapshot
   canWrite: true,
@@ -581,7 +581,9 @@ const state = {
 //   assets    {upload(blob, {type}) -> {id}, delete(id)} for storing photos, or null when this view cannot store them
 //   assetUrl  (id, thumb) -> an image address, or a promise of one
 //   downloads {save({filename, data})}
-const caps = { db: null, scan: null, assets: null, assetUrl: null, downloads: null };
+//   account   {view() -> an element}: the web app's account screen, reached from a button in the app bar
+//   banner    () -> an element or null: a slim notice at the top of the home screen (trial days left, and so on)
+const caps = { db: null, scan: null, assets: null, assetUrl: null, downloads: null, account: null, banner: null };
 let sampleBlocked = false;   // the runtime said this view may not read papers
 let scanOff = null;          // a message when scanning is closed for now, such as a used-up monthly cap
 let runtimeStrings = {};
@@ -595,6 +597,7 @@ const DEFAULT_STR = {
   scanOffBlocked: 'Claude was not allowed to read papers in this view. Open the page again and say yes when it asks.',
   scanOffStorage: 'Saving is not available in this view. Open Paper Trail from your Claude account.',
   homeFoot: 'Photos are sent to Claude to be read. Your records stay private unless you share this page.',
+  planClosed: 'You can look at these records but not change them.',
 };
 const STR = key => runtimeStrings[key] || DEFAULT_STR[key];
 
@@ -1215,6 +1218,7 @@ async function save() {
   } catch (e) {
     const code = e && e.code;
     if (code === 'quota_exceeded') toast('Paper Trail is full. Delete a few records to add more.');
+    else if (code === 'plan_closed') toast(STR('planClosed'));
     else if (code === 'invalid_argument') toast('You can look at these records but not change them.');
     else toast('That did not save. Try again.');
     state.saving = false;
@@ -1306,7 +1310,7 @@ function render() {
     state.viewId = null;
   }
   if (state.view !== 'home' && heroObserver) { heroObserver.disconnect(); heroObserver = null; }
-  const v = state.view === 'home' ? homeView() : state.view === 'ideas' ? ideasView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : editView();
+  const v = state.view === 'home' ? homeView() : state.view === 'ideas' ? ideasView() : state.view === 'reading' ? readingView() : state.view === 'detail' ? detailView() : state.view === 'account' ? accountView() : editView();
   byId('app').replaceChildren(v);
   if (lastView !== state.view) window.scrollTo(0, 0);
   lastView = state.view;
@@ -1345,6 +1349,7 @@ const ICONS = {
   pencil: '<path d="M4.2 19.8l.9-3.9L16.4 4.6a1.9 1.9 0 0 1 2.7 0l.3.3a1.9 1.9 0 0 1 0 2.7L8.1 18.9z"/><path d="M14.6 6.4l3 3"/>',
   bulb: '<path d="M9.6 18.2h4.8M10.2 21h3.6"/><path d="M12 3.4a5.6 5.6 0 0 0-3.3 10.1c.5.4.8.9.8 1.5v.2h5v-.2c0-.6.3-1.1.8-1.5A5.6 5.6 0 0 0 12 3.4z"/>',
   bell: '<path d="M6.4 16.6V11a5.6 5.6 0 0 1 11.2 0v5.6l1.6 2H4.8z"/><path d="M10 20.6a2.2 2.2 0 0 0 4 0"/>',
+  user: '<circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20c.9-3.6 3.7-5.4 7.2-5.4s6.3 1.8 7.2 5.4"/>',
   search: '<circle cx="10.8" cy="10.8" r="6"/><path d="M15.3 15.3l4.6 4.6"/>',
   plus: '<path d="M12 5.5v13M5.5 12h13"/>',
 };
@@ -1416,7 +1421,19 @@ function appBar() {
     h('div', { class: 'appname-wrap' }, h('span', { class: 'appname' }, 'Paper Trail'), h('span', { class: 'today' }, date)),
     h('span', { class: 'spacer' }),
     h('button', { class: 'round', type: 'button', id: 'btnFindTop', 'aria-label': 'Search your papers', onclick: focusSearch }, icon('search', 20)),
-    state.canWrite && state.storage === 'ready' ? h('button', { class: 'round', type: 'button', id: 'btnIdeasTop', 'aria-label': 'Ideas to add', onclick: () => openIdeas() }, icon('bulb', 20)) : null);
+    state.canWrite && state.storage === 'ready' ? h('button', { class: 'round', type: 'button', id: 'btnIdeasTop', 'aria-label': 'Ideas to add', onclick: () => openIdeas() }, icon('bulb', 20)) : null,
+    caps.account ? h('button', { class: 'round', type: 'button', id: 'btnAccount', 'aria-label': 'Your account', onclick: showAccount }, icon('user', 20)) : null);
+}
+function showAccount() {
+  state.view = 'account';
+  render();
+}
+function accountView() {
+  return h('div', { class: 'account' },
+    h('div', { class: 'bar' },
+      h('button', { class: 'btn ghost', type: 'button', id: 'btnBack', onclick: goHome }, '← Back'),
+      h('h2', { class: 'bar-title' }, 'Your account')),
+    caps.account.view({ exportAll: () => exportCsv(state.records, ''), count: state.records.length, toast }));
 }
 
 let heroObserver = null;
@@ -1479,6 +1496,7 @@ function homeView() {
   const wrap = h('div', { class: 'home' });
   wrap.append(
     appBar(),
+    caps.banner ? caps.banner() : null,
     scanCard(),
     h('div', { id: 'comingArea' }),
     h('div', { id: 'tilesArea' }),
@@ -2271,7 +2289,7 @@ async function init() {
   let rt = {};
   if (window.PT_RUNTIME) rt = await window.PT_RUNTIME.connect();
   else if (typeof artifactRuntime === 'function') rt = await artifactRuntime();
-  Object.assign(caps, { db: rt.db || null, scan: rt.scan || null, assets: rt.assets || null, assetUrl: rt.assetUrl || null, downloads: rt.downloads || null });
+  Object.assign(caps, { db: rt.db || null, scan: rt.scan || null, assets: rt.assets || null, assetUrl: rt.assetUrl || null, downloads: rt.downloads || null, account: rt.account || null, banner: rt.banner || null });
   runtimeStrings = rt.strings || {};
   state.canWrite = rt.canWrite !== false;
   if (caps.db) {

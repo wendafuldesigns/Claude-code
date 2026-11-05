@@ -1,0 +1,9 @@
+# Tells Netlify how to build Paper Trail from this repository (see docs/DEPLOY.md).
+# The settings it needs (SUPABASE_URL, SUPABASE_ANON_KEY, SUPPORT_EMAIL) go in Netlify's site settings, not in this file.
+[build]
+  base = "paper-trail/web"
+  command = "npm ci && node app/build.mjs"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

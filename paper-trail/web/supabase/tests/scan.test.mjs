@@ -166,5 +166,13 @@ try { execFileSync('node', [path.join(here, '../../app/extract-shared.mjs'), '--
 check('prompt.js matches the app file (run app/extract-shared.mjs if this fails)', sync);
 check('every paper type is in the prompt', CATS.every(c => buildScanPrompt(1, [], '2026-11-05').includes(c.id + ' (')));
 
+// ---- the one-file version for the Supabase dashboard
+let bundleOk = true;
+try { execFileSync('node', [path.join(here, '../../app/bundle-function.mjs'), '--check'], { stdio: 'pipe' }); } catch (e) { bundleOk = false; }
+check('the one-file version matches the source (run app/bundle-function.mjs if this fails)', bundleOk);
+let smoke = null;
+try { smoke = JSON.parse(execFileSync('node', ['--experimental-strip-types', '--no-warnings', path.join(here, 'bundle-smoke.mjs')], { stdio: 'pipe', encoding: 'utf8' }).trim().split('\n').pop()); } catch (e) { smoke = { error: String(e.stderr || e.message).slice(0, 300) }; }
+check('and it runs end to end on its own: a scan goes in, the fields come out', smoke && smoke.status === 200 && smoke.body.result.title === 'Vet checkup' && smoke.body.result.category === 'pet', smoke);
+
 console.log('\n' + passed + '/' + (passed + failed) + ' passed');
 process.exit(failed ? 1 : 0);

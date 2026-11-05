@@ -125,6 +125,10 @@ Every paper's summary has an **Add to Household Hub** section (closed until you 
 
 The tables live in one function, `hubTarget`. Its column lists match tables in the real Hub Sheet and Doc, in the same order.
 
+## The web app
+
+For people who do not use Claude, the same screens also run as a website with their own sign-in, cloud storage, and scans you pay for. It lives in `web/`. Start with `web/README.md`, then `web/docs/DEPLOY.md`.
+
 ## Known limits
 
 - Photos and screenshots only. PDFs are not read yet.
