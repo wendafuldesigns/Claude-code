@@ -51,7 +51,7 @@ await shot('4-account-trial');
 await pg.click('#btnBack');
 be.S.plan = { ...be.S.plan, plan_status: 'trialing', can_write: false, trial_ends_at: new Date(Date.now() - 864e5).toISOString() };
 await pg.reload();
-await pg.waitForSelector('#planBanner');
+await pg.waitForSelector('.scan-off');
 await shot('5-home-trial-ended');
 await pg.click('#btnAccount');
 await pg.waitForSelector('#acctPlanTitle');
