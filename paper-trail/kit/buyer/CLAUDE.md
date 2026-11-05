@@ -30,7 +30,7 @@ They will give you a newer `paper-trail.html` and replace the old one in this fo
 
 1. Find their existing Paper Trail in their artifact list and read it.
 2. Publish the new file to that same URL. Their records are kept.
-3. Leave `capabilities` out, unless `CHANGELOG.md` says they changed.
+3. Leave `capabilities` out, unless `more/CHANGELOG.md` says they changed.
 4. If the publish is refused and shows you the live version, that is the old app. The new file replaces it.
 
 ## Rules

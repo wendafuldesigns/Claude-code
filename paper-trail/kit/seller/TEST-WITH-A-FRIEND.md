@@ -86,6 +86,14 @@ This tells you what to say on the sales page about "uses your own Claude usage."
 
 I checked every column list against your real Hub Sheet and Doc. I could not paste into them, so this section is the real test.
 
+### 10. Is there an easier way in? (you can do this one yourself)
+
+Claude Code is the one step that's hardest for a non-techy buyer. This checks whether it can be skipped.
+
+- [ ] In a normal Claude chat (not Claude Code), attach `paper-trail.html` and paste what's in `more/PASTE-THIS-PROMPT.txt`. Does Claude publish it and give you a link that works, with Scan and Save working?
+- [ ] If yes, tell me. I'll make that the main path and Claude Code the backup, which turns setup into: attach a file, paste a sentence, open the link.
+- [ ] If no, write down what Claude said. The guide stays as it is.
+
 ## After the test
 
 1. Fix START-HERE.html wherever your friend got stuck.

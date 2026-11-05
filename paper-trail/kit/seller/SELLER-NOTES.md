@@ -15,7 +15,7 @@ For you, that means:
 | Path | What it is |
 | --- | --- |
 | `../paper-trail.html` | The app. The only copy. Everything else points here. |
-| `buyer/` | The files buyers get: `START-HERE.html`, `CLAUDE.md`, `PASTE-THIS-PROMPT.txt`, `TERMS.txt`, `CHANGELOG.md`. |
+| `buyer/` | The files buyers get: `START-HERE.html`, `CLAUDE.md`, and a `more/` folder with `GUIDE.html`, `PASTE-THIS-PROMPT.txt`, `TERMS.txt`, and `CHANGELOG.md`. |
 | `seller/` | You only: these notes, the sales copy, the test checklist, and the Household Hub page (`WHERE-DOES-EACH-PAPER-GO.md`). |
 | `screens/` | App screenshots with sample data. |
 | `mockups/` | The same screenshots as 3:4 shop images, evergreen with a phone frame. |
@@ -32,24 +32,25 @@ cd paper-trail/kit
 
 You can also just ask Claude Code: "Build the Paper Trail kit." It runs the same script.
 
-The real build refuses to run until every `REVIEW-BEFORE-SELLING` line is gone. There is one now, in `buyer/TERMS.txt`. The script also stops if it finds an em dash, a model name, or an unfilled placeholder in anything a buyer reads.
+The real build refuses to run until every `REVIEW-BEFORE-SELLING` line is gone. There is one now, in `buyer/more/TERMS.txt`. The script also stops if it finds an em dash, a model name, or an unfilled placeholder in anything a buyer reads.
 
 ## Before you sell
 
 1. Run the friend test in `TEST-WITH-A-FRIEND.md`. This is the big one.
 2. Paste a few rows into your own Hub Sheet and Doc (section 9 of the friend test).
-3. Have someone qualified read `buyer/TERMS.txt`. It's a plain-words draft, not legal advice. Then delete the `REVIEW-BEFORE-SELLING` line.
+3. Have someone qualified read `buyer/more/TERMS.txt`. It's a plain-words draft, not legal advice. Then delete the `REVIEW-BEFORE-SELLING` line.
 4. Read Anthropic's current terms for selling things people build on Claude.
-5. Check which Claude plans include Claude Code and artifacts. Put it in `START-HERE.html` under "What you need."
-6. Replace the staged scan screenshots with a real scan from your own copy.
-7. Decide on your price and whether updates are free. `START-HERE.html` says "I'll send you a new file" when there's an update, so only keep that line if you will.
-8. Pick where buyers contact you. The guides say wendaful.com.
+5. Record a short screen video of the three setup steps (about two minutes) and put the link at the top of `START-HERE.html`. A video will do more than any page of words.
+6. Check which Claude plans include Claude Code and artifacts. Put it in `START-HERE.html` under "What you need."
+7. Replace the staged scan screenshots with a real scan from your own copy.
+8. Decide on your price and whether updates are free. `START-HERE.html` says "I'll send you a new file" when there's an update, so only keep that line if you will.
+9. Pick where buyers contact you. The guides say wendaful.com.
 
 ## Send an update
 
 1. Change `../paper-trail.html`.
 2. Raise the number in `VERSION`.
-3. Add a new section at the top of `buyer/CHANGELOG.md`. Write the version number out, like `## Version 1.1.0`. Say whether the capabilities changed. If they did, `CLAUDE.md` and `PASTE-THIS-PROMPT.txt` need the new list too.
+3. Add a new section at the top of `buyer/more/CHANGELOG.md`. Write the version number out, like `## Version 1.1.0`. Say whether the capabilities changed. If they did, `CLAUDE.md` and `PASTE-THIS-PROMPT.txt` need the new list too.
 4. Run `./make-kit.sh`, upload the new zip to your shop, and email your buyers.
 
 An update never touches a buyer's records. Their records live in their own artifact, and publishing to the same link keeps them.
