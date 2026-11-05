@@ -17,7 +17,12 @@ Work down it in order. Nothing here is optional for the stage it's under.
 
 ## Before you charge money
 
-- [ ] Payments are built and tested with Stripe's test mode (next stage). A paid person's plan turns on, a late payment is handled, and a cancel keeps their papers readable.
+- [ ] You ran the whole payment test from `DEPLOY.md` in Stripe's test mode: subscribe, land back in the app, manage, cancel, and a late payment.
+- [ ] Stripe's list of webhook messages (Developers, Webhooks) shows every one answered with a success, not a failure.
+- [ ] You repeated the Stripe setup in **live mode**: live price, live key, live webhook with its own signing secret, and the three Supabase secrets replaced. Then you made one real purchase yourself and refunded it.
+- [ ] You decided whether to swap the Stripe secret key for a restricted key that can only do what the billing service needs.
+- [ ] Your Stripe customer page shows the cancel and update-card options, and your receipts and invoices carry your business name.
+- [ ] You know what happens when someone deletes their account while subscribed. Today you cancel the subscription in Stripe by hand, so add that to the deletion steps.
 - [ ] The Terms and Privacy pages are reviewed by someone qualified, the [brackets] are filled in, and the draft boxes are gone. They match what the app really does.
 - [ ] The refund rule is decided and written in the Terms.
 - [ ] You decided on the scan cap per month and the trial length (the numbers are in the database settings).

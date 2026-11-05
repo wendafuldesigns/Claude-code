@@ -20,23 +20,34 @@ const check = (name, ok, extra) => { if (ok) { passed++; console.log('PASS ' + n
 
 // ---------- build it the way a real deploy would ----------
 const anon = 'eyJhbGciOiJIUzI1NiJ9.' + Buffer.from(JSON.stringify({ role: 'anon' })).toString('base64url') + '.signature';
-build({ supabaseUrl: HOST, anonKey: anon, supportEmail: 'help@example.com', trialText: 'Try it free for 14 days.', subscribeUrl: '', out: OUT, production: false, allowLocal: false });
+const OUT_OFF = path.join(here, '../dist-test-off');
+const base = { supabaseUrl: HOST, anonKey: anon, supportEmail: 'help@example.com', trialText: 'Try it free for 14 days.', subscribeUrl: '', production: false, allowLocal: false };
+build({ ...base, out: OUT, billing: true, planText: '$6 a month', yearlyText: '$60 a year' });
+build({ ...base, out: OUT_OFF, billing: false });
 
 // ---------- serve it, with the same security headers the host will add ----------
-const headerBlock = fs.readFileSync(path.join(OUT, '_headers'), 'utf8').split('\n/')[0].split('\n').slice(1).map(l => l.trim()).filter(Boolean).map(l => [l.slice(0, l.indexOf(':')), l.slice(l.indexOf(':') + 1).trim()]);
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
-const server = http.createServer((req, res) => {
-  let p = decodeURIComponent(req.url.split('?')[0]);
-  if (p === '/') p = '/index.html';
-  if (!path.extname(p) && fs.existsSync(path.join(OUT, p + '.html'))) p += '.html';
-  const file = path.join(OUT, p);
-  if (!file.startsWith(OUT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end('not found'); return; }
-  const h = { 'content-type': types[path.extname(file)] || 'application/octet-stream' };
-  for (const [k, v] of headerBlock) h[k] = v;
-  res.writeHead(200, h);
-  res.end(fs.readFileSync(file));
-}).listen(0);
-const BASE = 'http://localhost:' + server.address().port;
+function serve(dir, tweak) {
+  const headerBlock = fs.readFileSync(path.join(dir, '_headers'), 'utf8').split('\n/')[0].split('\n').slice(1).map(l => l.trim()).filter(Boolean).map(l => [l.slice(0, l.indexOf(':')), l.slice(l.indexOf(':') + 1).trim()]);
+  const server = http.createServer((req, res) => {
+    let p = decodeURIComponent(req.url.split('?')[0]);
+    if (p === '/') p = '/index.html';
+    if (!path.extname(p) && fs.existsSync(path.join(dir, p + '.html'))) p += '.html';
+    const file = path.join(dir, p);
+    if (!file.startsWith(dir) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end('not found'); return; }
+    const h = { 'content-type': types[path.extname(file)] || 'application/octet-stream' };
+    for (const [k, v] of headerBlock) h[k] = v;
+    res.writeHead(200, h);
+    let body = fs.readFileSync(file);
+    if (tweak && p === '/config.js') body = Buffer.from(String(body) + tweak.configExtra);
+    res.end(body);
+  }).listen(0);
+  return { server, base: 'http://localhost:' + server.address().port };
+}
+const main = serve(OUT);
+const BASE = main.base;
+const off = serve(OUT_OFF);
+const BASE_OFF = off.base;
 
 // ---------- the browser ----------
 const browser = await chromium.launch();
@@ -243,7 +254,7 @@ await pg.waitForSelector('#acctEmail');
 check('the account screen shows who is signed in, the plan, and the trial', (await pg.locator('#acctEmail').innerText()) === 'wenda@example.com' && /Free trial/.test(await pg.locator('#acctPlanTitle').innerText()) && /days left/.test(await pg.locator('#acctPlanLine').innerText()));
 check('it explains how to put the app on the home screen, until it is installed', await pg.locator('#acctInstall').isVisible());
 check('it has Terms, Privacy, and the support address', await pg.locator('.acct a[href="/terms.html"]').count() === 1 && await pg.locator('.acct a[href="mailto:help@example.com"]').count() === 1);
-check('and a way to subscribe is not shown while the trial is open', await pg.locator('#acctSubscribe').count() === 0);
+check('while the trial is open, Subscribe is offered with the price, and says trial days are not added on', /Subscribe \(\$6 a month\)/.test(await pg.locator('#acctSubscribe').innerText()) && /Subscribe \(\$60 a year\)/.test(await pg.locator('#acctSubscribeYearly').innerText()) && /Any trial days left are not added on/.test(await pg.locator('.acct').innerText()));
 const [csv] = await Promise.all([pg.waitForEvent('download'), pg.click('#acctExport')]);
 check('"Save all my papers" hands over a spreadsheet', /^paper-trail-.*\.csv$/.test(csv.suggestedFilename()), csv.suggestedFilename());
 await pg.click('#btnBack');
@@ -266,7 +277,7 @@ await pg.click('#btnBack');
 await pg.click('#btnAccount');
 await pg.waitForSelector('#acctPlanTitle');
 check('the account screen says the trial ended, and that nothing is lost', /ended/.test(await pg.locator('#acctPlanTitle').innerText()) && /still look at everything/.test(await pg.locator('#acctPlanLine').innerText()) && await pg.locator('#acctExport').isVisible());
-check('and says subscribing is not open yet, since no payment link is set', /not open yet/.test(await pg.locator('.acct').innerText()));
+check('and offers Subscribe, with no Manage button since they never subscribed', await pg.locator('#acctSubscribe').isVisible() && await pg.locator('#acctManage').count() === 0);
 // ---- every plan state
 for (const [status, can, title, bannerRe] of [['active', true, /Subscribed/, null], ['past_due', true, /did not go through/, /did not go through/], ['canceled', false, /has ended/, null]]) {
   be.S.plan = { ...be.S.plan, plan_status: status, can_write: can, current_period_end: new Date(Date.now() + 20 * 864e5).toISOString(), scans_used: 3, scan_cap: 100 };
@@ -326,6 +337,95 @@ await fc6.setFiles(FIXTURE);
 await pg6.waitForSelector('#f-title', { timeout: 15000 });
 check('if the sign-in runs out during a scan, it quietly renews and the scan goes through', be6.S.scanCalls.length === 1 && be6.S.log.filter(l => l.path.startsWith('/functions/v1/scan')).length === 2 && be6.S.log.some(l => l.path.startsWith('/auth/v1/token')) && (await pg6.inputValue('#f-title')) === 'Oil change', { calls: be6.S.scanCalls.length });
 
+// ================= subscribing =================
+const stateIs = async (be, plan) => { be.S.plan = { ...be.S.plan, ...plan }; };
+const ended = { plan_status: 'trialing', can_write: false, trial_ends_at: new Date(Date.now() - 864e5).toISOString() };
+const be7 = makeBackend();
+be7.S.siteUrl = BASE;
+const pg7 = await open(be7);
+await signIn(pg7, be7);
+await stateIs(be7, ended);
+await pg7.reload();
+await pg7.waitForSelector('.scan-off');
+check('with the trial over, scanning is off and the reason is shown', await pg7.locator('#btnCamera').count() === 0);
+await pg7.click('#btnAccount');
+await pg7.waitForSelector('#acctSubscribe');
+await pg7.click('#acctSubscribe');
+await pg7.waitForSelector('#gateFinishing', { timeout: 8000 });
+check('Subscribe asks the billing service for the monthly plan and goes to the page it returns', be7.S.billingCalls.length === 1 && be7.S.billingCalls[0].action === 'checkout' && be7.S.billingCalls[0].plan === 'monthly', be7.S.billingCalls);
+check('coming back from paying shows "Finishing your subscription"', /Finishing your subscription/.test(await pg7.locator('#gate').innerText()));
+await pg7.waitForSelector('#btnCamera', { timeout: 20000 });
+check('and when the webhook has turned the plan on, scanning is back, with no leftover address', await pg7.locator('#btnCamera').isVisible() && !pg7.url().includes('checkout') && new URL(pg7.url()).search === '');
+check('the home screen has no warning once subscribed', await pg7.locator('#planBanner').count() === 0);
+await pg7.click('#btnAccount');
+await pg7.waitForSelector('#acctPlanTitle');
+check('the account screen says subscribed, with the renewal date and the new scan allowance', /^Subscribed$/.test(await pg7.locator('#acctPlanTitle').innerText()) && /Renews/.test(await pg7.locator('#acctPlanLine').innerText()) && /0 of 100/.test(await pg7.locator('#acctPlanLine').innerText()));
+check('and offers Manage instead of Subscribe', await pg7.locator('#acctManage').isVisible() && await pg7.locator('#acctSubscribe').count() === 0);
+await pg7.click('#acctManage');
+await pg7.waitForSelector('#btnCamera, #btnHand', { timeout: 10000 });
+check('Manage asks for the manage page', be7.S.billingCalls.at(-1).action === 'portal' && be7.S.billingCalls.length === 2, be7.S.billingCalls);
+be7.S.plan.cancel_at_period_end = true;
+await pg7.reload();
+await pg7.waitForSelector('#btnAccount');
+await pg7.click('#btnAccount');
+await pg7.waitForSelector('#acctPlanTitle');
+check('a cancel that takes effect later is explained, and still lets them add', /ending soon/.test(await pg7.locator('#acctPlanTitle').innerText()) && /ends on/.test(await pg7.locator('#acctPlanLine').innerText()) && /Manage subscription/.test(await pg7.locator('#acctPlanLine').innerText()));
+await pg7.click('#btnBack');
+check('and nothing is closed yet', await pg7.locator('#btnCamera').isVisible());
+
+// ---- when the payment page cannot be opened
+const be8 = makeBackend();
+be8.S.siteUrl = BASE;
+const pg8 = await open(be8);
+await signIn(pg8, be8);
+await pg8.click('#btnAccount');
+await pg8.waitForSelector('#acctSubscribe');
+be8.S.billingMode = 'down';
+await pg8.click('#acctSubscribe');
+await pg8.waitForFunction(() => /could not open the payment page/.test(document.getElementById('acctBillingMsg').textContent));
+check('if the payment page cannot be opened, it says so and the button works again', await pg8.locator('#acctSubscribe').isEnabled() && await pg8.locator('#acctPlanTitle').isVisible());
+be8.S.billingMode = 'already';
+await pg8.click('#acctSubscribe');
+await pg8.waitForFunction(() => /already subscribed/.test(document.getElementById('acctBillingMsg').textContent));
+check('if the server says they are already subscribed, they are pointed to Manage', /already subscribed.*Manage subscription/.test(await pg8.locator('#acctBillingMsg').innerText()), await pg8.locator('#acctBillingMsg').innerText());
+
+// ---- paying, but the confirmation is slow
+const be9 = makeBackend();
+be9.S.siteUrl = BASE;
+be9.S.neverActivate = true;
+const slowCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+const pg9 = await open(be9, { ctx: slowCtx });
+await pg9.route(BASE + '/config.js', async route => { const r = await route.fetch(); await route.fulfill({ response: r, body: (await r.text()) + '\nwindow.PT_CONFIG.checkoutWaitMs = 1600;' }); });
+await signIn(pg9, be9);
+await stateIs(be9, ended);
+await pg9.reload();
+await pg9.waitForSelector('.scan-off');
+await pg9.click('#btnAccount');
+await pg9.click('#acctSubscribe');
+await pg9.waitForSelector('#planBanner', { timeout: 15000 });
+check('if the plan has not turned on after a while, it says the payment is being confirmed and to reload', /payment is being confirmed/.test(await pg9.locator('#planBanner').innerText()), await pg9.locator('#planBanner').innerText());
+
+// ---- backing out of the payment page
+const be10 = makeBackend();
+const pg10 = await open(be10);
+await signIn(pg10, be10);
+await pg10.goto(BASE + '/?checkout=canceled');
+await pg10.waitForSelector('#btnCamera');
+check('backing out of the payment page just returns to the app, with a clean address', new URL(pg10.url()).search === '' && await pg10.locator('#btnCamera').isVisible());
+
+// ---- an app built without payments
+const be11 = makeBackend();
+await stateIs(be11, ended);
+const pg11 = await open(be11);
+await pg11.goto(BASE_OFF + '/');
+await pg11.waitForSelector('#gateEmail');
+await pg11.fill('#gateEmail', 'a@example.com'); await pg11.click('#gateSend');
+await pg11.waitForSelector('#gateCode'); await pg11.fill('#gateCode', CODE); await pg11.click('#gateCheck');
+await pg11.waitForSelector('.scan-off');
+await pg11.click('#btnAccount');
+await pg11.waitForSelector('#acctPlanTitle');
+check('without payments switched on, it says subscribing is not open yet and shows no button', /not open yet/.test(await pg11.locator('.acct').innerText()) && await pg11.locator('#acctSubscribe').count() === 0 && await pg11.locator('#acctManage').count() === 0);
+
 // ================= signing out, and a session that has expired =================
 const be4 = makeBackend();
 const pg4 = await open(be4);
@@ -353,13 +453,15 @@ check('it keeps only the app\'s own files, never anything from Supabase', cached
 
 // ================= nothing was blocked, nothing broke =================
 const violations = [];
-for (const p of [pg, pg2, pg3, pg4, pg5, pg6]) violations.push(...await csp(p).catch(() => []));
+for (const p of [pg, pg2, pg3, pg4, pg5, pg6, pg7, pg8, pg9, pg10, pg11]) violations.push(...await csp(p).catch(() => []));
 check('the browser blocked nothing: the security headers fit the app', violations.length === 0, violations);
-const real = problems.filter(t => !/Failed to load resource.*(401|403|400|429|402|502|404)/.test(t));
+const real = problems.filter(t => !/Failed to load resource.*(401|403|400|429|402|502|404|409)/.test(t));
 check('and there were no errors in the console', real.length === 0, real.slice(0, 6));
 
 await browser.close();
-server.close();
+main.server.close();
+off.server.close();
 fs.rmSync(OUT, { recursive: true, force: true });
+fs.rmSync(OUT_OFF, { recursive: true, force: true });
 console.log('\n' + passed + '/' + (passed + failed) + ' passed');
 process.exit(failed ? 1 : 0);

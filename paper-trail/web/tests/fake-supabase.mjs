@@ -19,7 +19,7 @@ export function makeBackend() {
   const S = {
     email: null,
     tokens: new Map(),            // access token -> true
-    plan: { plan_status: 'trialing', trial_ends_at: new Date(Date.now() + 14 * 864e5).toISOString(), current_period_end: null, can_write: true, scans_used: 0, scan_cap: 15 },
+    plan: { plan_status: 'trialing', trial_ends_at: new Date(Date.now() + 14 * 864e5).toISOString(), current_period_end: null, can_write: true, scans_used: 0, scan_cap: 15, has_customer: false, cancel_at_period_end: false },
     records: new Map(),           // id -> { id, household_id, data, created_by, created_at }
     objects: new Map(),           // storage path -> true
     log: [],                      // every request, for the tests to look at
@@ -30,6 +30,11 @@ export function makeBackend() {
     signedOut: 0,
     expireSessions: false,
     scan401Once: false,
+    siteUrl: 'http://localhost',
+    billingMode: 'ok',            // ok | down | already
+    billingCalls: [],
+    activateAfterPolls: 0,        // after a checkout, the plan turns on after this many status checks (the webhook arriving)
+    neverActivate: false,
     seq: 0,
   };
   const status = () => ({ household_id: HOUSEHOLD_ID, name: 'Our household', ...S.plan });
@@ -82,10 +87,27 @@ export function makeBackend() {
       return json(200, { ok: true, result: CANNED, used: S.plan.scans_used, cap: S.plan.scan_cap }, origin);
     }
 
+    // ---- the billing service
+    if (p === '/functions/v1/billing') {
+      if (!authed) return json(401, { error: 'session_expired' }, origin);
+      const b = body || {};
+      S.billingCalls.push({ action: b.action, plan: b.plan });
+      if (S.billingMode === 'down') return json(502, { error: 'upstream_error' }, origin);
+      if (S.billingMode === 'already') return json(409, { error: 'already_subscribed' }, origin);
+      if (b.action === 'checkout') { S.activateAfterPolls = 2; return json(200, { url: S.siteUrl + '/?checkout=success' }, origin); }
+      if (b.action === 'portal') return json(200, { url: S.siteUrl + '/?portal=back' }, origin);
+      return json(400, { error: 'bad_request' }, origin);
+    }
+
     // ---- database
     if (p.startsWith('/rest/v1/')) {
       if (!authed) return json(401, { code: 'PGRST301', message: 'JWT expired', details: null, hint: null }, origin);
-      if (p === '/rest/v1/rpc/my_status') return json(200, status(), origin);
+      if (p === '/rest/v1/rpc/my_status') {
+        if (S.activateAfterPolls > 0 && !S.neverActivate && --S.activateAfterPolls === 0) {
+          S.plan = { ...S.plan, plan_status: 'active', can_write: true, has_customer: true, cancel_at_period_end: false, current_period_end: new Date(Date.now() + 30 * 864e5).toISOString(), scans_used: 0, scan_cap: 100 };
+        }
+        return json(200, status(), origin);
+      }
       if (p === '/rest/v1/records') {
         const id = (url.searchParams.get('id') || '').replace(/^eq\./, '');
         if (method === 'GET') {

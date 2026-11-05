@@ -278,6 +278,47 @@ const strings = {
   get planClosed() { return strings.noAccess; },
 };
 
+/* ---------- subscribing and managing a subscription ---------- */
+// Both open a page on Stripe's own site. Nothing about money passes through this page, and the plan only changes when
+// Stripe tells the server a payment happened (the webhook), never from here.
+const billingOn = !!cfg.billing;
+const BILLING_ERRORS = {
+  session_expired: 'Please sign in again, then try again.',
+  already_subscribed: 'You are already subscribed. Use Manage subscription.',
+  billing_off: 'Subscribing is not open yet.',
+  plan_unavailable: 'That plan is not available right now.',
+  no_customer: 'There is nothing to manage yet.',
+  no_access: 'We could not open the payment page. Check your email is confirmed, then try again.',
+};
+async function callBilling(action, plan) {
+  const { data } = await sb.auth.getSession();
+  const token = data && data.session && data.session.access_token;
+  if (!token) throw { code: 'session_expired' };
+  let res;
+  try {
+    res = await fetch(cfg.supabaseUrl + '/functions/v1/billing', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token, apikey: cfg.supabaseAnonKey },
+      body: JSON.stringify({ action, plan }),
+    });
+  } catch (e) { throw { code: 'network' }; }
+  let body = null;
+  try { body = await res.json(); } catch (e) { /* no body */ }
+  if (!res.ok || !body || !body.url) throw { code: (body && body.error) || 'upstream_error' };
+  return body.url;
+}
+async function openBilling(action, plan, btn, msg) {
+  btn.disabled = true;
+  msg.textContent = '';
+  try {
+    location.href = await callBilling(action, plan);
+  } catch (e) {
+    btn.disabled = false;
+    msg.textContent = BILLING_ERRORS[e.code] || 'We could not open the payment page. Try again in a minute.';
+  }
+}
+let confirming = false;    // just came back from paying, and the plan has not turned on yet
+
 /* ---------- the account screen and the notice on the home screen ---------- */
 function planLines() {
   const s = status;
@@ -285,9 +326,32 @@ function planLines() {
   const used = `${s.scans_used} of ${s.scan_cap}`;
   if (s.plan_status === 'trialing' && s.can_write) return ['Free trial', `${daysLeft(s.trial_ends_at)} ${daysLeft(s.trial_ends_at) === 1 ? 'day' : 'days'} left. Scans used: ${used}.`];
   if (s.plan_status === 'trialing') return ['Your free trial has ended', 'You can still look at everything and save it as a spreadsheet. To add more, you will need a subscription.'];
+  if (s.plan_status === 'active' && s.cancel_at_period_end) return ['Subscribed, ending soon', `Your subscription ends ${s.current_period_end ? 'on ' + niceDay(s.current_period_end) : 'at the end of this period'}. You can turn it back on in Manage subscription. Scans this month: ${used}.`];
   if (s.plan_status === 'active') return ['Subscribed', `${s.current_period_end ? 'Renews ' + niceDay(s.current_period_end) + '. ' : ''}Scans this month: ${used}.`];
   if (s.plan_status === 'past_due') return ['Your last payment did not go through', 'You can keep using Paper Trail while this is sorted out.'];
   return ['Your subscription has ended', 'You can still look at everything and save it as a spreadsheet. To add more, you will need a subscription.'];
+}
+function planButtons() {
+  const msg = h('p', { class: 'muted small', id: 'acctBillingMsg', role: 'alert' });
+  const subscribed = status.plan_status === 'active' || status.plan_status === 'past_due';
+  const out = [];
+  if (billingOn) {
+    if (!subscribed) {
+      const sub = (plan, text, ghost, id) => { const b = h('button', { class: 'btn' + (ghost ? ' ghost' : ''), type: 'button', id }, 'Subscribe' + (text ? ' (' + text + ')' : '')); b.addEventListener('click', () => openBilling('checkout', plan, b, msg)); return b; };
+      out.push(sub('monthly', cfg.planText, false, 'acctSubscribe'));
+      if (cfg.yearlyText) out.push(sub('yearly', cfg.yearlyText, true, 'acctSubscribeYearly'));
+      if (status.plan_status === 'trialing' && planOpen(status)) out.push(h('p', { class: 'muted small' }, 'Subscribing starts your plan right away. Any trial days left are not added on.'));
+    }
+    if (status.has_customer) {
+      const b = h('button', { class: 'btn ghost', type: 'button', id: 'acctManage' }, 'Manage subscription');
+      b.addEventListener('click', () => openBilling('portal', undefined, b, msg));
+      out.push(b);
+    }
+  } else if (!planOpen(status)) {
+    out.push(cfg.subscribeUrl ? h('a', { class: 'btn', id: 'acctSubscribe', href: cfg.subscribeUrl }, 'Subscribe') : h('p', { class: 'muted small' }, 'Subscribing is not open yet.'));
+  }
+  out.push(msg);
+  return out;
 }
 const installed = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
 function accountView(ctx) {
@@ -297,8 +361,7 @@ function accountView(ctx) {
     box.replaceChildren(
       h('section', { class: 'fact-block' }, h('h3', null, 'Signed in as'), h('p', { class: 'fact-value', id: 'acctEmail' }, user.email)),
       h('section', { class: 'fact-block' }, h('h3', null, 'Your plan'), h('p', { class: 'fact-value', id: 'acctPlanTitle' }, title), h('p', { class: 'muted small', id: 'acctPlanLine' }, line),
-        !planOpen(status) && cfg.subscribeUrl ? h('a', { class: 'btn', id: 'acctSubscribe', href: cfg.subscribeUrl }, 'Subscribe') : null,
-        !planOpen(status) && !cfg.subscribeUrl ? h('p', { class: 'muted small' }, 'Subscribing is not open yet.') : null),
+        ...planButtons()),
       h('section', { class: 'fact-block' }, h('h3', null, 'Your papers'),
         ctx.count ? h('button', { class: 'btn ghost', type: 'button', id: 'acctExport', onclick: ctx.exportAll }, 'Save all my papers as a spreadsheet') : h('p', { class: 'muted small' }, 'Nothing saved yet.'),
         h('p', { class: 'muted small' }, 'Your papers belong to you. Saving a spreadsheet gets you a copy any time, even after a trial or a subscription ends.')),
@@ -317,7 +380,8 @@ function banner() {
   const s = status;
   if (!s) return null;
   let text = null, warn = false;
-  if (s.plan_status === 'trialing' && s.can_write) {
+  if (confirming && s.plan_status !== 'active') text = 'Thanks! Your payment is being confirmed. This can take a minute. Reload this page in a moment.';
+  else if (s.plan_status === 'trialing' && s.can_write) {
     const left = Math.max(0, s.scan_cap - s.scans_used), d = daysLeft(s.trial_ends_at);
     text = `Free trial: ${d} ${d === 1 ? 'day' : 'days'} left, ${left} ${left === 1 ? 'scan' : 'scans'} to go.`;
   } else if (s.plan_status === 'past_due') { text = 'Your last payment did not go through.'; warn = true; }
@@ -426,6 +490,18 @@ window.PT_RUNTIME = {
           : 'We could not reach Paper Trail. Check your connection, then try again.'));
         await new Promise(() => {});
       }
+    }
+    const back = new URLSearchParams(location.search).get('checkout');
+    if (back) history.replaceState(null, '', location.pathname);
+    if (back === 'success' && status.plan_status !== 'active') {
+      // the payment page sent them back before Stripe has told the server, so wait a moment for the plan to turn on
+      mount(card(h('p', { class: 'gate-lead', id: 'gateFinishing' }, 'Finishing your subscription...')));
+      const stop = Date.now() + (Number(cfg.checkoutWaitMs) || 25000);
+      while (Date.now() < stop && status.plan_status !== 'active') {
+        await sleep(1500);
+        try { await loadStatus(); } catch (e) { /* keep waiting */ }
+      }
+      confirming = status.plan_status !== 'active';
     }
     sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') location.reload(); });
     document.getElementById('app').hidden = false;

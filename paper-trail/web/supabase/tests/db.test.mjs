@@ -7,7 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const migration = fs.readFileSync(process.env.MIGRATION || path.join(here, '../migrations/0001_init.sql'), 'utf8');
+const migrationsDir = path.join(here, '../migrations');
+const migrations = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
+  .map((f, i) => fs.readFileSync(i === 0 && process.env.MIGRATION ? process.env.MIGRATION : i === 1 && process.env.MIGRATION2 ? process.env.MIGRATION2 : path.join(migrationsDir, f), 'utf8'));
 
 const prelude = `
 create role anon nologin;
@@ -40,7 +42,7 @@ alter default privileges in schema public grant all on sequences to anon, authen
 
 const db = new PGlite();
 await db.exec(prelude);
-await db.exec(migration);
+for (const m of migrations) await db.exec(m);
 
 let passed = 0, failed = 0;
 const check = (name, ok, extra) => {
@@ -191,6 +193,54 @@ const delOwn = await as(ana, async tx => (await tx.query(`delete from storage.ob
 check('an open plan can delete its own photo', delOwn.length === 1);
 const bucket = (await db.query(`select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'scans'`)).rows[0];
 check('the photo bucket is private, small-file, JPEG only', bucket && bucket.public === false && Number(bucket.file_size_limit) <= 5 * 1024 * 1024 && bucket.allowed_mime_types.join() === 'image/jpeg', bucket);
+
+// ---- subscriptions (0002_billing.sql)
+const svc = (sql, params) => as(null, async tx => (await tx.query(sql, params)).rows, 'service_role');
+const apply = async (id, created, hh, cus, sub, status, end, cancel) =>
+  (await svc('select public.apply_subscription($1, $2, $3, $4, $5, $6, $7, $8) as r', [id, created, hh, cus, sub, status, end, cancel]))[0].r;
+const statusOf = async uid => as(uid, async tx => (await tx.query('select public.my_status() as s')).rows[0].s);
+await setPlan(hidA, `plan_status = 'trialing', trial_ends_at = now() + interval '5 days', stripe_customer_id = null, stripe_subscription_id = null, plan_event_at = 0`);
+await db.exec(`delete from public.stripe_events`);
+const s0 = await statusOf(ana);
+check('the account status says whether there is a customer and whether a cancel is coming', s0.has_customer === false && s0.cancel_at_period_end === false, s0);
+const noInfo = await fails(as(ana, tx => tx.query('select public.billing_info($1)', [ana])), /permission denied/);
+check('a signed-in person cannot call the billing helpers', noInfo.failed && noInfo.matches, noInfo);
+const noApply = await fails(as(ana, tx => tx.query(`select public.apply_subscription('x', 1, $1, null, null, 'active', null, null)`, [hidA])), /permission denied/);
+check('or give themselves a plan', noApply.failed && noApply.matches, noApply);
+const noEvents = await fails(as(ana, tx => tx.query('select * from public.stripe_events')), /permission denied/);
+check('or read the list of Stripe messages', noEvents.failed && noEvents.matches, noEvents);
+const info = (await svc('select public.billing_info($1) as r', [ana]))[0].r;
+check('the billing service can look a person up', info.household_id === hidA && info.plan_status === 'trialing' && info.stripe_customer_id === null, info);
+check('and gets nothing for someone with no household', (await svc('select public.billing_info($1) as r', ['00000000-0000-0000-0000-000000000000']))[0].r === null);
+
+const end = new Date(Date.now() + 30 * 864e5).toISOString();
+const link = await apply('evt_1', 1000, hidA, 'cus_A', 'sub_A', null, null, null);
+check('finishing checkout links the customer without changing the plan', link.applied === true && link.plan_status === 'trialing' && (await statusOf(ana)).has_customer === true, link);
+const on = await apply('evt_2', 1001, hidA, 'cus_A', 'sub_A', 'active', end, false);
+const sOn = await statusOf(ana);
+check('a paid subscription turns the plan on, with its renewal date', on.applied && sOn.plan_status === 'active' && sOn.can_write === true && new Date(sOn.current_period_end).toISOString().slice(0, 10) === end.slice(0, 10), sOn);
+check('the same message again does nothing', (await apply('evt_2', 1001, hidA, 'cus_A', 'sub_A', 'canceled', null, null)).reason === 'duplicate' && (await statusOf(ana)).plan_status === 'active');
+check('an older message that arrives late is ignored', (await apply('evt_0', 900, hidA, 'cus_A', 'sub_A', 'canceled', null, null)).reason === 'stale' && (await statusOf(ana)).plan_status === 'active');
+await apply('evt_3', 1002, hidA, 'cus_A', 'sub_A', 'past_due', null, null);
+check('a failed payment marks the plan past due, and adding still works while it is sorted out', (await statusOf(ana)).plan_status === 'past_due' && (await canAdd(ana, hidA)) === true);
+await apply('evt_4', 1003, hidA, 'cus_A', 'sub_A', 'active', end, true);
+const sCancel = await statusOf(ana);
+check('a cancel at the end of the period keeps the plan on and says so', sCancel.plan_status === 'active' && sCancel.cancel_at_period_end === true && sCancel.can_write === true, sCancel);
+await apply('evt_5', 1004, hidA, 'cus_A', 'sub_A', 'canceled', end, false);
+check('when the subscription ends, adding stops but reading stays', (await statusOf(ana)).plan_status === 'canceled' && (await canAdd(ana, hidA)) === false && (await as(ana, async tx => (await tx.query('select 1 from public.records')).rows)).length === 1);
+await apply('evt_6', 1005, null, 'cus_A', 'sub_B', 'active', end, false);
+check('a new subscription for the same customer turns it back on', (await statusOf(ana)).plan_status === 'active' && (await canAdd(ana, hidA)) === true);
+const oldEnd = await apply('evt_7', 1006, null, 'cus_A', 'sub_A', 'canceled', null, null);
+check('and the old one ending afterward does not switch it off', oldEnd.reason === 'other_subscription' && (await statusOf(ana)).plan_status === 'active', oldEnd);
+const bySub = await apply('evt_8', 1007, null, null, 'sub_B', 'past_due', null, null);
+check('a message that only names the subscription finds the household', bySub.applied === true && bySub.household_id === hidA && (await statusOf(ana)).plan_status === 'past_due', bySub);
+const unknown = await apply('evt_9', 1008, '33333333-3333-4333-8333-333333333333', 'cus_ZZ', 'sub_ZZ', 'active', null, null);
+check('a message about nobody we know changes nothing', unknown.applied === false && unknown.reason === 'unknown_household');
+const bad = await fails(svc(`select public.apply_subscription('evt_bad', 1, $1, null, null, 'platinum', null, null)`, [hidA]), /bad status/);
+check('a made-up plan status is refused', bad.failed && bad.matches, bad);
+check('another family\'s plan is untouched by all of this', (await statusOf(ben)).plan_status === 'active' && (await statusOf(ben)).has_customer === false);
+const dupCustomer = await fails(svc(`select public.apply_subscription('evt_dup', 2000, $1, 'cus_A', null, null, null, null)`, [hidB]), /unique|duplicate/i);
+check('one Stripe customer cannot be attached to two households', dupCustomer.failed, dupCustomer);
 
 // ---- live updates and cleanup
 check('records are in the live updates feed', (await db.query(`select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'records'`)).rows.length === 1);

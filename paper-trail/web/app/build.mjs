@@ -2,6 +2,7 @@
 //
 //   node app/build.mjs --supabase-url https://abcd1234.supabase.co --anon-key <the anon or publishable key> --support-email you@example.com
 //   node app/build.mjs --production ...      refuses to build while the Terms and Privacy pages are still drafts
+//   node app/build.mjs --billing --plan-text "$6 a month" ...   shows the Subscribe and Manage buttons (needs the billing service set up)
 //
 // The same values can come from a .env file next to package.json (SUPABASE_URL, SUPABASE_ANON_KEY, SUPPORT_EMAIL).
 // Only PUBLIC values go in. The anon key is meant to be public; the database rules protect each family's papers.
@@ -38,6 +39,9 @@ export function buildSettings() {
     supportEmail: arg('support-email') || env.SUPPORT_EMAIL || '',
     trialText: arg('trial-text') || env.TRIAL_TEXT || 'Try it free for 14 days.',
     subscribeUrl: arg('subscribe-url') || env.SUBSCRIBE_URL || '',
+    billing: flag('billing') || /^(on|true|1|yes)$/i.test(env.BILLING || ''),
+    planText: arg('plan-text') || env.PLAN_TEXT || '',
+    yearlyText: arg('yearly-text') || env.YEARLY_TEXT || '',
     out: path.resolve(arg('out') || path.join(root, 'dist')),
     production: flag('production'),
     allowLocal: flag('allow-local'),
@@ -127,6 +131,7 @@ ${body.trim()}
   for (const f of ['terms.html', 'privacy.html', 'register-sw.js']) fs.copyFileSync(path.join(here, 'static', f), path.join(s.out, f));
   fs.writeFileSync(path.join(s.out, 'config.js'), '// Public settings. Nothing in this file is secret.\nwindow.PT_CONFIG = ' + JSON.stringify({
     supabaseUrl: s.supabaseUrl, supabaseAnonKey: s.anonKey, supportEmail: s.supportEmail || undefined, trialText: s.trialText, subscribeUrl: s.subscribeUrl || undefined,
+    billing: s.billing || undefined, planText: s.planText || undefined, yearlyText: s.yearlyText || undefined,
   }, null, 2) + ';\n');
 
   // 3. fonts, kept on your own site so no visit goes to Google

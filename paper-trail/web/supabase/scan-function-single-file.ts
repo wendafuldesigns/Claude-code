@@ -1,7 +1,7 @@
 // Paper Trail scan service, as one file for pasting into the Supabase dashboard.
 // GENERATED from supabase/functions/scan by app/bundle-function.mjs. Do not edit by hand.
 
-// ---------- the paper types and the reading instructions (shared with the app) ----------
+// ---------- prompt.js ----------
 const CATS = [
   { id: 'car',       short: 'Car',          long: 'Car',                      group: 'Car and travel',    who: 'Vehicle',          hint: '2019 Toyota Highlander', work: 'Work done',      about: 'oil changes, repairs, registration, smog checks, tires' },
   { id: 'home',      short: 'Home',         long: 'Home',                     group: 'Home and family',   who: 'Room or item',     hint: 'Water heater',           work: 'Work done',      about: 'home repairs, maintenance, contractors, yard work' },
@@ -274,6 +274,13 @@ async function handle(req, deps) {
 }
 
 // ---------- start ----------
+// Supabase Edge Function entry (Deno). All the logic is in handler.js so it can be tested without Deno.
+// Secrets it reads (set them in the Supabase dashboard, never in code):
+//   ANTHROPIC_API_KEY        your Anthropic key
+//   ALLOWED_ORIGINS          the address of the web app, for example https://papertrail.example.com (comma separated for more)
+// Supabase fills in SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY for you.
+// Optional: SCAN_MODEL (default claude-haiku-5-5), SCAN_EFFORT (low, medium, or high), REQUIRE_CONFIRMED_EMAIL (default true).
+
 Deno.serve((req: Request) =>
   handle(req, {
     env: Deno.env.toObject(),

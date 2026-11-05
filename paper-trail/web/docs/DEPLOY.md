@@ -110,11 +110,54 @@ Do this on your phone, in Safari or Chrome, and then add the app to your home sc
 
 Tell me anything that didn't work, with what you saw on screen. The first live run is where we find the surprises.
 
+## Step 8: Taking payments (Stripe)
+
+Do this after your first test (step 7) works. Use Stripe's **test mode** first. Nothing real is charged in test mode. There's a test/live switch at the top of the Stripe dashboard.
+
+How it works, in a sentence: the app opens a Stripe page for the payment, Stripe tells a small webhook function when someone has paid, and only that message turns a plan on. Nothing in the app can switch a plan on by itself.
+
+1. **Make a Stripe account** at stripe.com. You can work in test mode before the account is fully activated.
+2. **Make your product.** In Product catalog, add a product called `Paper Trail`. Give it a recurring price, billed monthly, at the price you picked. Copy the **price id** (it starts with `price_`). If you want a yearly price too, add a second price to the same product and copy that id.
+3. **Set up the customer page.** In Settings, Billing, Customer portal, switch on letting people cancel, update their card, and see invoices. Save it. The "Manage subscription" button won't work until this is saved.
+4. **Copy your secret key.** In Developers, API keys, copy the **secret key** for test mode (it starts with `sk_test_`). It goes only into Supabase in the next step.
+5. **Add secrets in Supabase** (Edge Functions, Secrets):
+   - `STRIPE_SECRET_KEY` is the key from step 4.
+   - `STRIPE_PRICE_MONTHLY` is the monthly price id.
+   - `STRIPE_PRICE_YEARLY` is the yearly price id. Skip it if you only have a monthly price.
+   - `SITE_URL` is your app's address with no slash at the end, like `https://papertrail.yourdomain.com`. People are sent back here after paying.
+6. **Run the second database file.** In the SQL Editor, paste all of `supabase/migrations/0002_billing.sql` and run it. Do this after the first one.
+7. **Add two more functions**, the same way as the scan service (Edge Functions, deploy a new function via the editor):
+   - Name it `billing`. Paste `supabase/billing-function-single-file.ts`. Turn **off** "Enforce JWT verification".
+   - Name it `stripe-webhook`. Paste `supabase/stripe-webhook-function-single-file.ts`. Turn **off** "Enforce JWT verification". This one matters most: Stripe can't send a Supabase token, so it checks Stripe's signature instead.
+8. **Tell Stripe where to send messages.** In Developers, Webhooks, add an endpoint. For the address, use `https://YOUR-PROJECT.supabase.co/functions/v1/stripe-webhook` (your project's address from step 2, then `/functions/v1/stripe-webhook`). Choose these four events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+
+   Then copy the endpoint's **signing secret** (it starts with `whsec_`) and add it in Supabase as the secret `STRIPE_WEBHOOK_SECRET`.
+9. **Turn the buttons on.** In Netlify, Environment variables, add `BILLING` set to `on` and `PLAN_TEXT` set to your price as people should read it, like `$6 a month`. It has to match the price in Stripe. Add `YEARLY_TEXT` too if you made a yearly price. Deploy again.
+
+### Test it with fake money
+
+1. Sign in with a test account. Open the account screen and tap **Subscribe**.
+2. On Stripe's page, pay with the test card `4242 4242 4242 4242`, any date in the future, any 3 digits, any ZIP.
+3. You should land back in the app on a "Finishing your subscription" screen, then in the app with your plan on. The account screen says **Subscribed**.
+4. In Supabase, Table Editor, `households`: your row should show `plan_status` as `active` and have Stripe ids filled in.
+5. Tap **Manage subscription**, cancel, and come back. The account screen says the subscription is ending soon, and you can still add papers until the date shown.
+6. Try Stripe's test card `4000 0000 0000 0341`. It saves fine and then fails when it's charged, so you can see what a late payment looks like.
+
+If something doesn't work, look at the logs: Supabase, Edge Functions, `stripe-webhook`, Logs. And in Stripe, Developers, Webhooks, your endpoint shows every message it sent and what the answer was.
+
+### Going live
+
+When test mode works, switch Stripe to **live mode** and repeat the Stripe parts with live values: a live price, the live secret key (`sk_live_`), and a new webhook endpoint with its own signing secret. Replace the three secrets in Supabase (`STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_WEBHOOK_SECRET`). Test mode and live mode are completely separate, so none of your test subscriptions carry over.
+
 ## Looking after testers
 
 Run these in the Supabase SQL Editor. Swap in the person's email.
 
-Give someone a paid plan for a month (no payment yet):
+Give someone a plan for a month without a payment (a gift, or a tester):
 
 ```sql
 update public.households set plan_status = 'active', current_period_end = now() + interval '30 days'
@@ -149,7 +192,6 @@ A button for people to do this themselves is on the launch checklist.
 
 ## What isn't built yet
 
-- Payments. The trial and the plan states all work. Taking money (Stripe) is the next stage.
 - Inviting family into one household. The database is built for it. The invite screens aren't.
 - A "delete my account" button. For now, people email you and you follow the steps above.
 - A CAPTCHA on sign-in. Decide on this before a big public launch.

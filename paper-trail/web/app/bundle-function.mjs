@@ -1,49 +1,67 @@
-// Joins the scan service (handler.js, prompt.js, index.ts) into ONE file you can paste into Supabase's dashboard:
-// Edge Functions, Deploy a new function, "via Editor". The result is supabase/scan-function-single-file.ts.
-// Usage: node app/bundle-function.mjs          writes it
-//        node app/bundle-function.mjs --check  fails if it is out of date
+// Joins each Supabase function (handler.js, the files it imports, and index.ts) into ONE file you can paste into
+// Supabase's dashboard: Edge Functions, Deploy a new function, "via Editor".
+//   scan           ->  supabase/scan-function-single-file.ts
+//   billing        ->  supabase/billing-function-single-file.ts
+//   stripe-webhook ->  supabase/stripe-webhook-function-single-file.ts
+// Usage: node app/bundle-function.mjs          writes them
+//        node app/bundle-function.mjs --check  fails if any is out of date
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const dir = path.join(here, '../supabase/functions/scan');
-export const BUNDLE_FILE = path.join(here, '../supabase/scan-function-single-file.ts');
+const functionsDir = path.join(here, '../supabase/functions');
+export const NAMES = ['scan', 'billing', 'stripe-webhook'];
+export const bundleFile = name => path.join(here, '../supabase', `${name}-function-single-file.ts`);
 
-export function bundle() {
-  const prompt = fs.readFileSync(path.join(dir, 'prompt.js'), 'utf8')
-    .replace(/^\/\/ GENERATED.*\n/, '').replace(/\nexport \{ CATS, buildScanPrompt \};\n?$/, '\n');
-  const handler = fs.readFileSync(path.join(dir, 'handler.js'), 'utf8')
-    .replace(/^import \{ CATS, buildScanPrompt \} from '\.\/prompt\.js';\n/m, '')
-    .replace(/^export async function handle/m, 'async function handle')
-    .replace(/^export function cleanResult/m, 'function cleanResult');
-  const entry = fs.readFileSync(path.join(dir, 'index.ts'), 'utf8')
-    .replace(/^import \{ handle \} from '\.\/handler\.js';\n/m, '');
-  if (/^\s*(import|export)\s/m.test(prompt + handler)) throw new Error('an import or export is left in the bundle');
-  return [
-    '// Paper Trail scan service, as one file for pasting into the Supabase dashboard.',
-    '// GENERATED from supabase/functions/scan by app/bundle-function.mjs. Do not edit by hand.',
+// a module's own text, without its import and export words, so it can sit inside a bigger file
+function plain(file) {
+  return fs.readFileSync(file, 'utf8')
+    .replace(/^\/\/ GENERATED.*\n/, '')
+    .replace(/^import .*;\n/gm, '')
+    .replace(/^export \{[^}]*\};?\n?/gm, '')
+    .replace(/^export (async function|function|const|let)\b/gm, '$1')
+    .trim();
+}
+
+export function bundle(name) {
+  const dir = path.join(functionsDir, name);
+  const handlerPath = path.join(dir, 'handler.js');
+  const handler = fs.readFileSync(handlerPath, 'utf8');
+  const parts = [];
+  for (const m of handler.matchAll(/^import .* from '(\.[^']+)';$/gm)) {
+    parts.push({ title: path.basename(m[1]), text: plain(path.resolve(dir, m[1])) });
+  }
+  const entry = fs.readFileSync(path.join(dir, 'index.ts'), 'utf8').replace(/^import .*;\n/gm, '').trim();
+  const out = [
+    `// Paper Trail ${name} service, as one file for pasting into the Supabase dashboard.`,
+    `// GENERATED from supabase/functions/${name} by app/bundle-function.mjs. Do not edit by hand.`,
     '',
-    '// ---------- the paper types and the reading instructions (shared with the app) ----------',
-    prompt.trim(),
-    '',
+    ...parts.flatMap(p => [`// ---------- ${p.title} ----------`, p.text, '']),
     '// ---------- the service ----------',
-    handler.trim(),
+    plain(handlerPath),
     '',
     '// ---------- start ----------',
-    entry.replace(/^\/\/ Supabase Edge Function entry[\s\S]*?(?=Deno\.serve)/, '').trim(),
+    entry,
     '',
   ].join('\n');
+  if (/^\s*(import|export)\s/m.test(out)) throw new Error(`${name}: an import or export is left in the bundle`);
+  return out;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const out = bundle();
-  if (process.argv.includes('--check')) {
-    const have = fs.existsSync(BUNDLE_FILE) ? fs.readFileSync(BUNDLE_FILE, 'utf8') : '';
-    if (have !== out) { console.error('scan-function-single-file.ts is out of date. Run: node app/bundle-function.mjs'); process.exit(1); }
-    console.log('scan-function-single-file.ts is up to date');
-  } else {
-    fs.writeFileSync(BUNDLE_FILE, out);
-    console.log('wrote ' + path.relative(process.cwd(), BUNDLE_FILE));
+  const check = process.argv.includes('--check');
+  let bad = false;
+  for (const name of NAMES) {
+    const out = bundle(name);
+    const file = bundleFile(name);
+    if (check) {
+      const have = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+      if (have !== out) { console.error(`${path.basename(file)} is out of date. Run: node app/bundle-function.mjs`); bad = true; }
+    } else {
+      fs.writeFileSync(file, out);
+      console.log('wrote ' + path.relative(process.cwd(), file));
+    }
   }
+  if (check) { if (bad) process.exit(1); console.log('the one-file versions are up to date'); }
 }

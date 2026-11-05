@@ -2,3 +2,11 @@
 # so the gateway check is off: it does not yet understand every kind of signing key.
 [functions.scan]
 verify_jwt = false
+
+# The billing service checks the person's token itself, like the scan service.
+[functions.billing]
+verify_jwt = false
+
+# Stripe does not send a Supabase token. The webhook checks Stripe's signature instead.
+[functions.stripe-webhook]
+verify_jwt = false
