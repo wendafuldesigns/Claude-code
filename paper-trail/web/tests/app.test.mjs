@@ -247,23 +247,28 @@ check('and a way to subscribe is not shown while the trial is open', await pg.lo
 const [csv] = await Promise.all([pg.waitForEvent('download'), pg.click('#acctExport')]);
 check('"Save all my papers" hands over a spreadsheet', /^paper-trail-.*\.csv$/.test(csv.suggestedFilename()), csv.suggestedFilename());
 await pg.click('#btnBack');
+check('no stray "null" or "undefined" text anywhere on the home screen', !/\b(null|undefined)\b/.test(await pg.locator('#app').innerText()));
 
 // ================= a trial that has ended =================
 be.S.plan = { ...be.S.plan, plan_status: 'trialing', can_write: false, trial_ends_at: new Date(Date.now() - 864e5).toISOString() };
 await pg.reload();
 await pg.waitForSelector('.card');
-check('after the trial ends the home screen says so', /free trial has ended/.test(await pg.locator('#planBanner').innerText()) && await pg.locator('#planBanner.warn').count() === 1);
+check('after the trial ends the home screen says so once, in the scan card', await pg.locator('#planBanner').count() === 0 && /free trial has ended/.test(await pg.locator('.scan-off').innerText()));
 check('papers can still be opened, but not scanned or added', await pg.locator('.card:not(.example)').count() >= 1 && await pg.locator('#btnCamera').count() === 0 && await pg.locator('#btnHand').count() === 0 && /free trial has ended/.test(await pg.locator('.scan-off').innerText()));
 await pg.locator('.card:not(.example)').first().click();
 await pg.waitForSelector('.detail');
 check('and there is no Edit button on a paper', await pg.locator('#btnEdit').count() === 0);
+await pg.click('#btnBack');
+check('and no stray "null" text appears when scanning is closed', !/\b(null|undefined)\b/.test(await pg.locator('#app').innerText()));
+await pg.locator('.card:not(.example)').first().click();
+await pg.waitForSelector('.detail');
 await pg.click('#btnBack');
 await pg.click('#btnAccount');
 await pg.waitForSelector('#acctPlanTitle');
 check('the account screen says the trial ended, and that nothing is lost', /ended/.test(await pg.locator('#acctPlanTitle').innerText()) && /still look at everything/.test(await pg.locator('#acctPlanLine').innerText()) && await pg.locator('#acctExport').isVisible());
 check('and says subscribing is not open yet, since no payment link is set', /not open yet/.test(await pg.locator('.acct').innerText()));
 // ---- every plan state
-for (const [status, can, title, bannerRe] of [['active', true, /Subscribed/, null], ['past_due', true, /did not go through/, /did not go through/], ['canceled', false, /has ended/, /subscription has ended/]]) {
+for (const [status, can, title, bannerRe] of [['active', true, /Subscribed/, null], ['past_due', true, /did not go through/, /did not go through/], ['canceled', false, /has ended/, null]]) {
   be.S.plan = { ...be.S.plan, plan_status: status, can_write: can, current_period_end: new Date(Date.now() + 20 * 864e5).toISOString(), scans_used: 3, scan_cap: 100 };
   await pg.reload();
   await pg.waitForSelector('.card');

@@ -1494,7 +1494,8 @@ function onTile(c, n) {
 
 function homeView() {
   const wrap = h('div', { class: 'home' });
-  wrap.append(
+  // append() turns a null into the word "null", so leave the empty ones out
+  wrap.append(...[
     appBar(),
     caps.banner ? caps.banner() : null,
     scanCard(),
@@ -1512,7 +1513,7 @@ function homeView() {
         })),
       h('div', { id: 'listArea' })),
     h('p', { class: 'home-foot' }, STR('homeFoot')),
-    canScanNow() ? h('button', { class: 'fab', id: 'fabScan', type: 'button', 'aria-label': 'Scan a paper', onclick: pickCamera }, icon('camera', 22), 'Scan') : null);
+    canScanNow() ? h('button', { class: 'fab', id: 'fabScan', type: 'button', 'aria-label': 'Scan a paper', onclick: pickCamera }, icon('camera', 22), 'Scan') : null].filter(Boolean));
   queueMicrotask(watchHero);
   queueMicrotask(refreshHome);
   return wrap;

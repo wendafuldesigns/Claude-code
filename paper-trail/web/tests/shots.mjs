@@ -1,0 +1,61 @@
+// Takes pictures of the web app's own screens (sign-in, account) from the built site, against the pretend Supabase.
+// Usage: node tests/shots.mjs <folder for the pictures>
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { build } from '../app/build.mjs';
+import { makeBackend, HOST, CODE } from './fake-supabase.mjs';
+
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PLAYWRIGHT_PATH || '/opt/node22/lib/node_modules/playwright');
+const here = path.dirname(fileURLToPath(import.meta.url));
+const OUT = path.join(here, '../dist-shots');
+const PICS = path.resolve(process.argv[2] || path.join(here, '../docs/screens'));
+fs.mkdirSync(PICS, { recursive: true });
+const anon = 'eyJhbGciOiJIUzI1NiJ9.' + Buffer.from(JSON.stringify({ role: 'anon' })).toString('base64url') + '.signature';
+build({ supabaseUrl: HOST, anonKey: anon, supportEmail: 'help@example.com', trialText: 'Try it free for 14 days.', subscribeUrl: '', out: OUT, production: false, allowLocal: false });
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json' };
+const server = http.createServer((req, res) => {
+  let p = decodeURIComponent(req.url.split('?')[0]); if (p === '/') p = '/index.html';
+  const f = path.join(OUT, p);
+  if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { 'content-type': types[path.extname(f)] || 'application/octet-stream' }); res.end(fs.readFileSync(f));
+}).listen(0);
+const BASE = 'http://localhost:' + server.address().port;
+const browser = await chromium.launch();
+const be = makeBackend();
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block' });
+const pg = await ctx.newPage();
+await pg.route(HOST + '/**', async r => r.fulfill(await be.answer(r.request())));
+await pg.routeWebSocket(/realtime/, () => {});
+const shot = n => pg.screenshot({ path: path.join(PICS, n + '.png') });
+await pg.goto(BASE + '/');
+await pg.waitForSelector('#gateEmail');
+await pg.evaluate(() => document.fonts.ready);
+await shot('1-sign-in');
+await pg.fill('#gateEmail', 'wenda@example.com');
+await pg.click('#gateSend');
+await pg.waitForSelector('#gateCode');
+await pg.fill('#gateCode', '482913');
+await shot('2-code');
+await pg.fill('#gateCode', CODE);
+await pg.click('#gateCheck');
+await pg.waitForSelector('#btnCamera');
+await pg.evaluate(() => document.fonts.ready);
+await shot('3-home-trial');
+await pg.click('#btnAccount');
+await pg.waitForSelector('#acctPlanTitle');
+await shot('4-account-trial');
+await pg.click('#btnBack');
+be.S.plan = { ...be.S.plan, plan_status: 'trialing', can_write: false, trial_ends_at: new Date(Date.now() - 864e5).toISOString() };
+await pg.reload();
+await pg.waitForSelector('#planBanner');
+await shot('5-home-trial-ended');
+await pg.click('#btnAccount');
+await pg.waitForSelector('#acctPlanTitle');
+await shot('6-account-trial-ended');
+await browser.close(); server.close();
+fs.rmSync(OUT, { recursive: true, force: true });
+console.log(fs.readdirSync(PICS).join('\n'));

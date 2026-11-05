@@ -320,9 +320,7 @@ function banner() {
   if (s.plan_status === 'trialing' && s.can_write) {
     const left = Math.max(0, s.scan_cap - s.scans_used), d = daysLeft(s.trial_ends_at);
     text = `Free trial: ${d} ${d === 1 ? 'day' : 'days'} left, ${left} ${left === 1 ? 'scan' : 'scans'} to go.`;
-  } else if (s.plan_status === 'trialing') { text = 'Your free trial has ended. You can look at everything, but not add.'; warn = true; }
-  else if (s.plan_status === 'past_due') { text = 'Your last payment did not go through.'; warn = true; }
-  else if (s.plan_status === 'canceled') { text = 'Your subscription has ended. You can look at everything, but not add.'; warn = true; }
+  } else if (s.plan_status === 'past_due') { text = 'Your last payment did not go through.'; warn = true; }
   else if (s.plan_status === 'active' && s.scan_cap - s.scans_used <= 5) { const left = Math.max(0, s.scan_cap - s.scans_used); text = `${left} ${left === 1 ? 'scan' : 'scans'} left this month.`; }
   return text ? h('p', { class: 'notice' + (warn ? ' warn' : ''), id: 'planBanner' }, text) : null;
 }
@@ -355,7 +353,7 @@ function emailStep(resolve, note) {
   } },
   h('label', { for: 'gateEmail', class: 'gate-label' }, 'Your email'), email, btn, msg);
   return card(
-    h('h1', { class: 'gate-title' }, 'Scan it. File it. Find it later.'),
+    h('h1', { class: 'gate-title' }, 'A place for your house papers'),
     h('p', { class: 'gate-lead' }, 'Snap a receipt, bill, or form. Claude reads it, you check it, and it is filed with your other house papers.'),
     form,
     h('p', { class: 'gate-small' }, (cfg.trialText || 'Try it free for 14 days.') + ' We email you a 6-digit code to sign in. No password to remember.'),
