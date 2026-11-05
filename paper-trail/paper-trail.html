@@ -571,6 +571,7 @@ const state = {
   tilesAll: null,          // null = every type while the list is empty, otherwise the top six
   hubVer: hubLoadVer(),    // which Household Hub the Add to Household Hub rows are laid out for: sheet | doc
   hubOpen: false,
+  hubPick: null,           // which table a health or dental paper goes to, when it has more than one
 };
 const caps = { db: null, sample: null, assets: null, downloads: null, user: null, images: null };
 let sampleBlocked = false;
@@ -1948,8 +1949,7 @@ function hubLoadVer() {
 function hubSaveVer(v) {
   try { localStorage.setItem('paperTrail.hubVer', v); } catch (e) { /* a view that blocks storage still works, it just forgets */ }
 }
-function hubTarget(r, ver) {
-  const sheet = ver !== 'doc';
+function hubCtx(r) {
   const rem = isReminder(r);
   const day = rem ? r.nextDueDate : r.date;
   const time = rem && r.nextDueTime ? fmtTime(r.nextDueTime) : '';
@@ -1962,6 +1962,35 @@ function hubTarget(r, ver) {
   const nextNote = r.nextDueNote && r.nextDueNote !== r.title ? r.nextDueNote : '';
   const nextText = !rem && (r.nextDueDate || nextNote) ? [nextNote, r.nextDueDate ? 'due ' + fmtDay(r.nextDueDate) : ''].filter(Boolean).join(', ') : '';
   const notes = [r.notes, nextText].filter(Boolean).join('; ');
+  return { rem, day, time, what, work, total, find, withWho, forWho, nextNote, notes };
+}
+// a table of rows is pasted as one row. Vision and Dental in the Hub are grids with a column for each person,
+// so those are pasted as one column. Health and dental papers can go to more than one table, so they offer a choice.
+function hubHealthTargets(r, ver) {
+  const sheet = ver !== 'doc';
+  const { rem, day, time, what, work, total, find, withWho, notes } = hubCtx(r);
+  const appointments = { id: 'appointments', label: 'Appointments', layout: 'row', where: sheet ? 'Health & Safety tab, Appointments' : 'Medical, Appointments',
+    cols: ['Date', 'Provider', 'Type', 'Location', 'Notes'],
+    cells: [day, r.vendor, what, '', [time ? 'At ' + time : '', r.subject ? 'For ' + r.subject : '', work, notes].filter(Boolean).join('. ')] };
+  const receipts = { id: 'receipts', label: 'Receipts', layout: 'row', where: sheet ? 'Health & Safety tab, Receipts' : 'Medical, Receipts',
+    cols: ['Date', 'Provider', 'Service', 'Amount', 'Paid With', 'Reimbursed?'],
+    cells: [day, r.vendor, withWho(work || what), total, '', ''] };
+  if (r.category === 'health') return rem || r.total == null ? [appointments, receipts] : [receipts, appointments];
+  const eye = /\b(eye|eyes|vision|optic\w*|optom\w*|ophthal\w*|glasses|contacts?|lens(?:es)?)\b/i.test([what, r.vendor, work].join(' '));
+  const col = ', in ' + (r.subject ? r.subject + "'s" : "the person's") + ' column';
+  const last = rem ? '' : day;
+  const grid = eye
+    ? { id: 'vision', label: 'Vision', layout: 'column', where: (sheet ? 'Health & Safety tab, the Vision table' : 'Medical, Vision') + col,
+      cols: ['Eye Doctor', 'Phone', 'Last Exam', 'Prescription', 'Next Appointment'],
+      cells: [r.vendor, find(/phone/i), last, find(/prescription|\brx\b/i), r.nextDueDate] }
+    : { id: 'dental', label: 'Dental', layout: 'column', where: (sheet ? 'Health & Safety tab, the Dental table' : 'Medical, Dental') + col,
+      cols: ['Dentist', 'Phone', 'Last Cleaning', 'Next Appointment', 'Notes'],
+      cells: [r.vendor, find(/phone/i), last, r.nextDueDate, [work, total, r.notes].filter(Boolean).join('; ')] };
+  return rem ? [appointments, grid, receipts] : [grid, receipts, appointments];
+}
+function hubTarget(r, ver) {
+  const sheet = ver !== 'doc';
+  const { rem, day, time, what, work, total, find, withWho, forWho, nextNote, notes } = hubCtx(r);
   const t = (where, cols, cells) => ({ where, cols, cells });
   const upcoming = (event, who) => t(sheet ? 'Everyday Life tab, Upcoming Events' : 'Social, Upcoming Events',
     ['Date', 'Event', 'Location', 'Who', 'What to Bring', 'RSVP?'], [day, event + (time ? ' (' + time + ')' : ''), r.vendor, who, '', '']);
@@ -1980,12 +2009,7 @@ function hubTarget(r, ver) {
           [day, work || what, r.nextDueDate, [r.vendor, r.notes, nextNote].filter(Boolean).join('; ')]);
     case 'health':
     case 'dental':
-      if (!rem && r.total != null) {
-        return t(sheet ? 'Health & Safety tab, Receipts' : 'Medical, Receipts',
-          ['Date', 'Provider', 'Service', 'Amount', 'Paid With', 'Reimbursed?'], [day, r.vendor, withWho(work || what), total, '', '']);
-      }
-      return t(sheet ? 'Health & Safety tab, Appointments' : 'Medical, Appointments', ['Date', 'Provider', 'Type', 'Location', 'Notes'],
-        [day, r.vendor, what, '', [time ? 'At ' + time : '', r.subject ? 'For ' + r.subject : '', work, notes].filter(Boolean).join('. ')]);
+      return hubHealthTargets(r, ver)[0];
     case 'home':
       return sheet
         ? t('Home tab, Repair History', ['Date', 'What Was Fixed', 'Company / Person', 'Cost', 'Warranty on Work', 'Notes'],
@@ -2043,35 +2067,49 @@ function hubCell(v, sheet) {
   // a cell that starts with = or @ would run as a formula in a spreadsheet, so mark it as plain text
   return sheet && (/^[=@]/.test(s) || /^[+-][^\d.\s$(]/.test(s)) ? "'" + s : s;
 }
-function hubRow(r, ver) {
-  const t = hubTarget(r, ver);
-  return { where: t.where, cols: t.cols, cells: t.cells.map(c => hubCell(c, ver !== 'doc')) };
+function hubOptions(r, ver) {
+  return r.category === 'health' || r.category === 'dental' ? hubHealthTargets(r, ver) : [hubTarget(r, ver)];
+}
+function hubRow(r, ver, pick) {
+  const list = hubOptions(r, ver);
+  const t = list.find(x => x.id === pick) || list[0];
+  return {
+    id: t.id || 'row', layout: t.layout || 'row', where: t.where, cols: t.cols,
+    options: list.length > 1 ? list.map(x => ({ id: x.id, label: x.label })) : [],
+    cells: t.cells.map(c => hubCell(c, ver !== 'doc')),
+  };
 }
 function hubBlock(r) {
   const ver = state.hubVer;
-  const t = hubRow(r, ver);
-  const pick = v => {
+  const t = hubRow(r, ver, state.hubPick);
+  const col = t.layout === 'column';
+  const rerender = change => {
     const y = window.scrollY;
-    state.hubVer = v;
-    hubSaveVer(v);
+    change();
     render();
     window.scrollTo(0, y);
   };
   const det = h('details', { class: 'hub', id: 'hub' },
     h('summary', { onclick: () => { state.hubOpen = !det.open; } }, h('h3', null, 'Add to Household Hub'), h('span', { class: 'chev', 'aria-hidden': 'true' }, '›')),
     h('div', { class: 'hub-body' },
-      h('p', { class: 'muted small' }, 'Have the Household Hub? Copy this paper as a row for the matching table.'),
+      h('p', { class: 'muted small' }, 'Have the Household Hub? Copy this paper for the matching table.'),
       h('div', { class: 'chips', role: 'group', 'aria-label': 'Which Household Hub' },
-        [['sheet', 'Google Sheet'], ['doc', 'Google Doc']].map(([v, label]) => h('button', { class: 'chip', type: 'button', 'data-hub': v, 'aria-pressed': String(ver === v), onclick: () => pick(v) }, label))),
+        [['sheet', 'Google Sheet'], ['doc', 'Google Doc']].map(([v, label]) => h('button', { class: 'chip', type: 'button', 'data-hub': v, 'aria-pressed': String(ver === v), onclick: () => rerender(() => { state.hubVer = v; hubSaveVer(v); }) }, label))),
+      t.options.length ? h('div', { class: 'chips', role: 'group', 'aria-label': 'Which table' },
+        t.options.map(o => h('button', { class: 'chip', type: 'button', 'data-hubtable': o.id, 'aria-pressed': String(t.id === o.id), onclick: () => rerender(() => { state.hubPick = o.id; }) }, o.label))) : null,
       h('p', { class: 'hub-where' }, h('strong', null, 'Goes in: '), t.where),
       h('div', { class: 'hub-list' }, t.cols.map((c, i) => h('div', { class: 'hub-item' },
         h('span', { class: 'hub-label' }, c),
         h('span', { class: 'hub-val' + (t.cells[i] ? '' : ' blank') }, t.cells[i] || 'Blank'),
         t.cells[i] ? h('button', { class: 'btn ghost small', type: 'button', 'aria-label': 'Copy ' + c, onclick: () => copyText(t.cells[i], c) }, 'Copy') : null))),
-      h('div', { class: 'hub-actions' }, h('button', { class: 'btn small', type: 'button', id: 'btnCopyHub', onclick: () => copyText(t.cells.join('\t'), 'the row') }, 'Copy row')),
-      h('p', { class: 'muted small' }, ver === 'doc'
-        ? 'In the Doc, click the first cell of an empty row and paste. If the whole row lands in one cell, paste one box at a time with the Copy buttons.'
-        : 'In the Sheet, click the first empty cell of that table and paste. The row spreads across the columns.')));
+      h('div', { class: 'hub-actions' }, h('button', { class: 'btn small', type: 'button', id: 'btnCopyHub', onclick: () => copyText(t.cells.join(col ? '\n' : '\t'), col ? 'the column' : 'the row') }, col ? 'Copy column' : 'Copy row')),
+      h('p', { class: 'muted small' }, col
+        ? (ver === 'doc'
+          ? 'In the Doc, paste one box at a time with the Copy buttons, next to the matching label. If a whole column pastes into one cell, that is why.'
+          : 'In the Sheet, click the cell next to ' + t.cols[0] + ' under that person and paste. It fills down. A blank box clears what was there, so to keep an old value, copy one box at a time.')
+        : (ver === 'doc'
+          ? 'In the Doc, click the first cell of an empty row and paste. If the whole row lands in one cell, paste one box at a time with the Copy buttons.'
+          : 'In the Sheet, click the first empty cell of that table and paste. The row spreads across the columns.'))));
   det.open = !!state.hubOpen;
   return h('section', { class: 'fact-block' }, det);
 }

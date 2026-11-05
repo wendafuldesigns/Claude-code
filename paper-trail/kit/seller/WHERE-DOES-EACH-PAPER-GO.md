@@ -34,7 +34,8 @@ The row comes out in the same column order as the Hub's table, so it drops right
 | --- | --- | --- |
 | Car | Vehicles tab, the repair and service log | Auto, the service table |
 | Pet | Pets tab, the vet and vaccine log | Pet Care, Vet Appointments and Vaccination Records |
-| Health, Dental and vision | Health & Safety tab, Appointments (Receipts when there's a total) | Medical, Appointments (Receipts when there's a total) |
+| Health | Health & Safety tab, Receipts (Appointments when there's no total) | Medical, Receipts (Appointments when there's no total) |
+| Dental and vision | Health & Safety tab, the Dental or Vision table | Medical, the Dental or Vision table |
 | Home | Home tab, Repair History | Home, Household Contacts |
 | Purchases and warranties | Documents & Digital tab, Warranties & Receipts | Confidential, Warranties/Receipts |
 | Bills and utilities | Money tab, Bills | Financial, Bills |
@@ -48,6 +49,8 @@ The row comes out in the same column order as the Hub's table, so it drops right
 | Other | Final Wishes tab, Where Things Are | If Something Happens, Where Things Are |
 
 A booked appointment goes to Appointments (health and dental) or Upcoming Events (everything else).
+
+The Vision and Dental tables have a column for each person, so those papers copy as a column. **Copy column** puts the values on separate lines, and you paste them under that person's name. Health and dental papers can also go to Receipts or Appointments, so there's a row of choices on the paper.
 
 ### What it looks like
 

@@ -79,6 +79,7 @@ This tells you what to say on the sales page about "uses your own Claude usage."
 - [ ] Open a paper's summary and open **Add to Household Hub**. Does it say the right place?
 - [ ] Pick Google Sheet and tap **Copy row**. In the Hub Sheet, click the first empty cell of the vehicle service log and paste. Does the row spread across the six columns? Does the date show as a date and the cost as money?
 - [ ] Do the same in the Hub Doc: click the first cell of an empty row in the Auto service table and paste. Does the row land in one cell, or spread across? If it lands in one cell, do the Copy buttons on each box work one at a time?
+- [ ] Save an eye exam. In its Hub section, pick **Copy column**, then paste it into the Vision table under a person's name in the Sheet. Do the five values land next to Eye Doctor, Phone, Last Exam, Prescription, and Next Appointment? Do the same with a dentist visit and the Dental table.
 - [ ] Try a pet paper, a health paper, and a bill. Do the columns line up with the tables?
 - [ ] In the Sheet, try a Legal and ID paper. Does TRUE tick the checkbox?
 - [ ] In the Sheet, paste a paper whose title starts with an equals sign. Paper Trail puts an apostrophe in front so it can't run as a formula. Does the apostrophe show in the cell?

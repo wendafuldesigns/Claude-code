@@ -61,7 +61,7 @@ An update never touches a buyer's records. Their records live in their own artif
 - 264 checks pass in a test browser: scanning, saving, editing, reminders, search, the history cards, exports, dark mode, and view-only mode. Those checks used a stand-in for Claude's features, so they prove the app's logic, not Claude's behavior.
 - The publish settings in `CLAUDE.md` are the ones I used for your copy.
 - The build script produces the zip and its guards trip when they should.
-- **Add to Household Hub:** every column list matches a table in your real Hub Sheet or Doc, in the same order (checked against both files). Another 32 checks cover every paper type, both versions, the copy buttons, and the formula guard.
+- **Add to Household Hub:** every column list matches a table in your real Hub Sheet or Doc, in the same order (checked against both files). Another 46 checks cover every paper type, both versions, every table choice, the Vision and Dental columns, the copy buttons, and the formula guard.
 
 **Not tested:**
 - Setup from a fresh Claude account.

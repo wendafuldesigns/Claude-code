@@ -114,7 +114,10 @@ Publish the same file to the same artifact URL to keep the saved records. The re
 
 Every paper's summary has an **Add to Household Hub** section (closed until you open it). It copies the paper as one row, in the column order of the matching table in the Household Hub, in either the Google Sheet or the Google Doc version. Pick which one you use. The choice is remembered when the view allows it.
 
-- **Where it goes:** the section names the table, for example "Vehicles tab, the repair and service log". Health and dental papers go to Receipts when there is a total and to Appointments when there is not. A booked appointment goes to Appointments (health, dental) or Upcoming Events (everything else).
+- **Where it goes:** the section names the table, for example "Vehicles tab, the repair and service log". A booked appointment goes to Appointments (health, dental) or Upcoming Events (everything else).
+- **Vision and Dental are grids.** In the Hub they have one column for each person, so a dentist or eye paper copies as a column: **Copy column** puts the five values on separate lines, and you paste them under the person's name. An eye exam, glasses, or contacts go to Vision. Anything else dental goes to Dental.
+- **Health and dental papers can go to more than one table**, so a row of choices shows up (Vision or Dental, Receipts, Appointments). Health papers start on Receipts when there is a total and on Appointments when there is not.
+- **A blank box clears what was in that cell** when you paste a whole column. To keep an old value, copy one box at a time.
 - **Copy row** puts a tab-separated row on the clipboard. In the Sheet it spreads across the columns when pasted. Each box also has its own **Copy** button, for the Doc if a whole row lands in one cell.
 - **Bank papers** copy only the last 4 digits of an account number.
 - **Formulas:** in the Sheet layout, a value that starts with `=` or `@` gets a leading apostrophe so it pastes as text.
