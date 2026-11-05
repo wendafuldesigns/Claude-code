@@ -298,6 +298,22 @@ p { margin: 0; }
 .detail-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center; }
 .detail-item .fact-label, .detail-item .fact-value { grid-column: 1; }
 .detail-item .btn { grid-column: 2; grid-row: 1 / span 2; }
+.hub > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; }
+.hub > summary::-webkit-details-marker { display: none; }
+.hub > summary h3 { margin: 0; }
+.hub .chev { font-size: 22px; line-height: 1; color: var(--muted); }
+.hub[open] .chev { transform: rotate(90deg); }
+.hub-body { display: grid; gap: 12px; margin-top: 6px; }
+.hub-body p, .hub-body .chips { margin: 0; }
+.hub-where { overflow-wrap: anywhere; }
+.hub-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hub-list { display: grid; gap: 10px; }
+.hub-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center; }
+.hub-item .hub-label, .hub-item .hub-val { grid-column: 1; }
+.hub-item .btn { grid-column: 2; grid-row: 1 / span 2; }
+.hub-label { font-size: 13px; color: var(--muted); }
+.hub-val { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.hub-val.blank { color: var(--muted); }
 .next { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .due-pill { font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
 .due-pill.late { background: var(--bad-bg); color: var(--bad); border-color: var(--line-strong); }
@@ -553,6 +569,8 @@ const state = {
   quickOpen: null,         // null = open while the list is short, then whatever the person chose
   returnTo: 'home',        // where Discard goes for a new record
   tilesAll: null,          // null = every type while the list is empty, otherwise the top six
+  hubVer: hubLoadVer(),    // which Household Hub the Add to Household Hub rows are laid out for: sheet | doc
+  hubOpen: false,
 };
 const caps = { db: null, sample: null, assets: null, downloads: null, user: null, images: null };
 let sampleBlocked = false;
@@ -1920,6 +1938,144 @@ function actionsBar(isNew) {
 }
 
 /* ---------- record summary ---------- */
+/* ---------- Household Hub bridge ----------
+   Turns one record into a row for the matching table in the Household Hub, the Google Sheet or the Google Doc,
+   in that table's own column order. The tables and columns come from the two Hub templates. Each `where`
+   below names the tab or section that holds the table. */
+function hubLoadVer() {
+  try { return localStorage.getItem('paperTrail.hubVer') === 'doc' ? 'doc' : 'sheet'; } catch (e) { return 'sheet'; }
+}
+function hubSaveVer(v) {
+  try { localStorage.setItem('paperTrail.hubVer', v); } catch (e) { /* a view that blocks storage still works, it just forgets */ }
+}
+function hubTarget(r, ver) {
+  const sheet = ver !== 'doc';
+  const rem = isReminder(r);
+  const day = rem ? r.nextDueDate : r.date;
+  const time = rem && r.nextDueTime ? fmtTime(r.nextDueTime) : '';
+  const what = r.title || r.vendor || '';
+  const work = r.work.join(', ');
+  const total = r.total != null ? money(r.total) : '';
+  const find = re => { const p = r.details.find(x => re.test(x.label) && x.value); return p ? p.value : ''; };
+  const withWho = s => (r.subject && s ? s + ' (' + r.subject + ')' : s);
+  const forWho = r.subject ? ' for ' + r.subject : '';
+  const nextNote = r.nextDueNote && r.nextDueNote !== r.title ? r.nextDueNote : '';
+  const nextText = !rem && (r.nextDueDate || nextNote) ? [nextNote, r.nextDueDate ? 'due ' + fmtDay(r.nextDueDate) : ''].filter(Boolean).join(', ') : '';
+  const notes = [r.notes, nextText].filter(Boolean).join('; ');
+  const t = (where, cols, cells) => ({ where, cols, cells });
+  const upcoming = (event, who) => t(sheet ? 'Everyday Life tab, Upcoming Events' : 'Social, Upcoming Events',
+    ['Date', 'Event', 'Location', 'Who', 'What to Bring', 'RSVP?'], [day, event + (time ? ' (' + time + ')' : ''), r.vendor, who, '', '']);
+  const cat = r.category;
+  if (rem && cat !== 'health' && cat !== 'dental' && cat !== 'school') return upcoming(what, r.subject);
+  switch (cat) {
+    case 'car':
+      return t(sheet ? 'Vehicles tab, the repair and service log' + forWho : 'Auto, the service table' + forWho,
+        ['Date', sheet ? 'Service or Repair' : 'Service', 'Mileage', 'Cost', 'Shop', 'Notes'],
+        [day, work || what, r.mileage, total, r.vendor, notes]);
+    case 'pet':
+      return sheet
+        ? t('Pets tab, the vet and vaccine log' + forWho, ['Vet Name', 'Date', 'Vaccine/Service', 'Next Due', 'Notes'],
+          [r.vendor, day, work || what, r.nextDueDate, [r.notes, nextNote].filter(Boolean).join('; ')])
+        : t('Pet Care, Vet Appointments and Vaccination Records' + forWho, ['Date', 'Vaccine/Service', 'Next Due', 'Notes'],
+          [day, work || what, r.nextDueDate, [r.vendor, r.notes, nextNote].filter(Boolean).join('; ')]);
+    case 'health':
+    case 'dental':
+      if (!rem && r.total != null) {
+        return t(sheet ? 'Health & Safety tab, Receipts' : 'Medical, Receipts',
+          ['Date', 'Provider', 'Service', 'Amount', 'Paid With', 'Reimbursed?'], [day, r.vendor, withWho(work || what), total, '', '']);
+      }
+      return t(sheet ? 'Health & Safety tab, Appointments' : 'Medical, Appointments', ['Date', 'Provider', 'Type', 'Location', 'Notes'],
+        [day, r.vendor, what, '', [time ? 'At ' + time : '', r.subject ? 'For ' + r.subject : '', work, notes].filter(Boolean).join('. ')]);
+    case 'home':
+      return sheet
+        ? t('Home tab, Repair History', ['Date', 'What Was Fixed', 'Company / Person', 'Cost', 'Warranty on Work', 'Notes'],
+          [day, r.subject ? r.subject + ': ' + (work || what) : work || what, r.vendor, total, '', notes])
+        : t('Home, Household Contacts', ['Service', 'Name or Company', 'Phone', 'Last Used', 'Notes'],
+          [what, r.vendor, find(/phone|tel/i), day, [work, total ? 'Cost ' + total : '', notes].filter(Boolean).join('; ')]);
+    case 'purchase':
+      return t(sheet ? 'Documents & Digital tab, Warranties & Receipts' : 'Confidential, Warranties/Receipts',
+        ['Item', 'Purchase Date', 'Warranty Expires', sheet ? 'Where the Receipt Is' : 'Receipt Location', 'Notes'],
+        [r.subject || what, day, /warrant|expire/i.test(r.nextDueNote) ? r.nextDueDate : '', 'In Paper Trail', [r.vendor, total, r.notes].filter(Boolean).join(', ')]);
+    case 'money':
+      return t(sheet ? 'Money tab, Bills' : 'Financial, Bills', ['Date Due', 'Bill', 'Amount', 'Autopay?', 'Paid?'], [day, r.vendor || what, total, '', '']);
+    case 'insurance':
+      return sheet
+        ? t('Money tab, Policies', ['Person', 'Insurance Type', 'Company', 'Policy #', 'Agent & Phone', 'Coverage Ends', 'Premium', 'Premium Due'],
+          ['', r.subject || what, r.vendor, find(/policy/i), find(/agent|phone/i), r.nextDueDate, total, ''])
+        : t('Insurance', ['Insurance Type', 'Provider', 'Policy Number', 'Coverage', 'Premium', 'Renewal Date', 'Phone', 'Notes'],
+          [r.subject || what, r.vendor, find(/policy/i), work, total, r.nextDueDate, find(/phone/i), r.notes]);
+    case 'bank': {
+      const digits = find(/account|acct|loan/i).replace(/\D/g, '');
+      const last4 = digits.length >= 4 ? digits.slice(-4) : '';
+      return sheet
+        ? t('Money tab, Bank Accounts', ['Bank', 'Account Type', 'Last 4', 'Owner', 'Balance', 'Beneficiary', 'Last Updated', 'Notes'],
+          [r.vendor, r.subject || what, last4, '', '', '', day, r.notes])
+        : t('Financial, Accounts', ['Account Type', 'Institution', 'Account # (last 4)', 'Owner', 'What It Is For', 'Notes'],
+          [r.subject || what, r.vendor, last4, '', what, r.notes]);
+    }
+    case 'tax': {
+      const year = (/\b(?:19|20)\d{2}\b/.exec(r.subject + ' ' + what) || [(day || '').slice(0, 4)])[0];
+      return t(sheet ? 'Money tab, Return Log' : 'Taxes, Return Log',
+        ['Tax Year', 'Prepared By', 'Date Filed', sheet ? 'Federal Refund / Owed' : 'Federal Refund or Owed', sheet ? 'State Refund / Owed' : 'State Refund or Owed', sheet ? 'Where It Is Saved' : "Where It's Saved"],
+        [year, r.vendor, day, '', '', 'In Paper Trail']);
+    }
+    case 'legal':
+      return sheet
+        ? t('Documents & Digital tab, Papers Checklist. Find the row for this paper and paste into it.', ['Document', 'Have It?', 'Where the Original Is', 'Digital Copy?', 'Last Updated', 'Notes'],
+          [withWho(what), 'TRUE', '', 'TRUE', todayISO(), ['In Paper Trail', r.notes].filter(Boolean).join('. ')])
+        : t('Legal, Location of Important Papers', ['Document', 'Location', 'Copy Location', 'Notes'], [withWho(what), '', 'In Paper Trail', r.notes]);
+    case 'school':
+      return t(sheet ? 'Our People tab, Extracurricular Activities' : 'Family, Extracurricular Activities',
+        ['Child', 'Activity', 'Day/Time', 'Location', 'Coach/Contact', 'Cost', 'Notes'],
+        [r.subject, what, [day, time].filter(Boolean).join(' '), r.vendor, find(/phone|coach|contact|email/i), total, notes]);
+    case 'travel':
+      return upcoming(r.subject && r.subject !== what ? r.subject + ': ' + what : what, '');
+    case 'business':
+      return t(sheet ? 'Money tab, Expense Tracker' : 'Financial, Expense Tracker', ['Date', 'Category', 'What It Was', 'Amount', 'Paid With', 'Notes'],
+        [day, 'Business', what + (r.vendor && r.vendor !== what ? ' (' + r.vendor + ')' : ''), total, '', r.notes]);
+    default:
+      return t(sheet ? 'Final Wishes tab, If Something Happens, Where Things Are' : 'If Something Happens, Where Things Are',
+        ['Item', "Where It's Kept", 'Notes'], [what, 'In Paper Trail', r.notes]);
+  }
+}
+function hubCell(v, sheet) {
+  const s = v == null ? '' : String(v).replace(/[\t\r\n]+/g, ' ').trim();
+  // a cell that starts with = or @ would run as a formula in a spreadsheet, so mark it as plain text
+  return sheet && (/^[=@]/.test(s) || /^[+-][^\d.\s$(]/.test(s)) ? "'" + s : s;
+}
+function hubRow(r, ver) {
+  const t = hubTarget(r, ver);
+  return { where: t.where, cols: t.cols, cells: t.cells.map(c => hubCell(c, ver !== 'doc')) };
+}
+function hubBlock(r) {
+  const ver = state.hubVer;
+  const t = hubRow(r, ver);
+  const pick = v => {
+    const y = window.scrollY;
+    state.hubVer = v;
+    hubSaveVer(v);
+    render();
+    window.scrollTo(0, y);
+  };
+  const det = h('details', { class: 'hub', id: 'hub' },
+    h('summary', { onclick: () => { state.hubOpen = !det.open; } }, h('h3', null, 'Add to Household Hub'), h('span', { class: 'chev', 'aria-hidden': 'true' }, '›')),
+    h('div', { class: 'hub-body' },
+      h('p', { class: 'muted small' }, 'Have the Household Hub? Copy this paper as a row for the matching table.'),
+      h('div', { class: 'chips', role: 'group', 'aria-label': 'Which Household Hub' },
+        [['sheet', 'Google Sheet'], ['doc', 'Google Doc']].map(([v, label]) => h('button', { class: 'chip', type: 'button', 'data-hub': v, 'aria-pressed': String(ver === v), onclick: () => pick(v) }, label))),
+      h('p', { class: 'hub-where' }, h('strong', null, 'Goes in: '), t.where),
+      h('div', { class: 'hub-list' }, t.cols.map((c, i) => h('div', { class: 'hub-item' },
+        h('span', { class: 'hub-label' }, c),
+        h('span', { class: 'hub-val' + (t.cells[i] ? '' : ' blank') }, t.cells[i] || 'Blank'),
+        t.cells[i] ? h('button', { class: 'btn ghost small', type: 'button', 'aria-label': 'Copy ' + c, onclick: () => copyText(t.cells[i], c) }, 'Copy') : null))),
+      h('div', { class: 'hub-actions' }, h('button', { class: 'btn small', type: 'button', id: 'btnCopyHub', onclick: () => copyText(t.cells.join('\t'), 'the row') }, 'Copy row')),
+      h('p', { class: 'muted small' }, ver === 'doc'
+        ? 'In the Doc, click the first cell of an empty row and paste. If the whole row lands in one cell, paste one box at a time with the Copy buttons.'
+        : 'In the Sheet, click the first empty cell of that table and paste. The row spreads across the columns.')));
+  det.open = !!state.hubOpen;
+  return h('section', { class: 'fact-block' }, det);
+}
+
 function detailView() {
   const r = recById(state.viewId);
   const cat = CAT[r.category] || CAT.other;
@@ -1978,7 +2134,7 @@ function detailView() {
   const notes = h('section', { class: 'fact-block' }, h('h3', null, 'Notes'),
     r.notes ? h('p', { class: 'notes-text' }, r.notes) : empty('notes', 'f-notes'));
 
-  wrap.append(h('div', { class: 'detail-grid' }, scansPanel(toDraft(r, []), true), h('div', { class: 'facts' }, rem ? [next, core, work, details, notes] : [core, work, details, next, notes])));
+  wrap.append(h('div', { class: 'detail-grid' }, scansPanel(toDraft(r, []), true), h('div', { class: 'facts' }, rem ? [next, core, work, details, notes, hubBlock(r)] : [core, work, details, next, notes, hubBlock(r)])));
 
   const bar = h('div', { class: 'actions' });
   if (canEdit) bar.append(h('button', { class: 'btn', type: 'button', id: 'btnEdit', onclick: () => openEdit() }, 'Edit'));

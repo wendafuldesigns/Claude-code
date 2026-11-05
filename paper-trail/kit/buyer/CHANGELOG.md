@@ -1,5 +1,10 @@
 # What changed
 
+## Version 1.1.0
+
+- New: **Add to Household Hub** on every paper. It copies the paper as a row, in the same column order as the matching table in the Household Hub Sheet or Doc. Pick which Hub you use, tap Copy row, and paste. Each box also has its own Copy button.
+- Capabilities did not change.
+
 ## Version 1.0.0
 
 First release.

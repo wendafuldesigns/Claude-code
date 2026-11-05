@@ -16,7 +16,7 @@ For you, that means:
 | --- | --- |
 | `../paper-trail.html` | The app. The only copy. Everything else points here. |
 | `buyer/` | The files buyers get: `START-HERE.html`, `CLAUDE.md`, `PASTE-THIS-PROMPT.txt`, `TERMS.txt`, `CHANGELOG.md`. |
-| `seller/` | You only: these notes, the sales copy, the test checklist. |
+| `seller/` | You only: these notes, the sales copy, the test checklist, and the Household Hub page (`WHERE-DOES-EACH-PAPER-GO.md`). |
 | `screens/` | App screenshots with sample data. |
 | `mockups/` | The same screenshots as 3:4 shop images, evergreen with a phone frame. |
 | `VERSION` | The version number. |
@@ -37,12 +37,13 @@ The real build refuses to run until every `REVIEW-BEFORE-SELLING` line is gone. 
 ## Before you sell
 
 1. Run the friend test in `TEST-WITH-A-FRIEND.md`. This is the big one.
-2. Have someone qualified read `buyer/TERMS.txt`. It's a plain-words draft, not legal advice. Then delete the `REVIEW-BEFORE-SELLING` line.
-3. Read Anthropic's current terms for selling things people build on Claude.
-4. Check which Claude plans include Claude Code and artifacts. Put it in `START-HERE.html` under "What you need."
-5. Replace the staged scan screenshots with a real scan from your own copy.
-6. Decide on your price and whether updates are free. `START-HERE.html` says "I'll send you a new file" when there's an update, so only keep that line if you will.
-7. Pick where buyers contact you. The guides say wendaful.com.
+2. Paste a few rows into your own Hub Sheet and Doc (section 9 of the friend test).
+3. Have someone qualified read `buyer/TERMS.txt`. It's a plain-words draft, not legal advice. Then delete the `REVIEW-BEFORE-SELLING` line.
+4. Read Anthropic's current terms for selling things people build on Claude.
+5. Check which Claude plans include Claude Code and artifacts. Put it in `START-HERE.html` under "What you need."
+6. Replace the staged scan screenshots with a real scan from your own copy.
+7. Decide on your price and whether updates are free. `START-HERE.html` says "I'll send you a new file" when there's an update, so only keep that line if you will.
+8. Pick where buyers contact you. The guides say wendaful.com.
 
 ## Send an update
 
@@ -60,6 +61,7 @@ An update never touches a buyer's records. Their records live in their own artif
 - 264 checks pass in a test browser: scanning, saving, editing, reminders, search, the history cards, exports, dark mode, and view-only mode. Those checks used a stand-in for Claude's features, so they prove the app's logic, not Claude's behavior.
 - The publish settings in `CLAUDE.md` are the ones I used for your copy.
 - The build script produces the zip and its guards trip when they should.
+- **Add to Household Hub:** every column list matches a table in your real Hub Sheet or Doc, in the same order (checked against both files). Another 32 checks cover every paper type, both versions, the copy buttons, and the formula guard.
 
 **Not tested:**
 - Setup from a fresh Claude account.
@@ -68,6 +70,7 @@ An update never touches a buyer's records. Their records live in their own artif
 - Sharing with family, and what the Share menu offers on other plans.
 - How much Claude usage a scan really uses.
 - Anthropic's terms on selling this.
+- Pasting a Hub row into the real Sheet and Doc. The Sheet should spread it across the columns. The Doc may put it all in one cell, which is why every box has its own Copy button.
 
 The screenshots show sample data with a made-up receipt, and the scan result came from a stand-in reader.
 

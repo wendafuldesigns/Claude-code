@@ -32,6 +32,21 @@ code, .say {
 .card { background: #fff; border: 1px solid #dfdad4; border-radius: 16px; padding: 18px 20px; margin: 0 0 14px; }
 .card h3 { margin: 0 0 6px; font-size: 18px; }
 .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid #dfdad4; }
+th { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #545454; }
+tr:last-child td { border-bottom: 0; }
+.card:has(table) { padding: 6px 8px; overflow-x: auto; }
+@media (max-width: 560px) {
+  .card:has(table) { overflow-x: visible; }
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tr { padding: 10px 6px; border-bottom: 1px solid #dfdad4; }
+  tr:last-child { border-bottom: 0; }
+  td { border: 0; padding: 2px 4px; }
+  td:first-child { font-weight: 600; }
+  td[data-label]::before { content: attr(data-label) ": "; color: #545454; }
+}
 .note { background: #f4f1ed; border-left: 5px solid #94a69c; border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; }
 .shots { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px 8px; }
 .shots figure { margin: 0; flex: 0 0 auto; width: 200px; }
@@ -97,6 +112,33 @@ footer { margin-top: 48px; font-size: 14px; color: #545454; }
 <h2>Use it with your family</h2>
 <p>Everyone you invite sees the same records, which is what a household wants. In Claude, open the Share menu for your Paper Trail and look for a way to invite people by email as Editors. Your plan decides what the menu offers.</p>
 <p>Only you and people with Editor access can save photos with a record.</p>
+
+<h2>Use it with the Household Hub</h2>
+<p>Got the Wendaful Household Hub? Paper Trail can hand a paper to it. Open any paper, tap <strong>Add to Household Hub</strong>, and pick Google Sheet or Google Doc. Tap <strong>Copy row</strong> and paste it into the table it points to.</p>
+<p>You don't have to send every paper over. Send the ones you'd want someone else to find fast, like the oil change, the vaccine record, or a warranty.</p>
+<div class="card">
+  <table>
+    <thead><tr><th>Paper type</th><th>Hub Sheet</th><th>Hub Doc</th></tr></thead>
+    <tbody>
+      <tr><td>Car</td><td data-label="Sheet">Vehicles, service log</td><td data-label="Doc">Auto, service table</td></tr>
+      <tr><td>Pet</td><td data-label="Sheet">Pets, vet and vaccine log</td><td data-label="Doc">Pet Care, vet and vaccination records</td></tr>
+      <tr><td>Health, Dental</td><td data-label="Sheet">Health &amp; Safety, Appointments or Receipts</td><td data-label="Doc">Medical, Appointments or Receipts</td></tr>
+      <tr><td>Home</td><td data-label="Sheet">Home, Repair History</td><td data-label="Doc">Home, Household Contacts</td></tr>
+      <tr><td>Purchases</td><td data-label="Sheet">Documents &amp; Digital, Warranties &amp; Receipts</td><td data-label="Doc">Confidential, Warranties/Receipts</td></tr>
+      <tr><td>Bills</td><td data-label="Sheet">Money, Bills</td><td data-label="Doc">Financial, Bills</td></tr>
+      <tr><td>Insurance</td><td data-label="Sheet">Money, Policies</td><td data-label="Doc">Insurance</td></tr>
+      <tr><td>Banking</td><td data-label="Sheet">Money, Bank Accounts</td><td data-label="Doc">Financial, Accounts</td></tr>
+      <tr><td>Taxes</td><td data-label="Sheet">Money, Return Log</td><td data-label="Doc">Taxes, Return Log</td></tr>
+      <tr><td>Legal and ID</td><td data-label="Sheet">Documents &amp; Digital, Papers Checklist</td><td data-label="Doc">Legal, Location of Important Papers</td></tr>
+      <tr><td>School</td><td data-label="Sheet">Our People, Extracurricular Activities</td><td data-label="Doc">Family, Extracurricular Activities</td></tr>
+      <tr><td>Travel, booked appointments</td><td data-label="Sheet">Everyday Life, Upcoming Events</td><td data-label="Doc">Social, Upcoming Events</td></tr>
+      <tr><td>Business</td><td data-label="Sheet">Money, Expense Tracker</td><td data-label="Doc">Financial, Expense Tracker</td></tr>
+      <tr><td>Other</td><td data-label="Sheet">Final Wishes, Where Things Are</td><td data-label="Doc">If Something Happens, Where Things Are</td></tr>
+    </tbody>
+  </table>
+</div>
+<p><strong>In the Sheet,</strong> click the first empty cell of that table and paste. The row spreads across the columns. <strong>In the Doc,</strong> click the first cell of an empty row and paste. If the whole row lands in one cell, paste one box at a time with the Copy buttons.</p>
+<p>For bank papers, Paper Trail copies only the last 4 digits of an account number.</p>
 
 <h2>Good to know</h2>
 <div class="card">

@@ -35,7 +35,7 @@ if [ "$MODE" = final ] && grep -rn 'REVIEW-BEFORE-SELLING' buyer; then
 fi
 
 OUT=dist/Paper-Trail-Kit
-rm -rf dist
+rm -rf dist/Paper-Trail-Kit dist/*.zip
 mkdir -p "$OUT/screens"
 cp "$APP" "$OUT/paper-trail.html"
 cp buyer/* "$OUT/"

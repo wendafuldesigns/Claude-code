@@ -110,6 +110,18 @@ Existing records keep their type. Anything saved under the old "Bills and insura
 
 Publish the same file to the same artifact URL to keep the saved records. The records live in the artifact's database, not in this file, so republishing does not touch them.
 
+## Add to Household Hub
+
+Every paper's summary has an **Add to Household Hub** section (closed until you open it). It copies the paper as one row, in the column order of the matching table in the Household Hub, in either the Google Sheet or the Google Doc version. Pick which one you use. The choice is remembered when the view allows it.
+
+- **Where it goes:** the section names the table, for example "Vehicles tab, the repair and service log". Health and dental papers go to Receipts when there is a total and to Appointments when there is not. A booked appointment goes to Appointments (health, dental) or Upcoming Events (everything else).
+- **Copy row** puts a tab-separated row on the clipboard. In the Sheet it spreads across the columns when pasted. Each box also has its own **Copy** button, for the Doc if a whole row lands in one cell.
+- **Bank papers** copy only the last 4 digits of an account number.
+- **Formulas:** in the Sheet layout, a value that starts with `=` or `@` gets a leading apostrophe so it pastes as text.
+- It is a copy button, not a connection. Nothing is written to the Hub for you.
+
+The tables live in one function, `hubTarget`. Its column lists match tables in the real Hub Sheet and Doc, in the same order.
+
 ## Known limits
 
 - Photos and screenshots only. PDFs are not read yet.

@@ -42,6 +42,7 @@ Later, search for "brake" and there it is. Tap your car and see the whole histor
 - **Handles appointments you already booked.** Add the dentist and it sits right there with everything else.
 - **Starts you off with ideas.** 66 quick add ideas, so you're never staring at a blank screen.
 - **Finds things fast.** Search, filter, or tap one car or person or pet to see their whole history.
+- **Sends papers to your Household Hub.** Own the Hub? One tap copies a paper as a row for the matching table.
 - **Saves a spreadsheet.** Take it to your accountant or your insurance agent.
 
 ### How it works
