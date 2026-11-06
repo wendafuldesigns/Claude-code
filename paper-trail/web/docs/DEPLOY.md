@@ -117,13 +117,13 @@ Do this after your first test (step 7) works. Use Stripe's **test mode** first. 
 How it works, in a sentence: the app opens a Stripe page for the payment, Stripe tells a small webhook function when someone has paid, and only that message turns a plan on. Nothing in the app can switch a plan on by itself.
 
 1. **Make a Stripe account** at stripe.com. You can work in test mode before the account is fully activated.
-2. **Make your product.** In Product catalog, add a product called `Paper Trail`. Give it a recurring price, billed monthly, at the price you picked. Copy the **price id** (it starts with `price_`). If you want a yearly price too, add a second price to the same product and copy that id.
+2. **Make your product.** In Product catalog, add a product called `Paper Trail`. Give it two recurring prices: **$6.00 billed monthly** and **$49.00 billed yearly**. Copy the **price id** of each (they start with `price_`). Keep both on the same product.
 3. **Set up the customer page.** In Settings, Billing, Customer portal, switch on letting people cancel, update their card, and see invoices. Save it. The "Manage subscription" button won't work until this is saved.
 4. **Copy your secret key.** In Developers, API keys, copy the **secret key** for test mode (it starts with `sk_test_`). It goes only into Supabase in the next step.
 5. **Add secrets in Supabase** (Edge Functions, Secrets):
    - `STRIPE_SECRET_KEY` is the key from step 4.
-   - `STRIPE_PRICE_MONTHLY` is the monthly price id.
-   - `STRIPE_PRICE_YEARLY` is the yearly price id. Skip it if you only have a monthly price.
+   - `STRIPE_PRICE_MONTHLY` is the id of the $6 monthly price.
+   - `STRIPE_PRICE_YEARLY` is the id of the $49 yearly price.
    - `SITE_URL` is your app's address with no slash at the end, like `https://papertrail.yourdomain.com`. People are sent back here after paying.
 6. **Run the second database file.** In the SQL Editor, paste all of `supabase/migrations/0002_billing.sql` and run it. Do this after the first one.
 7. **Add two more functions**, the same way as the scan service (Edge Functions, deploy a new function via the editor):
@@ -136,7 +136,7 @@ How it works, in a sentence: the app opens a Stripe page for the payment, Stripe
    - `customer.subscription.deleted`
 
    Then copy the endpoint's **signing secret** (it starts with `whsec_`) and add it in Supabase as the secret `STRIPE_WEBHOOK_SECRET`.
-9. **Turn the buttons on.** In Netlify, Environment variables, add `BILLING` set to `on` and `PLAN_TEXT` set to your price as people should read it, like `$6 a month`. It has to match the price in Stripe. Add `YEARLY_TEXT` too if you made a yearly price. Deploy again.
+9. **Turn the buttons on.** In Netlify, Environment variables, add `BILLING` set to `on`, `PLAN_TEXT` set to `$6 a month`, and `YEARLY_TEXT` set to `$49 a year`. These words have to match the prices in Stripe. If you ever change a price in Stripe, change the words here too and deploy again. Deploy again now to turn the buttons on.
 
 ### Test it with fake money
 
@@ -151,7 +151,7 @@ If something doesn't work, look at the logs: Supabase, Edge Functions, `stripe-w
 
 ### Going live
 
-When test mode works, switch Stripe to **live mode** and repeat the Stripe parts with live values: a live price, the live secret key (`sk_live_`), and a new webhook endpoint with its own signing secret. Replace the three secrets in Supabase (`STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_WEBHOOK_SECRET`). Test mode and live mode are completely separate, so none of your test subscriptions carry over.
+When test mode works, switch Stripe to **live mode** and repeat the Stripe parts with live values: a live price, the live secret key (`sk_live_`), and a new webhook endpoint with its own signing secret. Replace the four secrets in Supabase (`STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET`). Test mode and live mode are completely separate, so none of your test subscriptions carry over.
 
 ## Looking after testers
 

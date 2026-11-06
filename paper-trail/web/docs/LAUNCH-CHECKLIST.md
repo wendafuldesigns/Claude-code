@@ -19,7 +19,8 @@ Work down it in order. Nothing here is optional for the stage it's under.
 
 - [ ] You ran the whole payment test from `DEPLOY.md` in Stripe's test mode: subscribe, land back in the app, manage, cancel, and a late payment.
 - [ ] Stripe's list of webhook messages (Developers, Webhooks) shows every one answered with a success, not a failure.
-- [ ] You repeated the Stripe setup in **live mode**: live price, live key, live webhook with its own signing secret, and the three Supabase secrets replaced. Then you made one real purchase yourself and refunded it.
+- [ ] You repeated the Stripe setup in **live mode**: both live prices ($6 monthly and $49 yearly), live key, live webhook with its own signing secret, and the four Supabase secrets replaced. Then you made one real purchase of each price yourself and refunded them.
+- [ ] The words in Netlify (`PLAN_TEXT` is `$6 a month`, `YEARLY_TEXT` is `$49 a year`) match the live prices in Stripe.
 - [ ] You decided whether to swap the Stripe secret key for a restricted key that can only do what the billing service needs.
 - [ ] Your Stripe customer page shows the cancel and update-card options, and your receipts and invoices carry your business name.
 - [ ] You know what happens when someone deletes their account while subscribed. Today you cancel the subscription in Stripe by hand, so add that to the deletion steps.
@@ -48,4 +49,3 @@ Work down it in order. Nothing here is optional for the stage it's under.
 - Family sharing: invite a spouse or parent into one household. The database is ready for it.
 - Reading PDFs, not just photos.
 - A bigger plan for people who hit the monthly cap.
-- A yearly price.

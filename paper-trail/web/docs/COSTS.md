@@ -43,7 +43,15 @@ Take a subscription price P. Your cost per customer each month is about `0.029 Ã
 | $6 a month | $0.47 | $0.08 | $5.45 | 5 |
 | $8 a month | $0.53 | $0.08 | $7.39 | 4 |
 
-These prices are examples to show the math, not advice on what to charge. That's your call.
+The price I'd go with is **$6 a month or $49 a year**. Here's the yearly one worked out the same way:
+
+| Price | Stripe takes | Scans at the 100 cap, all year (Haiku) | What's left per customer | Per month | Customers to cover Supabase |
+| --- | --- | --- | --- | --- | --- |
+| $49 a year | $1.72 | $0.96 | $46.32 | $3.86 | 7 |
+
+A yearly customer is worth a little less each month than a monthly one, but you get the money up front and pay Stripe's 30 cents once instead of twelve times. The scan cap is the same either way, so a yearly customer can't cost you more.
+
+Prices are your call. These two are where I'd start.
 
 ## The safety nets
 
