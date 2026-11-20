@@ -1,10 +1,12 @@
-// Builds the six "method" graphics as PNGs (1080x1350, exported at 2x = 2160x2700).
-// Run from the project folder:  node wendaful-method-graphics/build.js
+// Builds the six "method" graphics as PNGs, exported at 2x, in two shapes:
+//   4x5/   1080x1350  feed posts
+//   9x16/  1080x1920  Stories + Reels (content kept inside Instagram's safe zone:
+//                     250px clear at the top, 340px clear at the bottom)
+// Run from the project folder:  node wendaful-method-graphics/build.js [4x5|9x16]
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
-const OUT = __dirname;
 const FONT_DIR = path.join(__dirname, 'fonts');
 
 // Wendaful Elevate palette
@@ -17,6 +19,21 @@ const C = {
   warm: '#dfdad4',
   bg: '#faf5f0',
   white: '#ffffff',
+};
+
+const FORMATS = {
+  '4x5': {
+    w: 1080, h: 1350, top: 90, bottom: 76, side: 72,
+    title: 180, cardMargin: 60, cardPad: '56px 52px', gap: 36, footInset: 0,
+    b1: 'width:640px;height:640px;top:-250px;right:-210px',
+    b2: 'width:520px;height:520px;bottom:-250px;left:-200px',
+  },
+  '9x16': {
+    w: 1080, h: 1920, top: 250, bottom: 340, side: 72,
+    title: 196, cardMargin: 72, cardPad: '64px 56px', gap: 44, footInset: 44,
+    b1: 'width:700px;height:700px;top:-210px;right:-230px',
+    b2: 'width:600px;height:600px;bottom:-200px;left:-230px',
+  },
 };
 
 const METHODS = [
@@ -92,25 +109,25 @@ const check =
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-function html(m) {
+function html(m, f) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontFace}
 :root{--evergreen:${C.evergreen};--sage:${C.sage};--light-sage:${C.lightSage};--charcoal:${C.charcoal};--gray:${C.gray};--warm:${C.warm};--bg:${C.bg};--white:${C.white}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{width:1080px;height:1350px;background:var(--bg);font-family:'Instrument Serif',serif;color:var(--charcoal);position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{width:${f.w}px;height:${f.h}px;background:var(--bg);font-family:'Instrument Serif',serif;color:var(--charcoal);position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
 .blob{position:absolute;border-radius:50%}
-.b1{width:640px;height:640px;top:-250px;right:-210px;background:var(--light-sage);opacity:.75}
-.b2{width:520px;height:520px;bottom:-250px;left:-200px;background:var(--warm);opacity:.6}
-.wrap{position:relative;height:100%;padding:90px 72px 76px;display:flex;flex-direction:column}
+.b1{${f.b1};background:var(--light-sage);opacity:.75}
+.b2{${f.b2};background:var(--warm);opacity:.6}
+.wrap{position:relative;height:100%;padding:${f.top}px ${f.side}px ${f.bottom}px;display:flex;flex-direction:column}
 .main{flex:1;display:flex;flex-direction:column;justify-content:center}
 .kicker{font-family:'Instrument Sans',sans-serif;font-size:32px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--gray)}
-h1{font-size:180px;font-weight:400;color:var(--evergreen);letter-spacing:-.015em;line-height:.98;margin:22px 0 28px;text-wrap:balance}
-.card{margin-top:60px;background:var(--white);border:2px solid var(--warm);border-radius:40px;padding:56px 52px}
-ul{list-style:none;display:flex;flex-direction:column;gap:36px}
+h1{font-size:${f.title}px;font-weight:400;color:var(--evergreen);letter-spacing:-.015em;line-height:.98;margin:22px 0 28px;text-wrap:balance}
+.card{margin-top:${f.cardMargin}px;background:var(--white);border:2px solid var(--warm);border-radius:40px;padding:${f.cardPad}}
+ul{list-style:none;display:flex;flex-direction:column;gap:${f.gap}px}
 li{display:flex;gap:26px;align-items:flex-start;font-size:60px;font-weight:400;line-height:1.12}
 li span:last-child{text-wrap:balance}
 .box{flex:none;width:52px;height:52px;border-radius:15px;background:var(--light-sage);display:grid;place-items:center;margin-top:8px}
-.foot{text-align:center;font-family:'Instrument Sans',sans-serif;font-size:30px;font-weight:500;letter-spacing:.06em;color:var(--evergreen)}
+.foot{padding-bottom:${f.footInset}px;text-align:center;font-family:'Instrument Sans',sans-serif;font-size:30px;font-weight:500;letter-spacing:.06em;color:var(--evergreen)}
 </style></head><body>
 <div class="blob b1"></div><div class="blob b2"></div>
 <div class="wrap">
@@ -128,28 +145,36 @@ li span:last-child{text-wrap:balance}
 }
 
 (async () => {
+  const wanted = process.argv[2] ? [process.argv[2]] : Object.keys(FORMATS);
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({
-    viewport: { width: 1080, height: 1350 },
-    deviceScaleFactor: 2,
-  });
-  const page = await ctx.newPage();
-  for (const m of METHODS) {
-    await page.setContent(html(m), { waitUntil: 'load' });
-    await page.evaluate(() => document.fonts.ready);
-    const ok = await page.evaluate(
-      () => document.fonts.check("400 180px 'Instrument Serif'") && document.fonts.check("600 32px 'Instrument Sans'")
-    );
-    if (!ok) throw new Error('Instrument Serif / Sans did not load');
-    // Real content check (the decorative circles bleed off the edge on purpose).
-    const fit = await page.evaluate(() => {
-      const r = (s) => document.querySelector(s).getBoundingClientRect();
-      return { top: r('.kicker').top, gap: r('.foot').top - r('.card').bottom };
-    });
-    if (fit.top < 60 || fit.gap < 40) console.warn(`WARNING: ${m.file} is too tight`, fit);
-    else console.log(`${m.file}: ok (top ${Math.round(fit.top)}px, gap to footer ${Math.round(fit.gap)}px)`);
-    await page.screenshot({ path: path.join(OUT, `${m.file}.png`) });
-    console.log('wrote', `${m.file}.png`);
+  for (const name of wanted) {
+    const f = FORMATS[name];
+    if (!f) throw new Error(`Unknown format "${name}". Use: ${Object.keys(FORMATS).join(', ')}`);
+    const outDir = path.join(__dirname, name);
+    fs.mkdirSync(outDir, { recursive: true });
+    const ctx = await browser.newContext({ viewport: { width: f.w, height: f.h }, deviceScaleFactor: 2 });
+    const page = await ctx.newPage();
+    for (const m of METHODS) {
+      await page.setContent(html(m, f), { waitUntil: 'load' });
+      await page.evaluate(() => document.fonts.ready);
+      const ok = await page.evaluate(
+        () => document.fonts.check("400 180px 'Instrument Serif'") && document.fonts.check("600 32px 'Instrument Sans'")
+      );
+      if (!ok) throw new Error('Instrument Serif / Sans did not load');
+      // Real content check (the decorative circles bleed off the edge on purpose).
+      const fit = await page.evaluate(() => {
+        const r = (s) => document.querySelector(s).getBoundingClientRect();
+        const foot = r('.foot'); const inset = parseFloat(getComputedStyle(document.querySelector('.foot')).paddingBottom);
+        return { top: r('.kicker').top, footBottom: foot.bottom - inset, gap: foot.top - r('.card').bottom };
+      });
+      const safeBottom = f.h - f.bottom;
+      const bad = fit.top < f.top || fit.footBottom > safeBottom + 1 || fit.gap < 40;
+      console.log(
+        `${name}/${m.file}: ${bad ? 'TOO TIGHT' : 'ok'} (content ${Math.round(fit.top)}px to ${Math.round(fit.footBottom)}px, safe ${f.top}px to ${safeBottom}px, gap to handle ${Math.round(fit.gap)}px)`
+      );
+      await page.screenshot({ path: path.join(outDir, `${m.file}.png`) });
+    }
+    await ctx.close();
   }
   await browser.close();
 })();
