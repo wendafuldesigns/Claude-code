@@ -77,14 +77,15 @@ const METHODS = [
   },
 ];
 
-const fontFace = [400, 500, 600, 700]
-  .map((w) => {
-    const b64 = fs
-      .readFileSync(path.join(FONT_DIR, `instrument-sans-latin-${w}-normal.woff2`))
-      .toString('base64');
-    return `@font-face{font-family:'Instrument Sans';font-weight:${w};font-style:normal;src:url(data:font/woff2;base64,${b64}) format('woff2');}`;
-  })
-  .join('\n');
+const b64 = (f) => fs.readFileSync(path.join(FONT_DIR, f)).toString('base64');
+const face = (family, weight, style, file) =>
+  `@font-face{font-family:'${family}';font-weight:${weight};font-style:${style};src:url(data:font/woff2;base64,${b64(file)}) format('woff2');}`;
+// Instrument Serif (titles + bullets) and Instrument Sans (small tracked labels only)
+const fontFace = [
+  face('Instrument Serif', 400, 'normal', 'instrument-serif-latin-400-normal.woff2'),
+  face('Instrument Sans', 500, 'normal', 'instrument-sans-latin-500-normal.woff2'),
+  face('Instrument Sans', 600, 'normal', 'instrument-sans-latin-600-normal.woff2'),
+].join('\n');
 
 const check =
   '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#54645b" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 12.8l4.2 4.2L18.5 7.8"/></svg>';
@@ -96,20 +97,20 @@ function html(m) {
 ${fontFace}
 :root{--evergreen:${C.evergreen};--sage:${C.sage};--light-sage:${C.lightSage};--charcoal:${C.charcoal};--gray:${C.gray};--warm:${C.warm};--bg:${C.bg};--white:${C.white}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{width:1080px;height:1350px;background:var(--bg);font-family:'Instrument Sans',sans-serif;color:var(--charcoal);position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{width:1080px;height:1350px;background:var(--bg);font-family:'Instrument Serif',serif;color:var(--charcoal);position:relative;overflow:hidden;-webkit-font-smoothing:antialiased}
 .blob{position:absolute;border-radius:50%}
 .b1{width:640px;height:640px;top:-250px;right:-210px;background:var(--light-sage);opacity:.75}
 .b2{width:520px;height:520px;bottom:-250px;left:-200px;background:var(--warm);opacity:.6}
 .wrap{position:relative;height:100%;padding:90px 72px 76px;display:flex;flex-direction:column}
 .main{flex:1;display:flex;flex-direction:column;justify-content:center}
-.kicker{font-size:34px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--gray)}
-h1{font-size:132px;font-weight:700;color:var(--evergreen);letter-spacing:-.025em;line-height:1.03;margin:20px 0 24px;text-wrap:balance}
+.kicker{font-family:'Instrument Sans',sans-serif;font-size:32px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--gray)}
+h1{font-size:180px;font-weight:400;color:var(--evergreen);letter-spacing:-.015em;line-height:.98;margin:22px 0 28px;text-wrap:balance}
 .card{margin-top:60px;background:var(--white);border:2px solid var(--warm);border-radius:40px;padding:56px 52px}
 ul{list-style:none;display:flex;flex-direction:column;gap:36px}
-li{display:flex;gap:26px;align-items:flex-start;font-size:46px;font-weight:500;line-height:1.22;letter-spacing:-.005em}
+li{display:flex;gap:26px;align-items:flex-start;font-size:60px;font-weight:400;line-height:1.12}
 li span:last-child{text-wrap:balance}
-.box{flex:none;width:52px;height:52px;border-radius:15px;background:var(--light-sage);display:grid;place-items:center;margin-top:2px}
-.foot{text-align:center;font-size:30px;font-weight:500;letter-spacing:.06em;color:var(--evergreen)}
+.box{flex:none;width:52px;height:52px;border-radius:15px;background:var(--light-sage);display:grid;place-items:center;margin-top:8px}
+.foot{text-align:center;font-family:'Instrument Sans',sans-serif;font-size:30px;font-weight:500;letter-spacing:.06em;color:var(--evergreen)}
 </style></head><body>
 <div class="blob b1"></div><div class="blob b2"></div>
 <div class="wrap">
@@ -137,9 +138,9 @@ li span:last-child{text-wrap:balance}
     await page.setContent(html(m), { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
     const ok = await page.evaluate(
-      () => document.fonts.check("700 132px 'Instrument Sans'") && document.fonts.check("500 46px 'Instrument Sans'")
+      () => document.fonts.check("400 180px 'Instrument Serif'") && document.fonts.check("600 32px 'Instrument Sans'")
     );
-    if (!ok) throw new Error('Instrument Sans did not load');
+    if (!ok) throw new Error('Instrument Serif / Sans did not load');
     // Real content check (the decorative circles bleed off the edge on purpose).
     const fit = await page.evaluate(() => {
       const r = (s) => document.querySelector(s).getBoundingClientRect();
